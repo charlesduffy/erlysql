@@ -1,4 +1,4 @@
--module(xndb-micro_app).
+-module(xndbmicro_app).
 
 -behaviour(application).
 
@@ -10,7 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    xndb-micro_sup:start_link().
+    xndbmicro_sup:start_link().
 
 stop(_State) ->
     ok.

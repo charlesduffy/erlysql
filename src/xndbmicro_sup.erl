@@ -1,4 +1,4 @@
--module(xndb-micro_sup).
+-module(xndbmicro_sup).
 
 -behaviour(supervisor).
 

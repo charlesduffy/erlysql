@@ -1,4 +1,4 @@
-{application, xndb-micro,
+{application, xndbmicro,
  [
   {description, ""},
   {vsn, "1"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { xndb-micro_app, []}},
+  {mod, { xndbmicro_app, []}},
   {env, []}
  ]}.
