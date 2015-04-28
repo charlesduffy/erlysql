@@ -1,0 +1,12 @@
+{application, xndb-micro,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { xndb-micro_app, []}},
+  {env, []}
+ ]}.
