@@ -32,6 +32,10 @@ init(Args) ->
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
+handle_cast({ exec , Query } , State) ->
+    io:format('$$ chunkserver $$ received: ~s~n' , Query ),
+    {noreply, State};	
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

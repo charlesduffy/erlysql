@@ -6,7 +6,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/0]).
+-export([start_link/0, cmd/1]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -22,6 +22,10 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+cmd(Query) ->
+    io:format('% ~s~n', [Query]),
+    gen_server:cast(?SERVER, {doquery , Query}).
+
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
 %% ------------------------------------------------------------------
@@ -31,6 +35,11 @@ init(Args) ->
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
+
+handle_cast({doquery , Query} ,  State) ->
+    io:format('$$ received query: ~s~n', [ Query ] ),
+    gen_server:cast(chunkserver, { exec , Query } ),
+    {noreply, State};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

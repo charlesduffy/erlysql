@@ -7,6 +7,12 @@
                   kernel,
                   stdlib
                  ]},
+  {modules, [
+		  xndbmicro_app,
+		  xndbmicro_sup,
+		  listener,
+		  chunkserver
+	    ]},
   {mod, { xndbmicro_app, []}},
   {env, []}
  ]}.
