@@ -45,6 +45,13 @@ handle_cast({ ins,  Query } , State) ->
     State2 = exec_ins( Query , State ),
     {noreply, State2};	
 
+handle_cast({ sel,  Query } , State) ->
+    R = io_lib:format("~p", [ Query ]),
+    io:format('$$ chunkserver SEL $$ received: ~s~n', [ R ] ),
+    io:format('$$ chunkserver state $$ received: ~n' ),
+    State2 = exec_sel( Query , State ),
+    {noreply, State2};	
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -63,4 +70,8 @@ code_change(_OldVsn, State, _Extra) ->
 
 exec_ins(Instup, State) ->
     ets:insert(chunktable, Instup),
+    {ok, State}.
+
+exec_sel(Selpred, State) ->
+    ets:match(chunktable, { Selpred } ),
     {ok, State}.

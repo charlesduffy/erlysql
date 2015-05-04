@@ -22,9 +22,9 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-cmd(Query) ->
+cmd(Command) ->
     io:format('%% listener cmd %%  ~n'),
-    gen_server:cast(?SERVER, {doquery , Query}).
+    gen_server:cast(?SERVER, {doquery , Command }).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
@@ -36,9 +36,9 @@ init(Args) ->
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({doquery , Query} ,  State) ->
+handle_cast({doquery , { Action ,  Query }} ,  State) ->
     io:format('$$ received query: '),
-    gen_server:cast(chunkserver, { ins , Query } ),
+    gen_server:cast(chunkserver, { Action , Query } ),
     {noreply, State};
 
 handle_cast(_Msg, State) ->
