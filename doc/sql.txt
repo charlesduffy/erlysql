@@ -1,0 +1,55 @@
+
+
+--- POC implementation SQL syntax support ---
+
+SELECT (select list specification) 
+FROM (table list specification) 
+WHERE (where clause specification)
+
+--
+
+INSERT INTO (insert target specification)
+VALUES (tuple spec)
+
+--
+
+CREATE TABLE (table spec)
+
+--
+
+DROP TABLE (table spec)
+
+====
+
+select list:
+
+<column name> , <column name> , <column name>
+
+====
+
+table list spec:
+
+<relation name> , <relation name> , <relation name>
+
+====
+
+where clause spec:
+
+<subclause> [AND|OR|] <subclause> [AND|OR] <subclause>
+
+
+====
+
+where clause specification subclause
+
+<expr> <comparison operator> <expr>
+
+====
+
+
+expr:
+
+number
+text
+column
+
