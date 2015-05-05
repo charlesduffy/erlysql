@@ -4,3 +4,4 @@ ebin/*
 src/*.so
 src/*.o
 src/lex.yy.c
+src/*.swp
