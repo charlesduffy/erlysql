@@ -1,2 +1,6 @@
 ebin/*
 .rebar/*
+*.so
+src/*.so
+src/*.o
+src/lex.yy.c
