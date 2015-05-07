@@ -17,17 +17,16 @@ EFLAGS= -pa $(EBIN) -smp
 
 vpath %.l $(SRCDIR)
 vpath %.c $(SRCDIR)
-#vpath %.o $(OBJDIR)
 
 NIFSO=parser_nif.so
-OBJECTS=$(SRCDIR:.c=.o)
+OBJECTS=parser_nif.o scanner.o
 
-.PHONY: erl all scanner
+.PHONY: erl all 
 
-all : $(NIFSO) scanner.c
+all : scanner.c  $(NIFSO)  erl
 
-scanner.c : scanner.l
-	$(LEX) -o $(SRCDIR)/$@ $<
+$(SRCDIR)/scanner.c : scanner.l
+	$(LEX) -o $@ $<
 
 erl : 
 	$(REBAR) co
@@ -38,8 +37,11 @@ clean:
 	rm -f $(SRCDIR)/scanner.c
 	$(REBAR) clean
 
-$(OBJECTS): 
-	gcc -fpic  -c $(CFLAGS) $< -o $@
+$(OBJECTS): %.o: %.c
+	gcc -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
 
 $(NIFSO):	$(OBJECTS)
 	gcc -shared -fpic -lfl -o $(NIFDIR)/$@
+
+errr:
+	@echo $(OBJECTS)
