@@ -3,23 +3,43 @@
 # wraps rebar
 
 ERL=$(shell which erl)
-EFLAGS= -pa /ebin -smp
+REBAR=$(shell which rebar)
+EBIN=$(ebin/)
 LEX=flex
 YACC=bison
-LFLAGS=-o src/scanner.c
-
-CSOURCES=*.c
-LSOURCES=*.l
-
-vpath %.l src
-vpath $.c src
-
-.PHONY: deps erlco all
+SRCDIR=c_src
+NIFDIR=priv
+##################
 
 
+CFLAGS=-I/usr/lib/erlang/usr/include/
+EFLAGS= -pa $(EBIN) -smp
 
-all:
+vpath %.l $(SRCDIR)
+vpath %.c $(SRCDIR)
+#vpath %.o $(OBJDIR)
 
-		
-scanner : scanner.c
-	flex scanner.l 
+NIFSO=parser_nif.so
+OBJECTS=$(SRCDIR:.c=.o)
+
+.PHONY: erl all scanner
+
+all : $(NIFSO) scanner.c
+
+scanner.c : scanner.l
+	$(LEX) -o $(SRCDIR)/$@ $<
+
+erl : 
+	$(REBAR) co
+
+clean:
+	rm -f $(SRCDIR)/*.o
+	rm -f $(NIFDIR)/*.so
+	rm -f $(SRCDIR)/scanner.c
+	$(REBAR) clean
+
+$(OBJECTS): 
+	gcc -fpic  -c $(CFLAGS) $< -o $@
+
+$(NIFSO):	$(OBJECTS)
+	gcc -shared -fpic -lfl -o $(NIFDIR)/$@
