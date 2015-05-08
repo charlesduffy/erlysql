@@ -1,9 +1,10 @@
 ebin/*
 .rebar/*
 *.so
-c_src/*.so
-c_src/*.o
-c_src/lex.yy.c
-c_src/scanner.c
-c_src/*.swp
+csrc/*.so
+csrc/*.o
+csrc/lex.yy.c
+csrc/scanner.c
+csrc/*.swp
+csrc/*.tab.h
 priv/*

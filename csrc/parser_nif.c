@@ -16,11 +16,16 @@ static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM bar_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     int y, ret;
+    char *queryString = "hello";
     if (!enif_get_int(env, argv[0], &y)) {
 	return enif_make_badarg(env);
     }
     ret = bar(y);
-    return enif_make_tuple(env, (ERL_NIF_TERM) ret);
+
+    yy_scan_string(queryString);
+
+    return enif_make_tuple1(env,
+		enif_make_int(env, ret) );
 }
 
 static ErlNifFunc nif_funcs[] = {
@@ -35,5 +40,5 @@ int foo (int x) {
 }
 
 int bar (int y) {
-	return 200;
+	return y*2;
 }
