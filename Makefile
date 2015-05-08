@@ -41,7 +41,7 @@ $(OBJECTS): %.o: %.c
 	gcc -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
 
 $(NIFSO):	$(OBJECTS)
-	gcc -shared -fpic -lfl -o $(NIFDIR)/$@
+	gcc -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -o $(NIFDIR)/$@
 
 errr:
 	@echo $(OBJECTS)
