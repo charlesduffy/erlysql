@@ -7,7 +7,7 @@ REBAR=$(shell which rebar)
 EBIN=$(ebin/)
 LEX=flex
 YACC=bison
-SRCDIR=c_src
+SRCDIR=csrc
 NIFDIR=priv
 ##################
 
