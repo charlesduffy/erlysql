@@ -17,20 +17,20 @@ static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM bar_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     int y, ret;
-    char *queryString = "hello";
-	yyscan_t scanner;
+    char *queryString = "10+2\n";
+//	yyscan_t scanner;
     YY_BUFFER_STATE buf;
     if (!enif_get_int(env, argv[0], &y)) {
 	return enif_make_badarg(env);
     }
     ret = bar(y);
 /* experimental, just get reentrant parser working doing something */
-    yylex_init(&scanner);
-    buf = yy_scan_string(queryString, scanner);
-    yylex(scanner);
+//    yylex_init(&scanner);
+    buf = yy_scan_string(queryString); //, scanner);
+  //  yylex(scanner);
     yyparse();
-    yy_delete_buffer(buf, scanner);
-    yylex_destroy(scanner);
+    //yy_delete_buffer(buf, scanner);
+    //yylex_destroy(scanner);
 	
 
 //    parseQuery(queryString);
