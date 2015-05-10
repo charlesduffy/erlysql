@@ -1,4 +1,17 @@
+===
 
+What SQL features are we going to support initially; summary. 
+
+SELECT statement with WHERE clause, single relation only. No joins.
+SUM, COUNT aggregates
+Predicate operators: > , < , =
+AND / OR / NOT operators
+
+INSERT statement, supporting VALUES clause and INSERT...SELECT
+
+UPDATE statement, supporting same predicate values as SELECT
+
+DELETE statement, supporting same predicate values as SELECT
 
 --- POC implementation SQL syntax support ---
 

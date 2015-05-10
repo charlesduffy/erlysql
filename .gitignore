@@ -7,4 +7,5 @@ csrc/lex.yy.c
 csrc/scanner.c
 csrc/*.swp
 csrc/*.tab.h
+csrc/*.tab.c
 priv/*
