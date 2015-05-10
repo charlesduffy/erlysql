@@ -1,3 +1,4 @@
+core
 ebin/*
 .rebar/*
 *.so
@@ -5,6 +6,7 @@ csrc/*.so
 csrc/*.o
 csrc/lex.yy.c
 csrc/scanner.c
+csrc/scanner.h
 csrc/*.swp
 csrc/*.tab.h
 csrc/*.tab.c

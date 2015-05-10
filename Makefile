@@ -9,10 +9,11 @@ LEX=flex
 YACC=bison -d
 SRCDIR=csrc
 NIFDIR=priv
+CC=gcc
 ##################
 
 
-CFLAGS=-I/usr/lib/erlang/usr/include/
+CFLAGS=-I/usr/lib/erlang/usr/include/ -g
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 
@@ -21,14 +22,14 @@ vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
 NIFSO=parser_nif.so
-OBJECTS=parser_nif.o scanner.o
+OBJECTS=parser_nif.o scanner.o grammar.tab.o
 
 .PHONY: erl all 
 
 all : grammar.tab.c scanner.c  $(NIFSO)  erl
 
 $(SRCDIR)/scanner.c : scanner.l grammar.tab.c 
-	$(LEX) -o $@ $<
+	$(LEX) --header-file=$(SRCDIR)/scanner.h -o $@ $<
 
 $(SRCDIR)/grammar.tab.c : grammar.y
 	$(YACC) $< -o $@
@@ -44,10 +45,10 @@ clean:
 	$(REBAR) clean
 
 $(OBJECTS): %.o: %.c
-	gcc -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
+	$(CC) -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
 
 $(NIFSO):	$(OBJECTS)
-	gcc -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -o $(NIFDIR)/$@
+	$(CC) -g -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -o $(NIFDIR)/$@
 
 errr:
 	@echo $(OBJECTS)
