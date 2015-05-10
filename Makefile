@@ -6,7 +6,7 @@ ERL=$(shell which erl)
 REBAR=$(shell which rebar)
 EBIN=$(ebin/)
 LEX=flex
-YACC=bison -d
+YACC=bison -d --report-file=grammar.output --verbose
 SRCDIR=csrc
 NIFDIR=priv
 CC=gcc

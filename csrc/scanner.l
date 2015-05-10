@@ -4,24 +4,65 @@
 
 %}
 
-
 %option noyywrap
-%option reentrant
+
 
 space	[\t ]
 newline [\r\n]
 digit 	[0-9]
 quote	'
 alpha	[a-zA-Z]	
-oper	[!+-=<>/]
+alphanum [a-zA-Z_0-9]
+plus	[+]
+minus	[-]
+division [/]
+greater [>]
+less    [<]
+equals  [=]
+semicolon [;]
+comma [,]
+asterisk [*]
+lparen [(]
+rparen [)]
 
 %%
+ 
+(?i:select)		{ return SELECT; } /* add a rule to create a state for "quoted" so we don't match these in strings */
+(?i:insert)		{ return INSERT; }
+(?i:update)		{ return UPDATE; }
+(?i:delete)		{ return DELETE; }
+(?i:where)		{ return WHERE; }
+(?i:from)		{ return FROM; }
+(?i:values)		{ return VALUES; }
+(?i:create)		{ return CREATE; }
+(?i:drop)		{ return DROP; }
+(?i:and)		{ return AND; }
+(?i:or)			{ return OR; }
+(?i:sum)		{ return SUM; }
+(?i:count)		{ return COUNT; }
+(?i:set)		{ return SET; }
+(?i:into)		{ return INTO; }
 
-{space}+ {return WHITESPACE;}
-{alpha}+ {return WORD;} /* modify to permit identifiers with numbers, etc */
-{quote}  {return QUOTE;}
-{oper}   {return OPER;}
-{newline} {return NEWLINE;}
-{digit}+ {return NUMBER;}
+{space}+ 		{ } 
+({alpha}+{alphanum}*) 	{ return IDENTIFIER;} /* Identifiers must start with a letter. Fix this definition */
+{quote}  		{ return QUOTE;}
+({quote}{alpha}+{quote}) { return STRING; }
+
+{newline} 		{return NEWLINE;}
+{digit}+ 		{ return INT; }	
+({digit}+\.{digit}+)  	{ return NUMERIC; }		
+
+{plus}			{ return ADD; }
+{minus}			{ return SUB; }
+{division}		{ return DIV; }
+{greater}		{ return GT; }
+{less}			{ return LT; }
+{equals}		{ return EQ; }
+({greater}{equals})	{ return GE; }
+{semicolon}		{ return SEMICOLON; }
+{comma}			{ return COMMA; }
+{asterisk}		{ return ASTERISK; }
+{lparen}		{ return LPAREN; }
+{rparen}		{ return RPAREN; }
 
 %%
