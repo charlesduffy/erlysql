@@ -1,5 +1,6 @@
 #include "erl_nif.h"
 #include "scanner.h"
+#include <string.h>
 #include <malloc.h>
 
 #define MAXBUFLEN 1024
@@ -20,7 +21,6 @@ static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     int ret;
-    size_t length;
     char queryText[MAXBUFLEN];
 //	yyscan_t scanner;
 
@@ -37,7 +37,7 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 
    (void) memset (queryText, '\0', sizeof(queryText));
 
-    if (enif_get_string(env, argv[0], queryText, sizeof(queryText), ERL_NIF_LATIN1) < 1) {
+    if (enif_get_string(env, argv[0], queryText, MAXBUFLEN, ERL_NIF_LATIN1) < 1) {
 	return enif_make_badarg(env);
     }
     ret = parseQuery(queryText);
@@ -69,5 +69,5 @@ int parseQuery (char *queryText) {
     buf = yy_scan_string(queryText); //, scanner);
   //  yylex(scanner);
     yyparse();
-    return (0);
+    return (9);
 }

@@ -13,15 +13,15 @@ digit 	[0-9]
 quote	'
 alpha	[a-zA-Z]	
 alphanum [a-zA-Z_0-9]
-plus	[+]
-minus	[-]
-division [/]
-greater [>]
-less    [<]
-equals  [=]
+add	[+]
+sub	[-]
+mul 	[*]
+div 	[/]
+gt	[>]
+lt	[<]
+eq	[=]
 semicolon [;]
 comma [,]
-asterisk [*]
 lparen [(]
 rparen [)]
 
@@ -48,20 +48,21 @@ rparen [)]
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
-{newline} 		{return NEWLINE;}
+{newline} 		{ return NEWLINE;}
 {digit}+ 		{ return INT; }	
 ({digit}+\.{digit}+)  	{ return NUMERIC; }		
 
-{plus}			{ return ADD; }
-{minus}			{ return SUB; }
-{division}		{ return DIV; }
-{greater}		{ return GT; }
-{less}			{ return LT; }
-{equals}		{ return EQ; }
-({greater}{equals})	{ return GE; }
+{add}			{ return ADD; }
+{sub}			{ return SUB; }
+{div}			{ return DIV; }
+{mul}			{ return MUL; }
+{gt} 			{ return GT; }
+{lt}			{ return LT; }
+{eq}			{ return EQ; }
+({gt}{eq})		{ return GE; }
+({lt}{eq})		{ return LE; }
 {semicolon}		{ return SEMICOLON; }
 {comma}			{ return COMMA; }
-{asterisk}		{ return ASTERISK; }
 {lparen}		{ return LPAREN; }
 {rparen}		{ return RPAREN; }
 

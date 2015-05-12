@@ -13,27 +13,41 @@ void yyerror (char const *s) {
 %}
 
 
-
 /* SQL keywords */
-%token SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP AND OR SUM COUNT SET INTO
+%token SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
 /* operators */
-%token ADD MUL DIV MOD EXP EQ LT GT NE GE LE
+//%token ADD MUL DIV MOD EXP EQ LT GT NE GE LE
 /* values and identifiers */
 %token INT BIGINT NUMERIC STRING IDENTIFIER
 
 /* punctuation */
-%token QUOTE SEMICOLON COMMA LPAREN RPAREN NEWLINE ASTERISK
+%token QUOTE COMMA NEWLINE 
+
+/*
+predicate_expr:
+	LPAREN predicate_expr RPAREN 				|
+	scalar_exp comparison_operator scalar_exp 	|
+	scalar_exp	boolean_operator scalar_exp		|
+;
+*/
 
 
-%left OR
-%left AND
-%left NOT
-%left EQ LT GT NE GE LE
-%left ADD SUB
-%left MUL DIV
-%right EXP    /* exponentiation */
+%left           OR
+%left           AND
+%left		NE
+%right		EQ
+%nonassoc	LT GT
+%nonassoc	LE GE
+%left           ADD SUB
+%left           MUL DIV MOD
+%left           EXP
+/* Unary Operators */
+%right          UMINUS
+%nonassoc	LPAREN RPAREN
+%left		SEMICOLON
+//%left           TYPECAST
+//%left           '.'
 
-/* Grammar follows */
 
 %%
 
@@ -44,8 +58,15 @@ sql:
 
 query_statement:
 	select_statement 	|
-	insert_statement
 ;
+
+/* 
+
+INSERT STATEMENT
+
+*/
+
+/*
 
 insert_statement:
 	INSERT INTO IDENTIFIER VALUES LPAREN value_list RPAREN
@@ -57,13 +78,17 @@ value_list:
 	scalar_expr COMMA scalar_expr		|
 	scalar_expr			
 ;
+*/
+
 	
+/*
 
+SELECT STATEMENT
 
+*/
 
 select_list:
 	select_list COMMA select_list |
-	ASTERISK		      |
 	scalar_expr
 ;
 	
@@ -74,51 +99,50 @@ table_expr:
 ;
 
 select_statement:
-	SELECT select_list 		   |
-	SELECT select_list FROM table_expr where_clause
+	SELECT select_list from_clause where_clause
 ;
 
 where_clause:
 				|
-	WHERE predicate_expr
+	WHERE scalar_expr
 ;
 
-comparison_operator:
-	GT |
-	LT | 
-	EQ |
-	NE 
+from_clause:
+				|
+	FROM table_expr
 ;
 
-boolean_operator:
-	AND 	|
-	OR	|	
-	NOT
-;
+/*
 
-scalar_operator:
-	ADD |
-	SUB |
-	MUL |
-	DIV 
-;
+EXPRESSIONS
 
-predicate_expr:
-	LPAREN predicate_expr RPAREN 				|
-	predicate_expr comparison_operator predicate_expr 	|
-	predicate_expr	boolean_operator predicate_expr		|
-	atom							|
-	colref
-;
+*/
+
 
 scalar_expr:
-	LPAREN scalar_expr RPAREN   		|
-	scalar_expr scalar_operator scalar_expr |
-	colref 			   		|
-	atom
+	value_expr				|
+	LPAREN scalar_expr RPAREN		|
+	scalar_expr ADD scalar_expr 		|
+	scalar_expr MUL scalar_expr 		|
+	scalar_expr DIV scalar_expr 		|
+	scalar_expr MOD scalar_expr 		|
+	scalar_expr AND scalar_expr 		|
+	scalar_expr OR scalar_expr 		|
+	scalar_expr EQ scalar_expr 		|
+	scalar_expr NE scalar_expr 		| 
+	scalar_expr GT scalar_expr 		|
+	scalar_expr LT scalar_expr 		|
+	scalar_expr GE scalar_expr 		|
+	scalar_expr LE scalar_expr 	
 ;
 
-atom:
+value_expr:
+	LPAREN value_expr RPAREN		|
+	colref					|
+	literal		
+;
+
+literal:
 	number |
 	string 
 ;
