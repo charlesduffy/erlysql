@@ -1,4 +1,5 @@
 core
+grammar.output
 ebin/*
 .rebar/*
 *.so
