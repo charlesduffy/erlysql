@@ -43,16 +43,16 @@ predicate_expr:
 %left           EXP
 /* Unary Operators */
 %right          UMINUS
-%nonassoc	LPAREN RPAREN
-%left		SEMICOLON
-//%left           TYPECAST
-//%left           '.'
+%left		LPAREN RPAREN
+%left		SEMICOLON COMMA
+//%left         TYPECAST
+//%left         '.'
 
 
 %%
 
 sql:
-	query_statement SEMICOLON  	  	|
+	|
 	query_statement SEMICOLON query_statement 
 ;
 
@@ -137,7 +137,6 @@ scalar_expr:
 ;
 
 value_expr:
-	LPAREN value_expr RPAREN		|
 	colref					|
 	literal		
 ;
