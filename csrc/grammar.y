@@ -10,28 +10,45 @@ void yyerror (char const *s) {
    fprintf (stderr, ">>> %s <<<\n", s);
  }
 
+typedef struct {
+	int 	i; //temp!
+} ParseNode;
+
 %}
 
+/* parser options */
+
+%define api.pure full
+%lex-param {yyscan_t scanner}
+%parse-param {yyscan_t scanner}
+
+/* demantic value */
+
+%union 
+{
+	core_YYSTYPE	core_yystyper;
+	/* literal types */
+	/* form is:
+	< C type decl >		<SQL type name>_val;
+	*/
+	
+	int	integer_val;
+	char 	*text_val;
+	/* keyword */
+	char	*keyword;
+	/* node types */
+	ParseNode *node;
+}	
 
 /* SQL keywords */
-%token SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
-/* operators */
-//%token ADD MUL DIV MOD EXP EQ LT GT NE GE LE
+%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
 /* values and identifiers */
-%token INT BIGINT NUMERIC STRING IDENTIFIER
+%token <keyword> INT BIGINT NUMERIC STRING IDENTIFIER
 
 /* punctuation */
-%token QUOTE COMMA NEWLINE 
+%token <keyword> QUOTE COMMA NEWLINE 
 
-/*
-predicate_expr:
-	LPAREN predicate_expr RPAREN 				|
-	scalar_exp comparison_operator scalar_exp 	|
-	scalar_exp	boolean_operator scalar_exp		|
-;
-*/
-
-
+/* operators */
 %left           OR
 %left           AND
 %left		NE
@@ -48,6 +65,7 @@ predicate_expr:
 //%left         TYPECAST
 //%left         '.'
 
+%type	<node> 	sql query_statement select_statement scalar_expr value_expr from_clause
 
 %%
 
@@ -78,7 +96,9 @@ value_list:
 	scalar_expr COMMA scalar_expr		|
 	scalar_expr			
 ;
+
 */
+
 
 	
 /*

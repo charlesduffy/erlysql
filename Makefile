@@ -22,7 +22,7 @@ vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
 NIFSO=parser_nif.so
-OBJECTS=parser_nif.o scanner.o grammar.tab.o simtree.o
+OBJECTS=parser_nif.o scanner.o grammar.tab.o 
 
 .PHONY: erl all 
 

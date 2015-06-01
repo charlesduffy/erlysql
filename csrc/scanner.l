@@ -5,7 +5,8 @@
 %}
 
 %option noyywrap
-
+%option reentrant
+%option bison-bridge
 
 space	[\t ]
 newline [\r\n]

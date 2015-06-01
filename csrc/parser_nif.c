@@ -41,14 +41,6 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 	return enif_make_badarg(env);
     }
     ret = parseQuery(queryText);
-/* experimental, just get reentrant parser working doing something */
-//    yylex_init(&scanner);
-  //  yylex(scanner);
-    //yy_delete_buffer(buf, scanner);
-    //yylex_destroy(scanner);
-	
-
-//    parseQuery(queryText);
     return enif_make_tuple1(env,
 		enif_make_int(env, ret) );
 }
@@ -66,8 +58,15 @@ int foo (int x) {
 
 int parseQuery (char *queryText) {
     YY_BUFFER_STATE buf;
-    buf = yy_scan_string(queryText); //, scanner);
+    yyscan_t scanner;
+    yylex_init(&scanner);
+ //  yylex(scanner);
+	
+
+    buf = yy_scan_string(queryText, scanner); 
   //  yylex(scanner);
     yyparse();
+    yy_delete_buffer(buf, scanner);
+    yylex_destroy(scanner);
     return (9);
 }
