@@ -5,8 +5,8 @@
 ERL=$(shell which erl)
 REBAR=$(shell which rebar)
 EBIN=$(ebin/)
-LEX=flex
-YACC=bison -d --report-file=grammar.output --verbose
+LEX=/home/ccd/bin/flex/bin/flex
+YACC=/home/ccd/bin/bison/bin/bison -d --report-file=grammar.output --verbose
 SRCDIR=csrc
 NIFDIR=priv
 CC=gcc
@@ -41,6 +41,7 @@ clean:
 	rm -f $(SRCDIR)/*.o
 	rm -f $(NIFDIR)/*.so
 	rm -f $(SRCDIR)/scanner.c
+	rm -f $(SRCDIR)/scanner.h
 	rm -f $(SRCDIR)/grammar.tab.c
 	$(REBAR) clean
 

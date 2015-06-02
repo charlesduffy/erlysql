@@ -1,4 +1,5 @@
 #include "erl_nif.h"
+#include "grammar.tab.h"
 #include "scanner.h"
 #include <string.h>
 #include <malloc.h>

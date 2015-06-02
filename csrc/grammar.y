@@ -1,37 +1,35 @@
-/* Infix notation calculator--calc */
+%code top {
 
-%{
-#define YYSTYPE int //fix!
 #define YYDEBUG 1
 #define YYERROR_VERBOSE 1
 #include <stdio.h>
-//yydebug=1;
-void yyerror (char const *s) {
-   fprintf (stderr, ">>> %s <<<\n", s);
- }
 
-typedef struct {
+}
+
+
+%code {
+
+  void yyerror (char const *s) {
+     fprintf (stderr, ">>> %s <<<\n", s);
+  }
+
+  typedef struct {
 	int 	i; //temp!
-} ParseNode;
+  } ParseNode;
 
-%}
+}
 
 /* parser options */
+
 
 %define api.pure full
 %lex-param {yyscan_t scanner}
 %parse-param {yyscan_t scanner}
 
-/* demantic value */
+/* semantic value */
 
 %union 
-{
-	core_YYSTYPE	core_yystyper;
-	/* literal types */
-	/* form is:
-	< C type decl >		<SQL type name>_val;
-	*/
-	
+	{
 	int	integer_val;
 	char 	*text_val;
 	/* keyword */
@@ -42,6 +40,7 @@ typedef struct {
 
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
+
 /* values and identifiers */
 %token <keyword> INT BIGINT NUMERIC STRING IDENTIFIER
 
