@@ -5,15 +5,15 @@
 ERL=$(shell which erl)
 REBAR=$(shell which rebar)
 EBIN=$(ebin/)
-LEX=/home/ccd/bin/flex/bin/flex
-YACC=/home/ccd/bin/bison/bin/bison -d --report-file=grammar.output --verbose
+LEX=flex
+YACC=bison -d --report-file=grammar.output --verbose
 SRCDIR=csrc
 NIFDIR=priv
 CC=gcc
 ##################
 
 
-CFLAGS=-I/usr/lib/erlang/usr/include/ -g
+CFLAGS=-I/usr/lib/erlang/usr/include/ -Icsrc/ -g
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 

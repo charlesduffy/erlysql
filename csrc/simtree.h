@@ -1,6 +1,13 @@
+struct parsenode {
+	int type;
+	struct parsenode *node;
+} ;
+
+typedef struct parsenode ParseNode;
+
+/*
 typedef struct simtree_node {
 
-/* POC standard only. Union to hold the value; possibly an enum to hold the type */	
 
 	union {
 
@@ -11,3 +18,4 @@ typedef struct simtree_node {
 
 
 };
+*/

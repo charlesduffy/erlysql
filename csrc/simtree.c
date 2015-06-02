@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <malloc.h>
+#include "simtree.h"
 
-*simtree_node create_node() {
+
+ParseNode * create_node() {
+
+	int i;
+	return (1);
 
 }
 

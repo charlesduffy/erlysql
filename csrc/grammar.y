@@ -1,22 +1,14 @@
-%code top {
+%code requires {
 
-#define YYDEBUG 1
 #define YYERROR_VERBOSE 1
 #include <stdio.h>
+#include "simtree.h"
 
-}
 
-
-%code {
 
   void yyerror (char const *s) {
      fprintf (stderr, ">>> %s <<<\n", s);
   }
-
-  typedef struct {
-	int 	i; //temp!
-  } ParseNode;
-
 }
 
 /* parser options */
