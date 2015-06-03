@@ -1,14 +1,12 @@
 %code requires {
 
-#define YYERROR_VERBOSE 1
+
 #include <stdio.h>
 #include "simtree.h"
 
+#include "parse.h"
 
-
-  void yyerror (char const *s) {
-     fprintf (stderr, ">>> %s <<<\n", s);
-  }
+typedef void *yyscan_t;
 }
 
 /* parser options */

@@ -66,7 +66,7 @@ int parseQuery (char *queryText) {
 
     buf = yy_scan_string(queryText, scanner); 
   //  yylex(scanner);
-    yyparse();
+    yyparse(scanner);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
     return (9);
