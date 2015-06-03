@@ -28,6 +28,11 @@ typedef void *yyscan_t;
 	ParseNode *node;
 }	
 
+%code{
+void yyerror (yyscan_t scanner, char const *s) {
+     fprintf (stderr, ">>> %s <<<\n", s); }
+}
+
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
 

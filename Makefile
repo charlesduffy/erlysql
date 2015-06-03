@@ -49,7 +49,7 @@ $(OBJECTS): %.o: %.c
 	$(CC) -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
 
 $(NIFSO):	$(OBJECTS)
-	$(CC) -g -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -o $(NIFDIR)/$@
+	$(CC) -g -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -Wl,--export-dynamic -o $(NIFDIR)/$@
 
 errr:
 	@echo $(OBJECTS)
