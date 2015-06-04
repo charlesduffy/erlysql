@@ -1,11 +1,6 @@
 %code requires {
-
-
 #include <stdio.h>
 #include "simtree.h"
-
-#include "parse.h"
-
 typedef void *yyscan_t;
 }
 
@@ -25,7 +20,9 @@ typedef void *yyscan_t;
 	/* keyword */
 	char	*keyword;
 	/* node types */
-	ParseNode *node;
+	selectStmtNode *selectStmt;
+	selectListNode *selectList;
+	fromClauseNode *fromClause;
 }	
 
 %code{
@@ -59,7 +56,11 @@ void yyerror (yyscan_t scanner, char const *s) {
 //%left         TYPECAST
 //%left         '.'
 
-%type	<node> 	sql query_statement select_statement scalar_expr value_expr from_clause
+%type	<node> 	sql query_statement scalar_expr value_expr 
+
+%type 	<selectStmt> select_statement
+%type 	<selectList> select_list
+%type 	<fromClause> from_clause
 
 %%
 
@@ -69,7 +70,7 @@ sql:
 ;
 
 query_statement:
-	select_statement 	|
+	select_statement  	|
 ;
 
 /* 
@@ -113,7 +114,8 @@ table_expr:
 ;
 
 select_statement:
-	SELECT select_list from_clause where_clause
+	SELECT select_list from_clause where_clause { $$ = mkSelectStmtNode(); }
+						      
 ;
 
 where_clause:
@@ -123,7 +125,7 @@ where_clause:
 
 from_clause:
 				|
-	FROM table_expr
+	FROM table_expr { $$ = mkFromClauseNode(); }
 ;
 
 /*
