@@ -1,5 +1,6 @@
 %{
 
+#include <string.h>
 #include "grammar.tab.h"
 
 %}
@@ -46,12 +47,12 @@ rparen [)]
 (?i:into)		{ return INTO; }
 
 {space}+ 		{ } 
-({alpha}+{alphanum}*) 	{ return IDENTIFIER;} /* Identifiers must start with a letter. Fix this definition */
+({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter. Fix this definition */
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
 {newline} 		{ return NEWLINE;}
-{digit}+ 		{ return INT; }	
+{digit}+ 		{ yylval->integer_val = atoi(yytext); return INT; } 
 ({digit}+\.{digit}+)  	{ return NUMERIC; }		
 
 {add}			{ return ADD; }

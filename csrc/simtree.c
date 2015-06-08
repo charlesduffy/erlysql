@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "simtree.h"
 
 /* 
@@ -41,3 +42,22 @@ fromClauseNode * mkFromClauseNode() {
 
 }
 
+valueExprNode * mkValueExpr() {
+
+	
+	valueExprNode *n;
+
+	printf("value expression hello world!\n");
+	printf("size of int is: %d\n", sizeof(int));
+	printf("size of value expression node is: %d\n", sizeof(valueExprNode));
+	n = (valueExprNode *) malloc((size_t) sizeof(valueExprNode));
+	if (n == NULL) {
+		printf("oops. Malloc failed\n");
+		n = NULL;
+	}
+	n->type = UNDEFINED;
+	n->value.integer_val = 0;	
+
+	return(n);
+
+}

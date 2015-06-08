@@ -1,5 +1,6 @@
 %code requires {
 #include <stdio.h>
+#include <string.h>
 #include "simtree.h"
 typedef void *yyscan_t;
 }
@@ -23,6 +24,7 @@ typedef void *yyscan_t;
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
+	valueExprNode  *valueExpr;
 }	
 
 %code{
@@ -34,7 +36,7 @@ void yyerror (yyscan_t scanner, char const *s) {
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
 
 /* values and identifiers */
-%token <keyword> INT BIGINT NUMERIC STRING IDENTIFIER
+%token <keyword> INT BIGINT NUMERIC STRING 
 
 /* punctuation */
 %token <keyword> QUOTE COMMA NEWLINE 
@@ -56,11 +58,14 @@ void yyerror (yyscan_t scanner, char const *s) {
 //%left         TYPECAST
 //%left         '.'
 
-%type	<node> 	sql query_statement scalar_expr value_expr 
+%type	<node> 	sql query_statement 
 
 %type 	<selectStmt> select_statement
 %type 	<selectList> select_list
 %type 	<fromClause> from_clause
+%type 	<valueExpr> value_expr
+%type 	<scalarExpr> scalar_expr
+%token  <colName0> IDENTIFIER
 
 %%
 
@@ -153,7 +158,14 @@ scalar_expr:
 ;
 
 value_expr:
-	colref					|
+	colref	{ 
+			valueExprNode *n = mkValueExpr(); 
+			//printf("parser. size of value expression N: %ld\n", sizeof(n));
+			n->type = COLREF;
+			n->value->colName = $1;
+			//n->value.colName = strdup((const char *) yylval);
+			$$ = (valueExprNode *) n; 
+		}				|
 	literal		
 ;
 
@@ -173,7 +185,7 @@ string:
 ;
 
 colref:
-	IDENTIFIER
+	IDENTIFIER { $$ = $1; }
 ;
 
 %%

@@ -1,3 +1,26 @@
+#ifndef _SIMTREE_H
+#define _SIMTREE_H
+
+
+/* Helper Enums for parse nodes */
+
+
+typedef enum { UNDEFINED, COLREF , LITERAL } valueExprType;
+
+
+union value_expr {
+	char * colName;
+	int integer_val;
+	char * text_val;
+	float float_val;
+} ;
+
+typedef union value_expr valueExpr;
+
+/* Parse Nodes */
+
+typedef char * colName0;
+
 struct select_stmt_node {
 	int type;
 } ;
@@ -16,17 +39,23 @@ struct from_clause_node {
 
 typedef struct from_clause_node fromClauseNode;
 
-/*
-typedef struct simtree_node {
+struct value_expr_node {
+	valueExprType type;
+	valueExpr value;
+} ;
 
+typedef struct value_expr_node valueExprNode;
 
-	union {
+struct scalar_expr_node {
+	int type;
+} ;
 
-		int int_lval; 	
-		char * text_lval;
+typedef struct scalar_expr_node scalarExprNode;
 
-	} lval;
+/* node function prototypes */
+selectStmtNode * mkSelectStmtNode ();
+selectListNode * mkSelectListNode ();
+fromClauseNode * mkFromClauseNode ();
+valueExprNode * mkValueExpr();
 
-
-};
-*/
+#endif
