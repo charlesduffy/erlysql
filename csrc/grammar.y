@@ -18,13 +18,18 @@ typedef void *yyscan_t;
 	{
 	int	integer_val;
 	char 	*text_val;
+	float  float_val;
 	/* keyword */
 	char	*keyword;
+	/* identifier */
+	char    *identifier_val;
+
 	/* node types */
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
 	valueExprNode  *valueExpr;
+	colName0       *columnName;
 }	
 
 %code{
@@ -36,7 +41,10 @@ void yyerror (yyscan_t scanner, char const *s) {
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
 
 /* values and identifiers */
-%token <keyword> INT BIGINT NUMERIC STRING 
+%token <keyword> BIGINT 
+%token <integer_val> INTEGER 
+%token <float_val> NUMERIC
+%token <text_val> STRING 
 
 /* punctuation */
 %token <keyword> QUOTE COMMA NEWLINE 
@@ -65,7 +73,8 @@ void yyerror (yyscan_t scanner, char const *s) {
 %type 	<fromClause> from_clause
 %type 	<valueExpr> value_expr
 %type 	<scalarExpr> scalar_expr
-%token  <colName0> IDENTIFIER
+%type   <columnName> colref
+%token  <identifier_val>  IDENTIFIER
 
 %%
 
@@ -162,27 +171,37 @@ value_expr:
 			valueExprNode *n = mkValueExpr(); 
 			//printf("parser. size of value expression N: %ld\n", sizeof(n));
 			n->type = COLREF;
-			n->value->colName = $1;
+			n->value.colName = $1;
 			//n->value.colName = strdup((const char *) yylval);
 			$$ = (valueExprNode *) n; 
 		}				|
-	literal		
+	
+	INTEGER	{
+			
+			valueExprNode *node = mkValueExpr();
+			node->type = INT;
+			node->value.integer_val = $1;
+			
+		}	 |	
+	NUMERIC{
+			
+			valueExprNode *node = mkValueExpr();
+			node->type = NUM;
+			node->value.numeric_val = $1;
+			$$ = (valueExprNode *) node;
+			
+		}	|	
+	STRING  {
+			
+			valueExprNode *node = mkValueExpr();
+			node->type = TEXT;
+			node->value.text_val = $1;
+			$$ = (valueExprNode *) node;
+			
+		}		
 ;
 
-literal:
-	number |
-	string 
-;
 
-number:
-	INT | 
-	BIGINT | 
-	NUMERIC
-;
-
-string:
-	STRING
-;
 
 colref:
 	IDENTIFIER { $$ = $1; }

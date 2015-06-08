@@ -52,8 +52,8 @@ rparen [)]
 ({quote}{alpha}+{quote}) { return STRING; }
 
 {newline} 		{ return NEWLINE;}
-{digit}+ 		{ yylval->integer_val = atoi(yytext); return INT; } 
-({digit}+\.{digit}+)  	{ return NUMERIC; }		
+{digit}+ 		{ yylval->integer_val = atoi(yytext); return INTEGER; } 
+({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUMERIC; }		
 
 {add}			{ return ADD; }
 {sub}			{ return SUB; }

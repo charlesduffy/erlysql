@@ -5,15 +5,17 @@
 /* Helper Enums for parse nodes */
 
 
-typedef enum { UNDEFINED, COLREF , LITERAL } valueExprType;
+//typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT } valueExprType;
 
-
+/*
 union value_expr {
 	char * colName;
 	int integer_val;
 	char * text_val;
-	float float_val;
+	float numeric_val;
 } ;
+*/
+
 
 typedef union value_expr valueExpr;
 
@@ -40,8 +42,8 @@ struct from_clause_node {
 typedef struct from_clause_node fromClauseNode;
 
 struct value_expr_node {
-	valueExprType type;
-	valueExpr value;
+	enum YYTOKENTYPE type;
+	union YYSTYPE value;
 } ;
 
 typedef struct value_expr_node valueExprNode;

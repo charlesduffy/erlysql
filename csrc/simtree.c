@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include "grammar.tab.h"
 #include "simtree.h"
 
 /* 
