@@ -29,7 +29,8 @@ typedef void *yyscan_t;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
 	valueExprNode  *valueExpr;
-	colName0       *columnName;
+	whereClauseNode *whereClause;
+	char 	       *columnName;
 }	
 
 %code{
@@ -74,6 +75,9 @@ void yyerror (yyscan_t scanner, char const *s) {
 %type 	<valueExpr> value_expr
 %type 	<scalarExpr> scalar_expr
 %type   <columnName> colref
+%type   <whereClause> where_clause
+
+
 %token  <identifier_val>  IDENTIFIER
 
 %%
@@ -128,13 +132,27 @@ table_expr:
 ;
 
 select_statement:
-	SELECT select_list from_clause where_clause { $$ = mkSelectStmtNode(); }
+	SELECT select_list from_clause where_clause { 
+				selectStatementNode *node = (selectStatementNode *) mkSelectStmtNode(); 
+				node->selectList = $2;
+				node->fromClause = $3;
+				node->whereClause = $4;
+				
+}
 						      
 ;
 
 where_clause:
-				|
-	WHERE scalar_expr
+			{ 
+				$$ =  NULL; 
+			}
+			|
+	WHERE scalar_expr 
+			{
+				whereClauseNode *node = (whereClauseNode *) mkWhereClauseNode();
+				node->expr = $2;
+				$$ = (whereClauseNode *) node;			  	
+			 }
 ;
 
 from_clause:
@@ -168,18 +186,19 @@ scalar_expr:
 
 value_expr:
 	colref	{ 
-			valueExprNode *n = mkValueExpr(); 
+			valueExprNode *node = mkValueExpr(); 
 			//printf("parser. size of value expression N: %ld\n", sizeof(n));
-			n->type = COLREF;
-			n->value.colName = (char *) $1;
+			node->type = COLREF;
+			node->value.colName = (char *) $1;
 			//n->value.colName = strdup((const char *) yylval);
-			$$ = (valueExprNode *) n; 
+			$$ = (valueExprNode *) node; 
 		}				|
 	
 	INTEGER	{
 			
 			valueExprNode *node = mkValueExpr();
 			node->type = INT;
+			printf("INTEGER: value of $1 is: %d", $1);
 			node->value.integer_val = $1;
 			
 		}	 |	

@@ -18,25 +18,33 @@ typedef union value_expr valueExpr;
 
 /* Parse Nodes */
 
-typedef char * colName0;
-
-struct select_stmt_node {
-	int type;
-} ;
-
-typedef struct select_stmt_node selectStmtNode;
 
 struct select_list_node {
 	int type;
+	valueExpr *item;
 } ;
 
 typedef struct select_list_node selectListNode;
 
+struct table_ref_node {
+	char *tableName;
+} ;
+
+typedef struct table_ref_node tableRefNode;
+
 struct from_clause_node {
 	int type;
+	tableRefNode *item;
 } ;
 
 typedef struct from_clause_node fromClauseNode;
+
+struct where_clause_node {
+	int type;
+	scalarExpr *expr;	
+} ;
+
+typedef struct where_clause_node whereClauseNode;
 
 struct value_expr_node {
 	valueExprType type;
@@ -51,10 +59,18 @@ struct scalar_expr_node {
 
 typedef struct scalar_expr_node scalarExprNode;
 
+struct select_stmt_node {
+	selectListNode *selectList;
+	fromClauseNode *fromClause;
+	whereClauseNode *whereClause;
+} ;
+
+typedef struct select_stmt_node selectStmtNode;
 /* node function prototypes */
 selectStmtNode * mkSelectStmtNode ();
 selectListNode * mkSelectListNode ();
 fromClauseNode * mkFromClauseNode ();
+whereClauseNode * mkWhereClauseNode ();
 valueExprNode * mkValueExpr();
 
 #endif

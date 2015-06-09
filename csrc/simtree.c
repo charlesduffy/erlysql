@@ -28,19 +28,26 @@ selectStmtNode * mkSelectStmtNode() {
 
 selectListNode * mkSelectListNode() {
 
-	int i;
-	printf("select list node hello world!\n");
-	return (selectListNode*) malloc(sizeof(selectListNode));
-	
+	selectListNode *node = (selectListNode *) malloc((size_t) sizeof(selectListNode));
+
+	if (node == NULL)  yyerror("oops. Malloc failed\n");
+
+	node->type = UNDEFINED;
+	node->item = NULL;
+
+	return(node);
 
 }
 fromClauseNode * mkFromClauseNode() {
 
-	int i;
-	printf("form clause node hello world!\n");
-	return (fromClauseNode*) malloc(sizeof(fromClauseNode));
-	
+	fromClauseNode *node = (fromClauseNode *) malloc((size_t) sizeof(fromClauseNode));
 
+	if (node == NULL)  yyerror("oops. Malloc failed\n");
+
+	node->type = UNDEFINED;
+	node->item = NULL;
+
+	return(node);
 }
 
 valueExprNode * mkValueExpr() {
