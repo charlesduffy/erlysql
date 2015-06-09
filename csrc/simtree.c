@@ -44,21 +44,13 @@ fromClauseNode * mkFromClauseNode() {
 }
 
 valueExprNode * mkValueExpr() {
-
 	
-	valueExprNode *n;
+	valueExprNode *node = (valueExprNode *) malloc((size_t) sizeof(valueExprNode));
 
-	printf("value expression hello world!\n");
-	printf("size of int is: %d\n", sizeof(int));
-	printf("size of value expression node is: %d\n", sizeof(valueExprNode));
-	n = (valueExprNode *) malloc((size_t) sizeof(valueExprNode));
-	if (n == NULL) {
-		printf("oops. Malloc failed\n");
-		n = NULL;
-	}
-	n->type = UNDEFINED;
-	n->value.integer_val = 0;	
+	if (node == NULL)  yyerror("oops. Malloc failed\n");
 
-	return(n);
+	node->type = UNDEFINED;
+	node->value.integer_val = 0;	
 
+	return(node);
 }

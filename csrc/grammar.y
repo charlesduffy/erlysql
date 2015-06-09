@@ -171,7 +171,7 @@ value_expr:
 			valueExprNode *n = mkValueExpr(); 
 			//printf("parser. size of value expression N: %ld\n", sizeof(n));
 			n->type = COLREF;
-			n->value.colName = $1;
+			n->value.colName = (char *) $1;
 			//n->value.colName = strdup((const char *) yylval);
 			$$ = (valueExprNode *) n; 
 		}				|
@@ -204,7 +204,7 @@ value_expr:
 
 
 colref:
-	IDENTIFIER { $$ = $1; }
+	IDENTIFIER { $$ = (char *) $1; }
 ;
 
 %%
