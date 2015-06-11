@@ -2,7 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "simtree.h"
+
+#define MAKENODE(nodetype) ( nodetype * ) malloc ((size_t) sizeof( nodetype ))
+
 typedef void *yyscan_t;
+
 }
 
 /* parser options */
@@ -134,11 +138,11 @@ table_expr:
 
 select_statement:
 	SELECT select_list from_clause where_clause { 
-				selectStmtNode *node = (selectStmtNode *) mkSelectStmtNode(); 
+				selectStmtNode *node = MAKENODE(SelectStmtNode); 
 				node->selectList = $2;
 				node->fromClause = $3;
 				node->whereClause = $4;
-				
+				$$=node;	
 }
 						      
 ;
@@ -150,7 +154,7 @@ where_clause:
 			|
 	WHERE scalar_expr 
 			{
-				whereClauseNode *node = (whereClauseNode *) mkWhereClauseNode();
+				whereClauseNode *node = MAKENODE(whereClauseNode);
 				node->expr = $2;
 				$$ = (whereClauseNode *) node;			  	
 			 }
@@ -158,7 +162,7 @@ where_clause:
 
 from_clause:
 				|
-	FROM table_expr { $$ = mkFromClauseNode(); }
+	FROM table_expr { $$ = MAKENODE(fromClauseNode); }
 ;
 
 /*
@@ -169,6 +173,8 @@ EXPRESSIONS
 
 
 scalar_expr:
+			{ printf ("Scalar! \n"); }
+	
 	value_expr				|
 	LPAREN scalar_expr RPAREN		|
 	scalar_expr ADD scalar_expr 		|
@@ -187,25 +193,22 @@ scalar_expr:
 
 value_expr:
 	colref	{ 
-			valueExprNode *node = mkValueExpr(); 
-			//printf("parser. size of value expression N: %ld\n", sizeof(n));
+			valueExprNode *node = MAKENODE(valueExprNode); 
 			node->type = COLREF;
 			node->value.colName = (char *) $1;
-			//n->value.colName = strdup((const char *) yylval);
 			$$ = (valueExprNode *) node; 
 		}				|
 	
 	INTEGER	{
 			
-			valueExprNode *node = mkValueExpr();
+			valueExprNode *node = MAKENODE(valueExprNode);
 			node->type = INT;
-			printf("INTEGER: value of $1 is: %d", $1);
 			node->value.integer_val = $1;
 			
 		}	 |	
 	NUMERIC{
 			
-			valueExprNode *node = mkValueExpr();
+			valueExprNode *node = MAKENODE(valueExprNode);
 			node->type = NUM;
 			node->value.numeric_val = $1;
 			$$ = (valueExprNode *) node;
@@ -213,7 +216,7 @@ value_expr:
 		}	|	
 	STRING  {
 			
-			valueExprNode *node = mkValueExpr();
+			valueExprNode *node = MAKENODE(valueExprNode);
 			node->type = TEXT;
 			node->value.text_val = $1;
 			$$ = (valueExprNode *) node;

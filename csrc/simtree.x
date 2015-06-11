@@ -61,3 +61,15 @@ valueExprNode * mkValueExpr() {
 
 	return(node);
 }
+
+whereClauseNode * mkWhereClauseNode() {
+	
+	whereClauseNode *node = (whereClauseNode*) malloc((size_t) sizeof(whereClauseNode));
+
+	if (node == NULL)  yyerror("oops. Malloc failed\n");
+
+	node->type = UNDEFINED;
+	node->value.integer_val = 0;	
+
+	return(node);
+}
