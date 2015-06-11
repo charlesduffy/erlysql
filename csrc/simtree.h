@@ -5,19 +5,37 @@
 /* Helper Enums for parse nodes */
 
 
-typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT } valueExprType;
+typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT, OPER, SEXPR } valueExprType;
+
+typedef enum { DIVISION , MULTIPLICATION , ADDITION , SUBTRACTION , MODULO } operVal;
 
 union value_expr {
 	char * colName;
 	int integer_val;
 	char * text_val;
 	float numeric_val;
+	operVal oper_val;
 } ;
 
 typedef union value_expr valueExpr;
 
 /* Parse Nodes */
 
+
+/* scalar expression */
+
+typedef struct s_expr scalarExpr;
+
+struct s_expr {
+
+	valueExprType type;
+	scalarExpr * left;	
+	scalarExpr * right;	
+
+} ;
+
+
+/*-------------------*/
 
 struct select_list_node {
 	int type;

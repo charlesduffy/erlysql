@@ -29,6 +29,7 @@ typedef void *yyscan_t;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
 	valueExprNode  *valueExpr;
+	scalarExpr *sExpr;
 	whereClauseNode *whereClause;
 	char 	       *columnName;
 }	
@@ -73,7 +74,7 @@ void yyerror (yyscan_t scanner, char const *s) {
 %type 	<selectList> select_list
 %type 	<fromClause> from_clause
 %type 	<valueExpr> value_expr
-%type 	<scalarExpr> scalar_expr
+%type 	<sExpr> scalar_expr
 %type   <columnName> colref
 %type   <whereClause> where_clause
 
@@ -133,7 +134,7 @@ table_expr:
 
 select_statement:
 	SELECT select_list from_clause where_clause { 
-				selectStatementNode *node = (selectStatementNode *) mkSelectStmtNode(); 
+				selectStmtNode *node = (selectStmtNode *) mkSelectStmtNode(); 
 				node->selectList = $2;
 				node->fromClause = $3;
 				node->whereClause = $4;
