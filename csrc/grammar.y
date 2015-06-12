@@ -1,9 +1,10 @@
 %code requires {
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "simtree.h"
 
-#define MAKENODE(nodetype) ( nodetype * ) malloc ((size_t) sizeof( nodetype ))
+#define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
 typedef void *yyscan_t;
 
@@ -138,7 +139,7 @@ table_expr:
 
 select_statement:
 	SELECT select_list from_clause where_clause { 
-				selectStmtNode *node = MAKENODE(SelectStmtNode); 
+				selectStmtNode *node = MAKENODE(selectStmtNode); 
 				node->selectList = $2;
 				node->fromClause = $3;
 				node->whereClause = $4;
