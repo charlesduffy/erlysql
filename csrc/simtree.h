@@ -1,9 +1,7 @@
 #ifndef _SIMTREE_H
 #define _SIMTREE_H
 
-
 /* Helper Enums for parse nodes */
-
 
 typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT, OPER, SEXPR } valueExprType;
 
@@ -21,6 +19,12 @@ typedef union value_expr valueExpr;
 
 /* Parse Nodes */
 
+struct value_expr_node {
+	valueExprType type;
+	valueExpr value;
+} ;
+
+typedef struct value_expr_node valueExprNode;
 
 /* scalar expression */
 
@@ -29,6 +33,7 @@ typedef struct s_expr scalarExpr;
 struct s_expr {
 
 	valueExprType type;
+	valueExprNode value;
 	scalarExpr * left;	
 	scalarExpr * right;	
 
@@ -64,18 +69,7 @@ struct where_clause_node {
 
 typedef struct where_clause_node whereClauseNode;
 
-struct value_expr_node {
-	valueExprType type;
-	valueExpr value;
-} ;
 
-typedef struct value_expr_node valueExprNode;
-
-struct scalar_expr_node {
-	int type;
-} ;
-
-typedef struct scalar_expr_node scalarExprNode;
 
 struct select_stmt_node {
 	selectListNode *selectList;
@@ -84,11 +78,4 @@ struct select_stmt_node {
 } ;
 
 typedef struct select_stmt_node selectStmtNode;
-/* node function prototypes */
-selectStmtNode * mkSelectStmtNode ();
-selectListNode * mkSelectListNode ();
-fromClauseNode * mkFromClauseNode ();
-whereClauseNode * mkWhereClauseNode ();
-valueExprNode * mkValueExpr();
-
 #endif

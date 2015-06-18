@@ -6,6 +6,10 @@
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
+#define MAKESCALAR(optype) \
+		$$ = MAKENODE(scalarExpr);\
+		$$->value = 
+
 typedef void *yyscan_t;
 
 }
@@ -33,7 +37,7 @@ typedef void *yyscan_t;
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
-	valueExprNode  *valueExpr;
+	valueExprNode  *valueExpr0;
 	scalarExpr *sExpr;
 	whereClauseNode *whereClause;
 	char 	       *columnName;
@@ -78,7 +82,7 @@ void yyerror (yyscan_t scanner, char const *s) {
 %type 	<selectStmt> select_statement
 %type 	<selectList> select_list
 %type 	<fromClause> from_clause
-%type 	<valueExpr> value_expr
+%type 	<valueExpr0> value_expr
 %type 	<sExpr> scalar_expr
 %type   <columnName> colref
 %type   <whereClause> where_clause
@@ -174,20 +178,36 @@ EXPRESSIONS
 
 
 scalar_expr:
-			{ printf ("Scalar! \n"); }
-	
-	value_expr				|
-	LPAREN scalar_expr RPAREN		|
+	value_expr  { $$ = MAKENODE(scalarExpr);
+		      $$->value = $1;
+		      $$->left = NULL;
+		      $$->right = NULL;
+		    }				|
+	LPAREN scalar_expr RPAREN
+				{ $$ = MAKENODE(scalarExpr);
+				  $$->left = $2;
+				  $$->right = NULL;			  
+				}		|
 	scalar_expr ADD scalar_expr 		|
+				
 	scalar_expr MUL scalar_expr 		|
+	
 	scalar_expr DIV scalar_expr 		|
+
 	scalar_expr MOD scalar_expr 		|
+
 	scalar_expr AND scalar_expr 		|
+
 	scalar_expr OR scalar_expr 		|
+
 	scalar_expr EQ scalar_expr 		|
+
 	scalar_expr NE scalar_expr 		| 
+
 	scalar_expr GT scalar_expr 		|
+
 	scalar_expr LT scalar_expr 		|
+
 	scalar_expr GE scalar_expr 		|
 	scalar_expr LE scalar_expr 	
 ;
