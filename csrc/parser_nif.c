@@ -7,7 +7,7 @@
 #define MAXBUFLEN 1024
 
 int foo(int x);
-int parseQuery (char *queryText);
+queryNode * parseQuery (char *queryText);
 
 static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -21,20 +21,12 @@ static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-    int ret;
+    queryNode * ret;
     char queryText[MAXBUFLEN];
-//	yyscan_t scanner;
 
     //consider static allocation here
     //determine better way to get the length of the query string at runtime
     //determine proper error handling method on malloc failure
-//   queryText = (char *) malloc ( MAXBUFLEN * sizeof(char));
-/*
-   if (queryText == (char *) NULL) {
-	printf("bad malloc\n");
-	return enif_make_badarg(env); 
-   }
-*/
 
    (void) memset (queryText, '\0', sizeof(queryText));
 
@@ -42,8 +34,9 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 	return enif_make_badarg(env);
     }
     ret = parseQuery(queryText);
-    return enif_make_tuple1(env,
-		enif_make_int(env, ret) );
+    return enif_make_tuple(env, 2,
+		enif_make_atom(env, "hello"),
+		enif_make_atom(env, "goodbye" ));
 }
 
 static ErlNifFunc nif_funcs[] = {
@@ -57,17 +50,15 @@ int foo (int x) {
 	return 100;
 }
 
-int parseQuery (char *queryText) {
+queryNode * parseQuery (char *queryText) {
     YY_BUFFER_STATE buf;
+    queryNode *qry;
     yyscan_t scanner;
-    yylex_init(&scanner);
- //  yylex(scanner);
-	
 
+    yylex_init(&scanner);
     buf = yy_scan_string(queryText, scanner); 
-  //  yylex(scanner);
     yyparse(scanner);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
-    return (9);
+    return (qry);
 }

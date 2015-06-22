@@ -19,7 +19,7 @@ typedef void *yyscan_t;
 
 %define api.pure full
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner}
+%parse-param {yyscan_t scanner} {queryNode * ptree}
 
 /* semantic value */
 
@@ -34,6 +34,7 @@ typedef void *yyscan_t;
 	char    *identifier_val;
 
 	/* node types */
+	queryNode *query;
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
@@ -77,8 +78,7 @@ void yyerror (yyscan_t scanner, char const *s) {
 //%left         TYPECAST
 //%left         '.'
 
-%type	<node> 	sql query_statement 
-
+%type	<query>	query_statement
 %type 	<selectStmt> select_statement
 %type 	<selectList> select_list
 %type 	<fromClause> from_clause
@@ -92,13 +92,14 @@ void yyerror (yyscan_t scanner, char const *s) {
 
 %%
 
-sql:
-	|
-	query_statement SEMICOLON query_statement 
-;
-
 query_statement:
-	select_statement  	|
+	query_statement SEMICOLON
+			{ queryNode *node = MAKENODE(queryNode);
+			  	
+			 } |
+		
+	query_statement SEMICOLON query_statement |
+	select_statement
 ;
 
 /* 
