@@ -52,12 +52,13 @@ int foo (int x) {
 
 queryNode * parseQuery (char *queryText) {
     YY_BUFFER_STATE buf;
-    queryNode *qry;
+    queryNode *qry = malloc(sizeof(queryNode));
     yyscan_t scanner;
 
     yylex_init(&scanner);
     buf = yy_scan_string(queryText, scanner); 
-    yyparse(scanner);
+    yyparse(scanner, qry);
+    printf("tree data: %d\n", qry->foo);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
     return (qry);

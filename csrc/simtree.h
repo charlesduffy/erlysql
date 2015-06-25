@@ -82,6 +82,7 @@ typedef struct select_stmt_node selectStmtNode;
 struct query_node {
 	//this should be a linked list of statement types (probably defined as a linked list of unions
 	selectStmtNode *selnode;	
+	int foo;
 };
 
 typedef struct query_node queryNode;

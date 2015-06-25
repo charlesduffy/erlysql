@@ -45,7 +45,7 @@ typedef void *yyscan_t;
 }	
 
 %code{
-void yyerror (yyscan_t scanner, char const *s) {
+void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
      fprintf (stderr, ">>> %s <<<\n", s); }
 }
 
@@ -92,14 +92,26 @@ void yyerror (yyscan_t scanner, char const *s) {
 
 %%
 
+
+/* this node is a multi-statement submission delimited by semicolon */
+
+sql:
+	query_statement	SEMICOLON |
+	query_statement SEMICOLON query_statement
+
+;
+
+/* this node is a single query statement */
+
 query_statement:
-	query_statement SEMICOLON
+	select_statement	
 			{ queryNode *node = MAKENODE(queryNode);
-			  	
-			 } |
+			  $$ = node;
+			  $$->selnode = $1;
+			  ptree->foo = 999;
+				printf("inside parser: %d\n", ptree->foo);
+			 } 
 		
-	query_statement SEMICOLON query_statement |
-	select_statement
 ;
 
 /* 
