@@ -50,6 +50,16 @@ int foo (int x) {
 	return 100;
 }
 
+char * preprocQuery (char *queryText) {
+/* placeholder for proposed query string preprocessor
+
+might strip whitespace, find basic problems (corruption, too long, too short etc).
+
+ */
+
+return (queryText);
+}
+
 queryNode * parseQuery (char *queryText) {
     YY_BUFFER_STATE buf;
     queryNode *qry = malloc(sizeof(queryNode));
@@ -62,4 +72,8 @@ queryNode * parseQuery (char *queryText) {
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
     return (qry);
+}
+
+static ERL_NIF_TERM parseTreeToErl (queryNode *qry) {
+	
 }

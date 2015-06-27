@@ -105,11 +105,11 @@ sql:
 
 query_statement:
 	select_statement	
-			{ queryNode *node = MAKENODE(queryNode);
+			{ 
+			  queryNode *node = MAKENODE(queryNode);
 			  $$ = node;
 			  $$->selnode = $1;
-			  ptree->foo = 999;
-				printf("inside parser: %d\n", ptree->foo);
+			  
 			 } 
 		
 ;
