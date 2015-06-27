@@ -68,10 +68,47 @@ queryNode * parseQuery (char *queryText) {
     yylex_init(&scanner);
     buf = yy_scan_string(queryText, scanner); 
     yyparse(scanner, qry);
-    printf("tree data: %d\n", qry->foo);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
     return (qry);
+}
+
+void prettyPrintSelectList(selectListNode *sellist) {
+
+			
+}
+
+
+void prettyPrintSelectNode (selectStmtNode *selnode ) {
+
+	printf("SELECT\n");	
+	//traverse select list and print
+	prettyPrintSelectList(selnode->selectList);
+	//
+		
+
+}
+
+void prettyPrintParseTree (queryNode *qry) {
+
+	/* scan queryNode
+		-- check query node type enum
+		-- pass to select query handler 
+	*/
+
+	//check node type
+	switch (qry->statType) {
+	  case SELECT_STATEMENT:
+		 prettyPrintSelectNode(qry->selnode);	
+		break;	
+	  case UPDATE_STATEMENT:
+	  case DELETE_STATEMENT:
+	  case INSERT_STATEMENT:
+		//not yet supported
+		printf("Unsupported statement type\n");
+
+	}
+
 }
 
 static ERL_NIF_TERM parseTreeToErl (queryNode *qry) {

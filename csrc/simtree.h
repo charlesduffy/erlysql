@@ -5,7 +5,7 @@
 
 typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT, OPER, SEXPR } valueExprType;
 
-typedef enum { DIVISION , MULTIPLICATION , ADDITION , SUBTRACTION , MODULO } operVal;
+typedef enum { DIVISION , MULTIPLICATION , ADDITION , SUBTRACTION , MODULO, GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT, EQUAL, NOTEQUAL } operVal;
 
 union value_expr {
 	char * colName;
@@ -32,8 +32,8 @@ typedef struct s_expr scalarExpr;
 
 struct s_expr {
 
-	valueExprType type;
-	valueExprNode * value;
+	//valueExprType type;
+	valueExprNode value;
 	scalarExpr * left;	
 	scalarExpr * right;	
 
@@ -44,7 +44,7 @@ struct s_expr {
 
 struct select_list_node {
 	int type;
-	valueExpr *item;
+	scalarExpr *sExpr;
 } ;
 
 typedef struct select_list_node selectListNode;
@@ -77,9 +77,17 @@ struct select_stmt_node {
 
 typedef struct select_stmt_node selectStmtNode;
 
+enum statement_type { SELECT_STATEMENT, INSERT_STATEMENT, UPDATE_STATEMENT, DELETE_STATEMENT };
+
+typedef enum statement_type statementType;
+
+
 struct query_node {
-	//this should be a linked list of statement types (probably defined as a linked list of unions
+	statementType statType;
+	//union statement type
 	selectStmtNode *selnode;	
+	//insertStmtNode *insnode;
+	//updateStmtNode *updnode;
 };
 
 typedef struct query_node queryNode;

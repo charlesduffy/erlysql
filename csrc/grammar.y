@@ -38,7 +38,7 @@ typedef void *yyscan_t;
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
-	valueExprNode  *valueExpr;
+	valueExprNode  valueExpr;
 	scalarExpr *sExpr;
 	whereClauseNode *whereClause;
 	char 	       *columnName;
@@ -144,8 +144,8 @@ SELECT STATEMENT
 */
 
 select_list:
-	select_list COMMA select_list |
-	scalar_expr
+	scalar_expr		       |
+	COMMA scalar_expr  |   
 ;
 	
 
@@ -183,6 +183,7 @@ from_clause:
 	FROM table_expr { $$ = MAKENODE(fromClauseNode); }
 ;
 
+
 /*
 
 EXPRESSIONS
@@ -201,60 +202,149 @@ scalar_expr:
 				  $$->left = $2;
 				  $$->right = NULL;			  
 				}		|
-	scalar_expr ADD scalar_expr 		|
+	scalar_expr ADD scalar_expr 
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = ADDITION;	
+			
+				}		|
 				
-	scalar_expr MUL scalar_expr 		|
+	scalar_expr MUL scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = MULTIPLICATION;	
+			
+				}		|
 	
-	scalar_expr DIV scalar_expr 		|
+	scalar_expr DIV scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = DIVISION;	
+			
+				}		|
 
-	scalar_expr MOD scalar_expr 		|
+	scalar_expr MOD scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = MODULO;	
+			
+				}		|
 
-	scalar_expr AND scalar_expr 		|
+	scalar_expr AND scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = BOOLAND;	
+			
+				}		|
 
-	scalar_expr OR scalar_expr 		|
+	scalar_expr OR scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = BOOLOR;	
+			
+				}		|
 
-	scalar_expr EQ scalar_expr 		|
+	scalar_expr EQ scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = EQUAL ;	
+			
+				}		|
 
-	scalar_expr NE scalar_expr 		| 
+	scalar_expr NE scalar_expr 		 
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = NOTEQUAL;	
+			
+				}		|
 
-	scalar_expr GT scalar_expr 		|
+	scalar_expr GT scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = GREATERTHAN;	
+			
+				}		|
 
-	scalar_expr LT scalar_expr 		|
+	scalar_expr LT scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = LESSTHAN;	
+			
+				}		|
 
-	scalar_expr GE scalar_expr 		|
+	scalar_expr GE scalar_expr 		
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = GREATERTHANOE;	
+			
+				}		|
 	scalar_expr LE scalar_expr 	
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = LESSTHANOE;	
+			
+				}		
 ;
 
 value_expr:
 	colref	{ 
-			valueExprNode *node = MAKENODE(valueExprNode); 
-			node->type = COLREF;
-			node->value.colName = (char *) $1;
-			$$ = (valueExprNode *) node; 
+			$$.type = COLREF;
+			$$.value.colName = (char *) $1;
 		}				|
 	
 	INTEGER	{
 			
-			valueExprNode *node = MAKENODE(valueExprNode);
-			node->type = INT;
-			node->value.integer_val = $1;
+			$$.type = INT;
+			$$.value.integer_val = $1;
+			printf("INTNODE!!! %d\n", $1);
 			
 		}	 |	
 	NUMERIC{
 			
-			valueExprNode *node = MAKENODE(valueExprNode);
-			node->type = NUM;
-			node->value.numeric_val = $1;
-			$$ = (valueExprNode *) node;
+			$$.type = NUM;
+			$$.value.numeric_val = $1;
 			
 		}	|	
 	STRING  {
 			
-			valueExprNode *node = MAKENODE(valueExprNode);
-			node->type = TEXT;
-			node->value.text_val = $1;
-			$$ = (valueExprNode *) node;
-			
+			$$.type = TEXT;
+			$$.value.text_val = $1;
 		}		
 ;
 
