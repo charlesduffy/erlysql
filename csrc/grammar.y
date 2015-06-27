@@ -144,8 +144,8 @@ SELECT STATEMENT
 */
 
 select_list:
-	scalar_expr		       |
-	COMMA scalar_expr  |   
+	scalar_expr	   |
+	select_list COMMA scalar_expr  |   
 ;
 	
 
