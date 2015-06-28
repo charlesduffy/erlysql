@@ -106,11 +106,10 @@ sql:
 query_statement:
 	select_statement	
 			{ 
-			  queryNode *node = MAKENODE(queryNode);
-			  $$ = node;
+			  $$ = ptree;
+			  $$->statType = SELECT_STMT;
 			  $$->selnode = $1;
-			  
-			 } 
+			} 
 		
 ;
 
@@ -144,11 +143,51 @@ SELECT STATEMENT
 */
 
 select_list:
-	scalar_expr	   |
-	select_list COMMA scalar_expr  |   
+	scalar_expr	  {
+				//dangerous assumption here, that we can allocate the value of the select_list
+				//at the first instance of scalar_expr.
+		 		$$ = MAKENODE(selectListNode);
+		 		//here we allocate enough memory for a single pointer to a pointer-to-sExp.
+		 		//we realloc it later for every new select list element encountered. Kinda inefficent.
+		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*));
+
+			 	printf("Scalar expr in select list!\n");
+				$$->nElements = 1;
+				*($$->sExpr) = $1;
+			  } |
+	select_list COMMA scalar_expr  { printf("recursive scalar expr!\n");
+
+					  /* here's where it gets tricky...
+					 
+					  1. We increment the element count */
+
+					  $$->nElements++;
+
+					  /* 
+
+					  2. Then we enlarge the size of the array of pointers-to-sExprs by one. 
+
+				 	     Consider doing this by getting the current size of the block of memory
+					     with sizeof() then adding the size of a *scalarExpr rather than using
+					     the element count.
+					 */
+
+					  $$->sExpr = realloc ($$->sExpr, (size_t) sizeof(scalarExpr*) * $$->nElements);
+	
+					  /*then we use the element count (adjusted by minus one) as the offset into the array, and
+					  assign the new sExpr (which comes from the third rule element) */
+	
+					  *($$->sExpr + ($$->nElements - 1)) = $3;
+
+					/*----------------------
+					|  this all kind of sux, of course.
+					|  suggestions for replacement:
+					|  ^ use a linked list instead of **sExpr
+					|----------------------*/
+					  
+					} 
 ;
 	
-
 table_expr:
 	table_expr COMMA table_expr |
 	IDENTIFIER
@@ -156,11 +195,10 @@ table_expr:
 
 select_statement:
 	SELECT select_list from_clause where_clause { 
-				selectStmtNode *node = MAKENODE(selectStmtNode); 
-				node->selectList = $2;
-				node->fromClause = $3;
-				node->whereClause = $4;
-				$$=node;	
+				$$ = MAKENODE(selectStmtNode); 
+				$$->selectList = $2;
+				$$->fromClause = $3;
+				$$->whereClause = $4;
 }
 						      
 ;
@@ -172,15 +210,16 @@ where_clause:
 			|
 	WHERE scalar_expr 
 			{
-				whereClauseNode *node = MAKENODE(whereClauseNode);
-				node->expr = $2;
-				$$ = (whereClauseNode *) node;			  	
+				$$ = MAKENODE(whereClauseNode);
+				$$->expr = $2;
 			 }
 ;
 
 from_clause:
 				|
-	FROM table_expr { $$ = MAKENODE(fromClauseNode); }
+	FROM table_expr { 
+				$$ = MAKENODE(fromClauseNode); 
+			}
 ;
 
 
@@ -319,6 +358,15 @@ scalar_expr:
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = LESSTHANOE;	
 			
+				}		|
+
+	scalar_expr SUB scalar_expr 	
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = SUBTRACTION;	
 				}		
 ;
 
@@ -329,11 +377,8 @@ value_expr:
 		}				|
 	
 	INTEGER	{
-			
 			$$.type = INT;
 			$$.value.integer_val = $1;
-			printf("INTNODE!!! %d\n", $1);
-			
 		}	 |	
 	NUMERIC{
 			

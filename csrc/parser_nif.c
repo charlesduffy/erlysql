@@ -6,6 +6,15 @@
 
 #define MAXBUFLEN 1024
 
+/* pretty printer fun decls. Farm these out to own files eventually */
+
+void prettyPrintSelectList(selectListNode *) ;
+void prettyPrintSelectNode (selectStmtNode *) ;
+void prettyPrintParseTree (queryNode *) ; 
+void prettyPrintSexpr(scalarExpr *) ;
+
+/* other fun decl */
+
 int foo(int x);
 queryNode * parseQuery (char *queryText);
 
@@ -70,12 +79,66 @@ queryNode * parseQuery (char *queryText) {
     yyparse(scanner, qry);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
+//    prettyPrintParseTree(qry);
     return (qry);
+}
+
+void prettyPrintSexpr(scalarExpr *sExp) {
+
+	/* scalar expressions are tree-like structures. 
+           Basic recursive tree traversal algorithm here.
+	*/
+	valueExprNode v;
+	char *oper[] = { "/" , "*" , "+" , "-" , "%" , ">" , "<" , ">=" , "<=" , "OR" , "AND" , "NOT" , "=" , "!=" };
+
+	printf("entering pretty print sexpr\n");
+
+	switch(sExp->value.type) {
+	 case UNDEFINED:
+		printf(" undef ");
+		break;
+	 case COLREF:
+		printf(" %s ", sExp->value.value.colName);
+		break;
+	 case TEXT:
+		printf(" %s ", sExp->value.value.text_val);
+		break;
+	 case INT:
+		printf(" %d ", sExp->value.value.integer_val);
+		break;
+	 case NUM:
+		printf(" %f ", sExp->value.value.numeric_val);
+		break;
+	 case OPER:
+		printf(" %s " , *(oper + sExp->value.value.oper_val));	
+		break;
+	 case SEXPR:
+		printf(" sexpr ");
+		break;
+	}
+
+	if (sExp->left != NULL) prettyPrintSexpr(sExp->left);
+	
+	if (sExp->right != NULL) prettyPrintSexpr(sExp->right);
+	
+
+
 }
 
 void prettyPrintSelectList(selectListNode *sellist) {
 
-			
+	/* iterate over the array of pointers-to-sExpr 
+	   and print each one */	
+
+	printf("Select list: %d elements\n",sellist->nElements);
+
+	int i;
+	scalarExpr *sExpr = *(sellist->sExpr);
+	for (i=0; i < sellist->nElements; i++) {
+		prettyPrintSexpr(sExpr);
+		printf("+++++\n");
+		sExpr++;
+	}
 }
 
 
@@ -95,15 +158,15 @@ void prettyPrintParseTree (queryNode *qry) {
 		-- check query node type enum
 		-- pass to select query handler 
 	*/
-
+printf("----------\n");
 	//check node type
 	switch (qry->statType) {
-	  case SELECT_STATEMENT:
+	  case SELECT_STMT:
 		 prettyPrintSelectNode(qry->selnode);	
 		break;	
-	  case UPDATE_STATEMENT:
-	  case DELETE_STATEMENT:
-	  case INSERT_STATEMENT:
+	  case UPDATE_STMT:
+	  case DELETE_STMT:
+	  case INSERT_STMT:
 		//not yet supported
 		printf("Unsupported statement type\n");
 

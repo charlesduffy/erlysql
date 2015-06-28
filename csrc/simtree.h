@@ -43,8 +43,8 @@ struct s_expr {
 /*-------------------*/
 
 struct select_list_node {
-	int type;
-	scalarExpr *sExpr;
+	int nElements;
+	scalarExpr **sExpr;
 } ;
 
 typedef struct select_list_node selectListNode;
@@ -77,7 +77,7 @@ struct select_stmt_node {
 
 typedef struct select_stmt_node selectStmtNode;
 
-enum statement_type { SELECT_STATEMENT, INSERT_STATEMENT, UPDATE_STATEMENT, DELETE_STATEMENT };
+enum statement_type { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT };
 
 typedef enum statement_type statementType;
 
