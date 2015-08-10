@@ -26,10 +26,23 @@ start_link() ->
 %% gen_server Function Definitions
 %% ------------------------------------------------------------------
 
+
+%% Initialise the chunk ETS table
+%% -- add error checking
 init(Args) ->
     io:format('$$ chunkserver $$ initialising ~n'),
-    ets:new(chunktable, [ set , named_table ]),
-    {ok, Args}.
+    Table = ets:new(chunktable, [ set ]),
+    populate_table_tmp(Table),
+    State = { Table },
+    { ok, State }.
+
+
+%% the Query format is simple right now
+handle_call({ sca,  Query } , _From , State) ->
+    io:format('chunkserver call SCA: ' ),
+    { Table } = State, 
+    Reply = scan_table( Table , Query ),
+    {reply, Reply, State};	
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -67,6 +80,33 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+
+scan_table(Table , Query) ->
+	Result = ets:match(Table , Query ),			
+	{ ok , Result }.
+
+%% temporary for test data
+populate_table_tmp (Table) ->
+	%%  open file
+	%%  read file line
+	%%  load ETS table
+	{ ok, FileHandle } = file:open('/usr/share/dict/words', [read]),
+	try get_lines(FileHandle, Table, 1) 
+		after file:close(FileHandle)	
+	end,
+	{ ok }.
+
+get_lines (FileHandle, Table, Index) ->
+
+	case file:read_line(FileHandle) of
+		eof -> [];
+		{ok , Line } -> insert_helper( FileHandle, Line, Table, Index)
+	end.
+
+insert_helper ( FileHandle, Line, Table , Index) ->
+	ets:insert(Table, { Index , Line }),
+	get_lines(FileHandle, Table, Index + 1). 
+	
 
 exec_ins(Instup, State) ->
     ets:insert(chunktable, Instup),
