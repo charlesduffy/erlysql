@@ -149,13 +149,15 @@ select_list:
 		 		$$ = MAKENODE(selectListNode);
 		 		//here we allocate enough memory for a single pointer to a pointer-to-sExp.
 		 		//we realloc it later for every new select list element encountered. Kinda inefficent.
-		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*));
+		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 
-			 	printf("Scalar expr in select list!\n");
+			 	printf("First Scalar expr in select list!\n\r");
 				$$->nElements = 1;
 				*($$->sExpr) = $1;
+				//scalarExpr *SK = *($$->sExpr);				
+				//printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 			  } |
-	select_list COMMA scalar_expr  { printf("recursive scalar expr!\n");
+	select_list COMMA scalar_expr  { printf("recursive scalar expr!\n\r");
 
 					  /* here's where it gets tricky...
 					 
@@ -172,13 +174,16 @@ select_list:
 					     the element count.
 					 */
 
-					  $$->sExpr = realloc ($$->sExpr, (size_t) sizeof(scalarExpr*) * $$->nElements);
+			//		  $$->sExpr = realloc ($$->sExpr, (size_t) sizeof(scalarExpr*) * $$->nElements);
+					  //temporarily using fixed size array to debug
 	
 					  /*then we use the element count (adjusted by minus one) as the offset into the array, and
 					  assign the new sExpr (which comes from the third rule element) */
 	
 					  *($$->sExpr + ($$->nElements - 1)) = $3;
 
+				//	scalarExpr *SK = *($$->sExpr + ($$->nElements - 1));				
+				//	printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 					/*----------------------
 					|  this all kind of sux, of course.
 					|  suggestions for replacement:
@@ -243,6 +248,7 @@ scalar_expr:
 				}		|
 	scalar_expr ADD scalar_expr 
 				{
+				  //printf("I am adding\n");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $3;
@@ -362,6 +368,7 @@ scalar_expr:
 
 	scalar_expr SUB scalar_expr 	
 				{
+				  //printf("and subtracting\n");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $3;
@@ -374,11 +381,14 @@ value_expr:
 	colref	{ 
 			$$.type = COLREF;
 			$$.value.colName = (char *) $1;
+			//printf("value_expr in parser. Colref value is: %s\n\r", $$.value.colName);
 		}				|
 	
 	INTEGER	{
 			$$.type = INT;
 			$$.value.integer_val = $1;
+			//printf("value_expr in parser. Integer value is: %d\n\r", $$.value.integer_val);
+//			printf("value_expr in parser. Integer value as string: %s\n\r", $$.value.integer_val);
 		}	 |	
 	NUMERIC{
 			

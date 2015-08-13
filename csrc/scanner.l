@@ -52,7 +52,7 @@ rparen [)]
 ({quote}{alpha}+{quote}) { return STRING; }
 
 {newline} 		{ return NEWLINE;}
-{digit}+ 		{ yylval->integer_val = atoi(yytext); return INTEGER; } 
+{digit}+ 		{ yylval->integer_val = atoi(yytext); printf("scanner here. INTEGER!!\n"); return INTEGER; } 
 ({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUMERIC; }		
 
 {add}			{ return ADD; }

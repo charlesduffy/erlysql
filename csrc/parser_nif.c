@@ -6,6 +6,8 @@
 
 #define MAXBUFLEN 1024
 
+#define TREESEP() (printf("\t|\n\t+-"))
+
 /* pretty printer fun decls. Farm these out to own files eventually */
 
 void prettyPrintSelectList(selectListNode *) ;
@@ -79,7 +81,7 @@ queryNode * parseQuery (char *queryText) {
     yyparse(scanner, qry);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
-//    prettyPrintParseTree(qry);
+    prettyPrintParseTree(qry);
     return (qry);
 }
 
@@ -91,29 +93,30 @@ void prettyPrintSexpr(scalarExpr *sExp) {
 	valueExprNode v;
 	char *oper[] = { "/" , "*" , "+" , "-" , "%" , ">" , "<" , ">=" , "<=" , "OR" , "AND" , "NOT" , "=" , "!=" };
 
-	printf("entering pretty print sexpr\n");
+	//printf("entering pretty print sexpr\n");
 
 	switch(sExp->value.type) {
+		TREESEP();
 	 case UNDEFINED:
-		printf(" undef ");
+		printf(" [UNDEFINED:<>\n");
 		break;
 	 case COLREF:
-		printf(" %s ", sExp->value.value.colName);
+		printf(" [COLREF]:%s \n", sExp->value.value.colName);
 		break;
 	 case TEXT:
-		printf(" %s ", sExp->value.value.text_val);
+		printf(" [TEXT]:%s \n", sExp->value.value.text_val);
 		break;
 	 case INT:
-		printf(" %d ", sExp->value.value.integer_val);
+		printf(" [INT]:%d \n", sExp->value.value.integer_val);
 		break;
 	 case NUM:
-		printf(" %f ", sExp->value.value.numeric_val);
+		printf(" [NUM]:%f \n", sExp->value.value.numeric_val);
 		break;
 	 case OPER:
-		printf(" %s " , *(oper + sExp->value.value.oper_val));	
+		printf(" [OPER]:%s \n" , *(oper + sExp->value.value.oper_val));	
 		break;
 	 case SEXPR:
-		printf(" sexpr ");
+		printf(" [SEXPR] \n");
 		break;
 	}
 
@@ -132,19 +135,20 @@ void prettyPrintSelectList(selectListNode *sellist) {
 
 	printf("Select list: %d elements\n",sellist->nElements);
 
-	int i;
-	scalarExpr *sExpr = *(sellist->sExpr);
+	int i;	
+	scalarExpr *sExpr ;
 	for (i=0; i < sellist->nElements; i++) {
+		sExpr = *(sellist->sExpr+i);
 		prettyPrintSexpr(sExpr);
-		printf("+++++\n");
-		sExpr++;
+		printf("+++++\n\r");
+		//sExpr++;
 	}
 }
 
 
 void prettyPrintSelectNode (selectStmtNode *selnode ) {
 
-	printf("SELECT\n");	
+	printf("[SELECT]\n");	
 	//traverse select list and print
 	prettyPrintSelectList(selnode->selectList);
 	//
@@ -158,7 +162,7 @@ void prettyPrintParseTree (queryNode *qry) {
 		-- check query node type enum
 		-- pass to select query handler 
 	*/
-printf("----------\n");
+printf("Parse tree prettyprint\r\n======================\n\r\n\r");
 	//check node type
 	switch (qry->statType) {
 	  case SELECT_STMT:

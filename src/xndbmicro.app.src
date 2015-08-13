@@ -11,7 +11,9 @@
 		  xndbmicro_app,
 		  xndbmicro_sup,
 		  listener,
-		  chunkserver
+		  chunkserver,
+		  despatch,
+		  planner
 	    ]},
   {mod, { xndbmicro_app, []}},
   {env, []}
