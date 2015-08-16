@@ -38,6 +38,7 @@ typedef void *yyscan_t;
 	selectStmtNode *selectStmt;
 	selectListNode *selectList;
 	fromClauseNode *fromClause;
+	tableRefNode   *tableExpr;
 	valueExprNode  valueExpr;
 	scalarExpr *sExpr;
 	whereClauseNode *whereClause;
@@ -86,7 +87,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 %type 	<sExpr> scalar_expr
 %type   <columnName> colref
 %type   <whereClause> where_clause
-
+%type 	<tableExpr> table_expr
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -194,8 +195,11 @@ select_list:
 ;
 	
 table_expr:
-	table_expr COMMA table_expr |
-	IDENTIFIER
+	IDENTIFIER {
+			$$ = MAKENODE(tableRefNode);
+			$$->tableName = $1;
+		   } |
+	table_expr COMMA IDENTIFIER 
 ;
 
 select_statement:
@@ -400,6 +404,7 @@ value_expr:
 			
 			$$.type = TEXT;
 			$$.value.text_val = $1;
+			printf("value_expr in parser. Text value : %s\n\r", $$.value.text_val);
 		}		
 ;
 

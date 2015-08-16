@@ -50,6 +50,23 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 		enif_make_atom(env, "goodbye" ));
 }
 
+static ERL_NIF_TERM sExprToNifTerm (scalarExpr *sExpr) {
+	/* traverse the scalarExpr and produce nested Erlang tuple 
+	   representation of it 
+
+	Eg:
+	
+	( 1 + ( foo * 4))
+
+	{ 1 , + , { * , foo , 4 }}
+
+	*/
+
+	
+
+	
+}
+
 static ErlNifFunc nif_funcs[] = {
     {"foo", 1, foo_nif},
     {"parseQuery", 1, parseQuery_nif}
