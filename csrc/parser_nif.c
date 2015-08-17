@@ -60,11 +60,47 @@ static ERL_NIF_TERM sExprToNifTerm (scalarExpr *sExpr) {
 
 	{ 1 , + , { * , foo , 4 }}
 
+	algo:
+ 		(if an oper, then we have a complex sExpr. 
+		 if not, it'll be relatively simple.)
+	1. if left node not null, recurse call self with left
+	2. keep going left...
+	3. end-condition is left isnull
+	
+					 
+
+
 	*/
 
+	//print current node val
 	
 
+	//is current node oper ?
+	if (sExpr->value.type != OPER) {
+		printf("literal\n\r");
+		if (sExpr->value.type == INT) printf (" %d\n\r", sExpr->value.value.integer_val);
+		else if (sExpr->value.type == COLREF || TEXT) printf (" %s\n\r", sExpr->value.value.colName);
+		printf("returning\n\t");
+		return(NULL);
+	} 
 	
+	if (sExpr->value.type == OPER) {
+		printf("oper\n\r%d\n\r", sExpr->value.value.oper_val);
+		
+
+	}	
+	
+	if (sExpr->left != NULL) {
+		printf ("going left\n\r");	
+		sExprToNifTerm(sExpr->left);	
+	}
+	
+	if (sExpr->right != NULL) {
+		printf ("going right\n\r");	
+		sExprToNifTerm(sExpr->right);	
+	}
+
+	printf("enf returning\n\r");	
 }
 
 static ErlNifFunc nif_funcs[] = {
@@ -156,7 +192,8 @@ void prettyPrintSelectList(selectListNode *sellist) {
 	scalarExpr *sExpr ;
 	for (i=0; i < sellist->nElements; i++) {
 		sExpr = *(sellist->sExpr+i);
-		prettyPrintSexpr(sExpr);
+//		prettyPrintSexpr(sExpr);
+		sExprToNifTerm(sExpr);
 		printf("+++++\n\r");
 		//sExpr++;
 	}
