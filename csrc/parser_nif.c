@@ -8,6 +8,11 @@
 
 #define TREESEP() (printf("\t|\n\t+-"))
 
+/* Node to Erlang NIF term converters */
+
+static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
+
+
 /* pretty printer fun decls. Farm these out to own files eventually */
 
 void prettyPrintSelectList(selectListNode *) ;
@@ -34,6 +39,7 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 {
     queryNode * ret;
     char queryText[MAXBUFLEN];
+    ERL_NIF_TERM erlParseTree;
 
     //consider static allocation here
     //determine better way to get the length of the query string at runtime
@@ -45,12 +51,38 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 	return enif_make_badarg(env);
     }
     ret = parseQuery(queryText);
+
+    erlParseTree = nodeToNifTerm(env, ret);	
+
     return enif_make_tuple(env, 2,
 		enif_make_atom(env, "hello"),
 		enif_make_atom(env, "goodbye" ));
 }
 
-static ERL_NIF_TERM sExprToNifTerm (scalarExpr *sExpr) {
+static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
+
+
+	selectListNode *sellist = qry->selnode->selectList;
+
+	/* iterate over the array of pointers-to-sExpr 
+	   and print each one */	
+
+	printf("Select list: %d elements\n",sellist->nElements);
+	
+	int i;	
+	scalarExpr *sExpr ;
+	for (i=0; i < sellist->nElements; i++) {
+		sExpr = *(sellist->sExpr+i);
+//		prettyPrintSexpr(sExpr);
+		sExprToNifTerm(env, sExpr);
+		printf("+++++\n\r");
+		//sExpr++;
+	}
+    
+
+}
+
+static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	/* traverse the scalarExpr and produce nested Erlang tuple 
 	   representation of it 
 
@@ -75,29 +107,44 @@ static ERL_NIF_TERM sExprToNifTerm (scalarExpr *sExpr) {
 	//print current node val
 	
 
+/*
+
+	each call returns either
+		a literal / colref
+		an oper
+		a tuple
+
+	1. generalise all as ETERM ? ie, functions always call the appropriate 'erl_mk' and return ETERM 
+
+*/
+
 	//is current node oper ?
 	if (sExpr->value.type != OPER) {
 		printf("literal\n\r");
-		if (sExpr->value.type == INT) printf (" %d\n\r", sExpr->value.value.integer_val);
-		else if (sExpr->value.type == COLREF || TEXT) printf (" %s\n\r", sExpr->value.value.colName);
 		printf("returning\n\t");
-		return(NULL);
+		if (sExpr->value.type == INT) {
+
+			printf (" %d\n\r", sExpr->value.value.integer_val);
+			return(enif_make_int(env, sExpr->value.value.integer_val));
+			}
+		else if (sExpr->value.type == COLREF || TEXT) {
+			 printf (" %s\n\r", sExpr->value.value.colName);
+			 return(enif_make_atom(env, sExpr->value.value.colName));
+			}
 	} 
 	
 	if (sExpr->value.type == OPER) {
 		printf("oper\n\r%d\n\r", sExpr->value.value.oper_val);
-		
-
 	}	
 	
 	if (sExpr->left != NULL) {
 		printf ("going left\n\r");	
-		sExprToNifTerm(sExpr->left);	
+		sExprToNifTerm(env, sExpr->left);	
 	}
 	
 	if (sExpr->right != NULL) {
 		printf ("going right\n\r");	
-		sExprToNifTerm(sExpr->right);	
+		sExprToNifTerm(env, sExpr->right);	
 	}
 
 	printf("enf returning\n\r");	
@@ -230,8 +277,4 @@ printf("Parse tree prettyprint\r\n======================\n\r\n\r");
 
 	}
 
-}
-
-static ERL_NIF_TERM parseTreeToErl (queryNode *qry) {
-	
 }
