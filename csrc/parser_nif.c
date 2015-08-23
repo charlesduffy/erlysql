@@ -11,11 +11,13 @@
 /* Node to Erlang NIF term converters */
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
+static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *, scalarExpr *) ;
 
 
 /* pretty printer fun decls. Farm these out to own files eventually */
 
-void prettyPrintSelectList(selectListNode *) ;
+
+void prettyPrintSelectList(ErlNifEnv *, selectListNode *) ;
 void prettyPrintSelectNode (selectStmtNode *) ;
 void prettyPrintParseTree (queryNode *) ; 
 void prettyPrintSexpr(scalarExpr *) ;
@@ -228,7 +230,7 @@ void prettyPrintSexpr(scalarExpr *sExp) {
 
 }
 
-void prettyPrintSelectList(selectListNode *sellist) {
+void prettyPrintSelectList(ErlNifEnv *env, selectListNode *sellist) {
 
 	/* iterate over the array of pointers-to-sExpr 
 	   and print each one */	
@@ -240,7 +242,7 @@ void prettyPrintSelectList(selectListNode *sellist) {
 	for (i=0; i < sellist->nElements; i++) {
 		sExpr = *(sellist->sExpr+i);
 //		prettyPrintSexpr(sExpr);
-		sExprToNifTerm(sExpr);
+		sExprToNifTerm(env, sExpr);
 		printf("+++++\n\r");
 		//sExpr++;
 	}
