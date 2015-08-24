@@ -17,7 +17,7 @@ static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *, scalarExpr *) ;
 /* pretty printer fun decls. Farm these out to own files eventually */
 
 
-void prettyPrintSelectList(ErlNifEnv *, selectListNode *) ;
+void prettyPrintSelectList(selectListNode *) ;
 void prettyPrintSelectNode (selectStmtNode *) ;
 void prettyPrintParseTree (queryNode *) ; 
 void prettyPrintSexpr(scalarExpr *) ;
@@ -56,16 +56,21 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 
     erlParseTree = nodeToNifTerm(env, ret);	
 
+/*
     return enif_make_tuple(env, 2,
 		enif_make_atom(env, "hello"),
 		enif_make_atom(env, "goodbye" ));
+	*/
+
+   return(erlParseTree);
 }
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 
 
 	selectListNode *sellist = qry->selnode->selectList;
-
+	ERL_NIF_TERM nifList;
+	ERL_NIF_TERM nifItem;
 	/* iterate over the array of pointers-to-sExpr 
 	   and print each one */	
 
@@ -76,10 +81,13 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 	for (i=0; i < sellist->nElements; i++) {
 		sExpr = *(sellist->sExpr+i);
 //		prettyPrintSexpr(sExpr);
-		sExprToNifTerm(env, sExpr);
+		nifItem = sExprToNifTerm(env, sExpr);
+		nifList = enif_make_list_cell( env, nifItem , nifList );
 		printf("+++++\n\r");
 		//sExpr++;
 	}
+
+	return nifList;
     
 
 }
@@ -119,19 +127,23 @@ static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	1. generalise all as ETERM ? ie, functions always call the appropriate 'erl_mk' and return ETERM 
 
 */
-
+	ERL_NIF_TERM lNode,rNode,cNode;
 	//is current node oper ?
+
 	if (sExpr->value.type != OPER) {
 		printf("literal\n\r");
 		printf("returning\n\t");
+		//replace with table-driven method + fn pointers
 		if (sExpr->value.type == INT) {
 
 			printf (" %d\n\r", sExpr->value.value.integer_val);
-			return(enif_make_int(env, sExpr->value.value.integer_val));
+			cNode = enif_make_int(env, sExpr->value.value.integer_val);
+			return(cNode);
 			}
 		else if (sExpr->value.type == COLREF || TEXT) {
 			 printf (" %s\n\r", sExpr->value.value.colName);
-			 return(enif_make_atom(env, sExpr->value.value.colName));
+			 cNode = enif_make_atom(env, sExpr->value.value.colName);
+			 return(cNode);
 			}
 	} 
 	
@@ -141,15 +153,16 @@ static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	
 	if (sExpr->left != NULL) {
 		printf ("going left\n\r");	
-		sExprToNifTerm(env, sExpr->left);	
+		lNode = sExprToNifTerm(env, sExpr->left);	
 	}
 	
 	if (sExpr->right != NULL) {
 		printf ("going right\n\r");	
-		sExprToNifTerm(env, sExpr->right);	
+		rNode = sExprToNifTerm(env, sExpr->right);	
 	}
 
 	printf("enf returning\n\r");	
+	cNode = enif_make_tuple( env, 3 , enif_make_int(env, sExpr->value.value.oper_val) , lNode , rNode );
 }
 
 static ErlNifFunc nif_funcs[] = {
@@ -230,7 +243,7 @@ void prettyPrintSexpr(scalarExpr *sExp) {
 
 }
 
-void prettyPrintSelectList(ErlNifEnv *env, selectListNode *sellist) {
+void prettyPrintSelectList(selectListNode *sellist) {
 
 	/* iterate over the array of pointers-to-sExpr 
 	   and print each one */	
@@ -241,8 +254,7 @@ void prettyPrintSelectList(ErlNifEnv *env, selectListNode *sellist) {
 	scalarExpr *sExpr ;
 	for (i=0; i < sellist->nElements; i++) {
 		sExpr = *(sellist->sExpr+i);
-//		prettyPrintSexpr(sExpr);
-		sExprToNifTerm(env, sExpr);
+		prettyPrintSexpr(sExpr);
 		printf("+++++\n\r");
 		//sExpr++;
 	}
