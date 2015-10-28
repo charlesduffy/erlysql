@@ -7,7 +7,7 @@
 
 %option header-file="csrc/scanner.h"
 %option noyywrap
-%option reentrant
+%option reentrant 
 %option bison-bridge
 
 space	[\t ]

@@ -1,5 +1,5 @@
-#ifndef _SIMTREE_H
-#define _SIMTREE_H
+#ifndef _PARSETREE_H
+#define _PARSETREE_H
 
 /* Helper Enums for parse nodes */
 
@@ -84,6 +84,7 @@ typedef enum statement_type statementType;
 struct query_node {
 	statementType statType;
 	//union statement type
+	//*****FIX this
 	selectStmtNode *selnode;	
 	//insertStmtNode *insnode;
 	//updateStmtNode *updnode;

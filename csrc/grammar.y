@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "simtree.h"
+#include "parsetree.h"
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
