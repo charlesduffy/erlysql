@@ -13,7 +13,7 @@ CC=gcc
 ##################
 
 
-CFLAGS=-I/usr/lib/erlang/usr/include/ -Icsrc/ -g
+CFLAGS=-fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ -g
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 
@@ -23,6 +23,20 @@ vpath %.y $(SRCDIR)
 
 NIFSO=parser_nif.so
 OBJECTS=parser_nif.o scanner.o grammar.tab.o 
+
+##################
+#test harness
+
+UNITYROOT=$(HOME)/Unity
+TESTDIR=$(SRCDIR)/test
+TESTINC=-I$(SRCDIR) -I$(UNITYROOT)/src -I$(UNITYROOT)/extras/fixture/src
+TESTSRC=$(UNITYROOT)/src/unity.c \
+  	$(UNITYROOT)/extras/fixture/src/unity_fixture.c 
+	
+TESTTARGET=all_tests
+TESTCFLAGS=-Icsrc/ -g
+
+##################
 
 .PHONY: erl all 
 
@@ -46,10 +60,15 @@ clean:
 	$(REBAR) clean
 
 $(OBJECTS): %.o: %.c
-	$(CC) -fpic -c $(CFLAGS) $< -o $(SRCDIR)/$@
+	$(CC) -c $(CFLAGS) $< -o $(SRCDIR)/$@
 
 $(NIFSO):	$(OBJECTS)
 	$(CC) -g -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -Wl,--export-dynamic -o $(NIFDIR)/$@
 
 errr:
 	@echo $(OBJECTS)
+
+test:	CFLAGS = $(TESTCFLAGS)
+test:	grammar.tab.c scanner.c scanner.o grammar.tab.o
+	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c  $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o) -lfl -o $(TESTTARGET)
+	./$(TESTTARGET) -v	

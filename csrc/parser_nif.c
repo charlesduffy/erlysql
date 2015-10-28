@@ -62,6 +62,8 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 		enif_make_atom(env, "goodbye" ));
 	*/
 
+   printf("returning from parseQuery_nif\n");
+
    return(erlParseTree);
 }
 
@@ -86,6 +88,8 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 		printf("+++++\n\r");
 		//sExpr++;
 	}
+
+printf("returning from nodeToNifTerm\n");
 
 	return nifList;
     

@@ -32,7 +32,6 @@ typedef struct s_expr scalarExpr;
 
 struct s_expr {
 
-	//valueExprType type;
 	valueExprNode value;
 	scalarExpr * left;	
 	scalarExpr * right;	

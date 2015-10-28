@@ -118,6 +118,8 @@ query_statement:
 
 INSERT STATEMENT
 
+----UNSUPPORTED
+
 */
 
 /*
@@ -235,6 +237,8 @@ from_clause:
 /*
 
 EXPRESSIONS
+
+Todo: rewrite all the scalar_expr OPER scalar_expr rules.
 
 */
 
