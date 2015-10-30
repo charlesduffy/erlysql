@@ -15,7 +15,7 @@ yyscan_t scanner1 , scanner2;
 
 /*
 int main (int argc, char **argv) {
-	printf("hello\n");
+	debug("hello");
 }
 */
 
@@ -35,7 +35,7 @@ TEST_SETUP(basicParser) {
 TEST_TEAR_DOWN(basicParser) {
 
    free(qry1);    
-   printf("freeing ...\n");
+   debug("freeing ...");
    free(qry2);    
    yy_delete_buffer(buf1, scanner1);
    yy_delete_buffer(buf2, scanner2);
@@ -49,7 +49,7 @@ TEST(basicParser, elderberry)
    
     int result;
     char * queryText = "select 1+x , 2-4 , hello from bar;";	
-    printf("query is: %s\n", queryText);
+    debug("query is: %s", queryText);
     buf1 = yy_scan_string(queryText, scanner1);
     yyparse(scanner1, qry1);
     result = compareSelectListNode( qry1->selnode->selectList , qry1->selnode->selectList );
@@ -85,7 +85,7 @@ TEST(basicParser, herring)
     buf2 = yy_scan_string(queryText2, scanner2);
     yyparse(scanner1, qry1);
     yyparse(scanner2, qry2);
-	printf("\n** nElements %d\n", qry1->selnode->selectList->nElements);
+	debug("** nElements %d", qry1->selnode->selectList->nElements);
     result = compareSelectListNode(qry1->selnode->selectList, qry2->selnode->selectList); 
     TEST_ASSERT_EQUAL(1 , result);
 }

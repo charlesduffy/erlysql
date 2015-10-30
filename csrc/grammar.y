@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "parsetree.h"
+#include "dbglog.h"
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
@@ -154,13 +155,13 @@ select_list:
 		 		//we realloc it later for every new select list element encountered. Kinda inefficent.
 		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 
-			 	printf("First Scalar expr in select list!\n\r");
+			 	debug("First Scalar expr in select list!");
 				$$->nElements = 1;
 				*($$->sExpr) = $1;
 				//scalarExpr *SK = *($$->sExpr);				
 				//printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 			  } |
-	select_list COMMA scalar_expr  { printf("recursive scalar expr!\n\r");
+	select_list COMMA scalar_expr  { debug("recursive scalar expr!");
 
 					  /* here's where it gets tricky...
 					 
@@ -248,7 +249,7 @@ scalar_expr:
 		      $$->value = $1;
 		      $$->left = NULL;
 		      $$->right = NULL;
-		      printf("Single value_expr in scalar_expr\n");
+		      debug("Single value_expr in scalar_expr");
 		    }				|
 	LPAREN scalar_expr RPAREN
 				{ $$ = MAKENODE(scalarExpr);
@@ -377,7 +378,6 @@ scalar_expr:
 
 	scalar_expr SUB scalar_expr 	
 				{
-				  //printf("and subtracting\n");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $3;
@@ -390,14 +390,13 @@ value_expr:
 	colref	{ 
 			$$.type = COLREF;
 			$$.value.colName = (char *) $1;
-			printf("value_expr in parser. Colref value is: %s\n\r", $$.value.colName);
+			debug("value_expr in parser. Colref value is: %s", $$.value.colName);
 		}				|
 	
 	INTEGER	{
 			$$.type = INT;
 			$$.value.integer_val = $1;
-			printf("value_expr in parser. Integer value is: %d\n\r", $$.value.integer_val);
-//			printf("value_expr in parser. Integer value as string: %s\n\r", $$.value.integer_val);
+			debug("value_expr in parser. Integer value is: %d", $$.value.integer_val);
 		}	 |	
 	NUMERIC{
 			
@@ -409,7 +408,7 @@ value_expr:
 			
 			$$.type = TEXT;
 			$$.value.text_val = $1;
-			printf("value_expr in parser. Text value : %s\n\r", $$.value.text_val);
+			debug("value_expr in parser. Text value : %s", $$.value.text_val);
 		}		
 ;
 

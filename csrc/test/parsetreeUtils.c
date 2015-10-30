@@ -5,6 +5,7 @@ parsetree utilities for the test harness only. Nested struct comparison function
 ********/
 
 #include "parsetree.h"
+#include "dbglog.h"
 #include <string.h>
 #include <unistd.h>
 #include <malloc.h>    
@@ -20,32 +21,32 @@ int compareSelectListNode(selectListNode *A , selectListNode *B) {
  int c;
  scalarExpr *sExprA, *sExprB;
 
-printf("Entering compareSelectListNode\n");
+debug("Entering compareSelectListNode");
 fflush(stdout);
   
  /* test that the number of elements in the list is the same */
 
  if (A->nElements != B->nElements) {
-	printf( "nElements not equal\n");
+	debug( "nElements not equal");
 	fflush(stdout);
 	return 0;
 }
 
  nElems = A->nElements;
 
- printf("Number of elements: %d\n", nElems);
+ debug("Number of elements: %d", nElems);
 
  /* check all the select list elements */
 
  for (i = 0; i < nElems; i++) {
 
-    printf("Testing element %d of %d\n", i , nElems);
+    debug("Testing element %d of %d", i , nElems);
    
     sExprA = *(A->sExpr+i);    
     sExprB = *(B->sExpr+i);    
 
     if (sExprCmp(sExprA , sExprB) == 0) {
-     printf("returning 0 from sExprComp\n");
+     debug("returning 0 from sExprComp");
      return 0;
 	 }
 
@@ -64,40 +65,40 @@ int sExprCmp(scalarExpr *A , scalarExpr *B) {
 
  if ( A->value.type != B->value.type) {
 
-   printf("Value types not equal A %d  |  B %d\n", A->value.type, B->value.type); 
+   debug("Value types not equal A %d  |  B %d", A->value.type, B->value.type); 
    return 0; 
 }
 
 
-printf("Value type: %d %d\n", A->value.type, B->value.type);
+debug("Value type: %d %d", A->value.type, B->value.type);
 fflush(stdout);
  
 	switch(A->value.type) {
 		TREESEP();
 	 case UNDEFINED:
-		printf(" [UNDEFINED:<>\n");
+		debug(" [UNDEFINED:<>");
 		break;
 	 case COLREF:
 		if (strcmp(A->value.value.colName,B->value.value.colName) != 0 )  { 
-		  	printf("Colref not equal: %s | %s\n" , A->value.value.colName , B->value.value.colName );
+		  	debug("Colref not equal: %s | %s" , A->value.value.colName , B->value.value.colName );
 			return 0;
 		}
 		break;
 	 case TEXT:
 		if (strcmp(A->value.value.text_val,B->value.value.text_val) != 0 ) {
-		  printf("Text not equal: %s | %s\n" , A->value.value.text_val , B->value.value.text_val );
+		  debug("Text not equal: %s | %s" , A->value.value.text_val , B->value.value.text_val );
 		  return 0;
 		}
 		break;
 	 case INT:
 		if (A->value.value.integer_val != B->value.value.integer_val) {
-		  printf("Int not equal: %d | %d\n" , A->value.value.integer_val , B->value.value.integer_val );
+		  debug("Int not equal: %d | %d" , A->value.value.integer_val , B->value.value.integer_val );
 		  return 0;
 		}
 		break;
 	 case NUM:
 		if (A->value.value.integer_val != B->value.value.integer_val) {
-		  printf("Int not equal: %d | %d\n" , A->value.value.integer_val , B->value.value.integer_val );
+		  debug("Int not equal: %d | %d" , A->value.value.integer_val , B->value.value.integer_val );
 		  return 0;
 		}
 		break;
@@ -105,21 +106,21 @@ fflush(stdout);
 		if (A->value.value.oper_val != B->value.value.oper_val) return 0;
 		break;
 	 case SEXPR:
-		printf(" [SEXPR] \n");
+		debug(" [SEXPR] ");
 		break;
 
 	}
 	
 	if (A->left != NULL && B->left != NULL) 
 	  if (sExprCmp(A->left, B->left) == 0) {
-	     printf("returning zero from recursive call left side \n");
+	     debug("returning zero from recursive call left side ");
              return 0;
 	} 
 		
 	
 	if (A->right != NULL && B->right != NULL)
 	  if (sExprCmp(A->right, B->right) == 0) {
-	     printf("returning zero from recursive call right side \n");
+	     debug("returning zero from recursive call right side ");
 	     return 0;
 	  }
 
