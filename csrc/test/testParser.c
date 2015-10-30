@@ -90,10 +90,22 @@ TEST(basicParser, herring)
     TEST_ASSERT_EQUAL(1 , result);
 }
 
+TEST(basicParser, antioch)
+{
+    int result;
+    char * queryText1 = "select foo , bar , 1122.2 , 1+3-1+10.1 from bar;";	
+    buf1 = yy_scan_string(queryText1, scanner1);
+    yyparse(scanner1, qry1);
+    printf("%s\n", queryText1);
+    prettyPrintParseTree(qry1);
+    TEST_ASSERT_EQUAL(1 , 1);
+}
+
 TEST_GROUP_RUNNER (basicParser) {
 
-	RUN_TEST_CASE(basicParser, elderberry);
-	RUN_TEST_CASE(basicParser, herring);
+//	RUN_TEST_CASE(basicParser, elderberry);
+//	RUN_TEST_CASE(basicParser, herring);
+	RUN_TEST_CASE(basicParser, antioch);
 
 }
 

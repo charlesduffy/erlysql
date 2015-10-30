@@ -158,7 +158,6 @@ select_list:
 			 	debug("First Scalar expr in select list!");
 				$$->nElements = 1;
 				*($$->sExpr) = $1;
-				//scalarExpr *SK = *($$->sExpr);				
 				//printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 			  } |
 	select_list COMMA scalar_expr  { debug("recursive scalar expr!");
@@ -186,12 +185,13 @@ select_list:
 	
 					  *($$->sExpr + ($$->nElements - 1)) = $3;
 
-				//	scalarExpr *SK = *($$->sExpr + ($$->nElements - 1));				
 				//	printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 					/*----------------------
 					|  this all kind of sux, of course.
 					|  suggestions for replacement:
 					|  ^ use a linked list instead of **sExpr
+					|  ^ preallocate a large number of select list items, and realloc in the event the number exceeds. Suggest say 2000 items. 
+					|    -- problem with that is that the sExprs can be arbitrarily complex...how deep to pre-allocate them?
 					|----------------------*/
 					  
 					} 
@@ -258,7 +258,6 @@ scalar_expr:
 				}		|
 	scalar_expr ADD scalar_expr 
 				{
-				  //printf("I am adding\n");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $3;

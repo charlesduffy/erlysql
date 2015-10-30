@@ -69,8 +69,8 @@ errr:
 	@echo $(OBJECTS)
 
 test:	CFLAGS = $(TESTCFLAGS)
-test:	grammar.tab.c scanner.c scanner.o grammar.tab.o
-	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(SRCDIR)/test/parsetreeUtils.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o) -lfl -o $(TESTTARGET)
+test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o
+	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(SRCDIR)/test/parsetreeUtils.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o parsetree.o) -lfl -o $(TESTTARGET)
 	./$(TESTTARGET) -v	
 
 testdebug: 	TESTCFLAGS += -DXDEBUG
