@@ -22,7 +22,7 @@ vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
 NIFSO=parser_nif.so
-OBJECTS=parser_nif.o scanner.o grammar.tab.o 
+OBJECTS=parser_nif.o scanner.o grammar.tab.o parsetree.o
 
 ##################
 #test harness
@@ -70,7 +70,5 @@ errr:
 
 test:	CFLAGS = $(TESTCFLAGS)
 test:	grammar.tab.c scanner.c scanner.o grammar.tab.o
-	#ruby $(UNITYROOT)/auto/generate_test_runner.rb $(SRCDIR)/test/testParser.c  $(SRCDIR)/test/test_runners/testParserCodeRunner.c
-	#$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c  $(SRCDIR)/test/test_runners/testParserCodeRunner.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o) -lfl -o $(TESTTARGET)
-	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o) -lfl -o $(TESTTARGET)
+	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(SRCDIR)/test/parsetreeUtils.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o) -lfl -o $(TESTTARGET)
 	./$(TESTTARGET) -v	

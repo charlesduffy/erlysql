@@ -248,6 +248,7 @@ scalar_expr:
 		      $$->value = $1;
 		      $$->left = NULL;
 		      $$->right = NULL;
+		      printf("Single value_expr in scalar_expr\n");
 		    }				|
 	LPAREN scalar_expr RPAREN
 				{ $$ = MAKENODE(scalarExpr);
@@ -389,13 +390,13 @@ value_expr:
 	colref	{ 
 			$$.type = COLREF;
 			$$.value.colName = (char *) $1;
-			//printf("value_expr in parser. Colref value is: %s\n\r", $$.value.colName);
+			printf("value_expr in parser. Colref value is: %s\n\r", $$.value.colName);
 		}				|
 	
 	INTEGER	{
 			$$.type = INT;
 			$$.value.integer_val = $1;
-			//printf("value_expr in parser. Integer value is: %d\n\r", $$.value.integer_val);
+			printf("value_expr in parser. Integer value is: %d\n\r", $$.value.integer_val);
 //			printf("value_expr in parser. Integer value as string: %s\n\r", $$.value.integer_val);
 		}	 |	
 	NUMERIC{
