@@ -11,7 +11,7 @@ union value_expr {
 	char * colName;
 	int integer_val;
 	char * text_val;
-	float numeric_val;
+	double numeric_val;
 	operVal oper_val;
 } ;
 

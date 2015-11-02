@@ -40,6 +40,9 @@ TESTCFLAGS=-Icsrc/ -g
 
 .PHONY: erl all 
 
+debug: CFLAGS += -DXDEBUG
+debug: all
+
 all : grammar.tab.c scanner.c  $(NIFSO)  erl
 
 $(SRCDIR)/scanner.c : scanner.l grammar.tab.c 

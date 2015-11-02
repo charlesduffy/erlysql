@@ -57,7 +57,7 @@ queryNode * parseQuery (char *queryText) {
     yyparse(scanner, qry);
     yy_delete_buffer(buf, scanner);
     yylex_destroy(scanner);
-    prettyPrintParseTree(qry);
+//    prettyPrintParseTree(qry);
     return (qry);
 }
 

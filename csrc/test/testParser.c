@@ -24,23 +24,20 @@ TEST_GROUP(basicParser);
 TEST_SETUP(basicParser) {
 
     qry1 = malloc(sizeof(queryNode));
-    qry2 = malloc(sizeof(queryNode));
+   // qry2 = malloc(sizeof(queryNode));
     yylex_init(&scanner1);
-    yylex_init(&scanner2);
-    //buf = yy_scan_string(queryText, scanner);
-//    yyparse(scanner, qry);
+    //yylex_init(&scanner2);
 
 }
 
 TEST_TEAR_DOWN(basicParser) {
 
    free(qry1);    
-   debug("freeing ...");
-   free(qry2);    
+//   free(qry2);    
    yy_delete_buffer(buf1, scanner1);
-   yy_delete_buffer(buf2, scanner2);
+  // yy_delete_buffer(buf2, scanner2);
    yylex_destroy(scanner1);
-   yylex_destroy(scanner2);
+   //yylex_destroy(scanner2);
 
 }
 
@@ -48,10 +45,12 @@ TEST(basicParser, elderberry)
 {
    
     int result;
-    char * queryText = "select 1+x , 2-4 , hello from bar;";	
+    char * queryText = "select  4-1+4/1+1, hello from bar;";	
     debug("query is: %s", queryText);
     buf1 = yy_scan_string(queryText, scanner1);
+//    buf2 = yy_scan_string(queryText, scanner2);
     yyparse(scanner1, qry1);
+//    yyparse(scanner2, qry2);
     result = compareSelectListNode( qry1->selnode->selectList , qry1->selnode->selectList );
     TEST_ASSERT_EQUAL(1 , result);
 }
@@ -80,20 +79,17 @@ TEST(basicParser, herring)
 {
     int result;
     char * queryText1 = "select foo , bar from bar;";	
-    char * queryText2 = "select foo from bar;";	
     buf1 = yy_scan_string(queryText1, scanner1);
-    buf2 = yy_scan_string(queryText2, scanner2);
     yyparse(scanner1, qry1);
-    yyparse(scanner2, qry2);
 	debug("** nElements %d", qry1->selnode->selectList->nElements);
-    result = compareSelectListNode(qry1->selnode->selectList, qry2->selnode->selectList); 
+    result = compareSelectListNode(qry1->selnode->selectList, qry1->selnode->selectList); 
     TEST_ASSERT_EQUAL(1 , result);
 }
 
 TEST(basicParser, antioch)
 {
     int result;
-    char * queryText1 = "select foo , bar , 1122.2 , 1+3-1+10.1 from bar;";	
+    char * queryText1 = "select  4-1+4/1+1, hello from bar;";	
     buf1 = yy_scan_string(queryText1, scanner1);
     yyparse(scanner1, qry1);
     printf("%s\n", queryText1);
@@ -104,8 +100,10 @@ TEST(basicParser, antioch)
 TEST_GROUP_RUNNER (basicParser) {
 
 //	RUN_TEST_CASE(basicParser, elderberry);
-//	RUN_TEST_CASE(basicParser, herring);
+	RUN_TEST_CASE(basicParser, herring);
+	RUN_TEST_CASE(basicParser, elderberry);
 	RUN_TEST_CASE(basicParser, antioch);
+//	RUN_TEST_CASE(basicParser, elderberry);
 
 }
 

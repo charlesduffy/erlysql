@@ -1,32 +1,31 @@
 #include "erl_nif.h"
 #include "grammar.tab.h"
 #include "scanner.h"
+#include "dbglog.h"
 #include <string.h>
 #include <malloc.h>
 
 #define MAXBUFLEN 1024
 
-#define TREESEP() (printf("\t|\n\t+-"))
-
 /* Node to Erlang NIF term converters */
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
 static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *, scalarExpr *) ;
+static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode );
+
+/* NIF function callable from erlang */
 
 
+static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* , int , const ERL_NIF_TERM[]);
 
-int foo(int x);
 queryNode * parseQuery (char *queryText);
 
-static ERL_NIF_TERM foo_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
-    int x, ret;
-    if (!enif_get_int(env, argv[0], &x)) {
-	return enif_make_badarg(env);
-    }
-    ret = foo(x);
-    return enif_make_int(env, ret);
-}
+static ErlNifFunc nif_funcs[] = {
+    {"parseQuery", 1, parseQuery_nif}
+};
+
+ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
+
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
@@ -44,16 +43,16 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
 	return enif_make_badarg(env);
     }
     ret = parseQuery(queryText);
-
+debug("returned from parseQuery");
     erlParseTree = nodeToNifTerm(env, ret);	
 
 /*
-    return enif_make_tuple(env, 2,
-		enif_make_atom(env, "hello"),
-		enif_make_atom(env, "goodbye" ));
-	*/
-
-   printf("returning from parseQuery_nif\n");
+   erlParseTree = enif_make_tuple2(env, 
+	enif_make_int(env, 222),
+	enif_make_int(env, 333)
+	);
+*/
+   debug("returning from parseQuery_nif\n");
 
    return(erlParseTree);
 }
@@ -67,7 +66,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 	/* iterate over the array of pointers-to-sExpr 
 	   and print each one */	
 
-	printf("Select list: %d elements\n",sellist->nElements);
+	debug("Select list: %d elements\n",sellist->nElements);
 	
 	int i;	
 	scalarExpr *sExpr ;
@@ -76,97 +75,116 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 //		prettyPrintSexpr(sExpr);
 		nifItem = sExprToNifTerm(env, sExpr);
 		nifList = enif_make_list_cell( env, nifItem , nifList );
-		printf("+++++\n\r");
+		debug("+++++\n\r");
 		//sExpr++;
 	}
 
-printf("returning from nodeToNifTerm\n");
+debug("returning from nodeToNifTerm");
 
 	return nifList;
-    
-
 }
 
 static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	/* traverse the scalarExpr and produce nested Erlang tuple 
 	   representation of it 
 
-	Eg:
-	
 	( 1 + ( foo * 4))
 
-	{ 1 , + , { * , foo , 4 }}
+	{ + , 1, { * , foo , 4 }}
 
-	algo:
- 		(if an oper, then we have a complex sExpr. 
-		 if not, it'll be relatively simple.)
-	1. if left node not null, recurse call self with left
-	2. keep going left...
-	3. end-condition is left isnull
-	
-					 
-
-
-	*/
-
-	//print current node val
-	
-
-/*
-
-	each call returns either
-		a literal / colref
-		an oper
-		a tuple
-
-	1. generalise all as ETERM ? ie, functions always call the appropriate 'erl_mk' and return ETERM 
-
+	is oper?
+	  yes:is left null?
+  		yes:is right null?
+		    yes:return value
+	  	    no:recurse right
+		no:recurse left
+	  no:return tuple of value
 */
+
+
 	ERL_NIF_TERM lNode,rNode,cNode;
 	//is current node oper ?
 
-	if (sExpr->value.type != OPER) {
-		printf("literal\n\r");
-		printf("returning\n\t");
-		//replace with table-driven method + fn pointers
-		if (sExpr->value.type == INT) {
 
-			printf (" %d\n\r", sExpr->value.value.integer_val);
+   cNode = enif_make_tuple2(env, 
+	enif_make_int(env, 222),
+	enif_make_int(env, 333)
+	);
+
+/*
+
 			cNode = enif_make_int(env, sExpr->value.value.integer_val);
-			return(cNode);
-			}
-		else if (sExpr->value.type == COLREF || TEXT) {
-			 printf (" %s\n\r", sExpr->value.value.colName);
 			 cNode = enif_make_atom(env, sExpr->value.value.colName);
-			 return(cNode);
-			}
-	} 
 	
-	if (sExpr->value.type == OPER) {
-		printf("oper\n\r%d\n\r", sExpr->value.value.oper_val);
-	}	
+*/
+	debug("Entering sExprToNifTerm");
 	
+	if (sExpr->value.type != OPER) {
+		cNode = valueExprToNifTerm(env, sExpr->value);
+		return (cNode);
+	}
+
 	if (sExpr->left != NULL) {
-		printf ("going left\n\r");	
-		lNode = sExprToNifTerm(env, sExpr->left);	
+	  lNode = sExprToNifTerm (env , sExpr->left);
 	}
 	
 	if (sExpr->right != NULL) {
-		printf ("going right\n\r");	
-		rNode = sExprToNifTerm(env, sExpr->right);	
+	  rNode = sExprToNifTerm (env , sExpr->right);
 	}
 
-	printf("enf returning\n\r");	
-	cNode = enif_make_tuple( env, 3 , enif_make_int(env, sExpr->value.value.oper_val) , lNode , rNode );
+	//make my cNode
+	cNode = enif_make_tuple2(env, lNode, rNode);
+
+	return (cNode);
+
 }
 
-static ErlNifFunc nif_funcs[] = {
-    {"foo", 1, foo_nif},
-    {"parseQuery", 1, parseQuery_nif}
-};
+ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *env, valueExprNode value) {
+//***TODO consider adding tags with SQL datatype to tuple	
 
-ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL)
+	ERL_NIF_TERM cNode;
+debug("entering valueExprToNifTerm");
+	
+	valueExpr v = value.value;
 
-int foo (int x) {
-	return 100;
+	switch (value.type) {
+
+   	 case UNDEFINED:
+	    debug("undefined value in s expression");
+	    cNode = (ERL_NIF_TERM) NULL;
+	    break;
+	 case COLREF:
+	    debug("add Colref to tuple...");
+	    //consider making this text
+	    cNode = enif_make_atom(env, v.colName);
+	    break;
+	 case INT:
+	    debug("add integer to tuple...");
+	    cNode = enif_make_int(env, v.integer_val);
+	    break;
+	 case NUM:
+	    debug("add float to tuple...");
+	    cNode = enif_make_double(env, v.numeric_val);
+	    break;
+	 case TEXT:
+	    debug("add text to tuple...");
+	    cNode = enif_make_string(env, v.text_val, ERL_NIF_LATIN1);
+	    break;
+	 case OPER:
+	    debug("add oper to tuple. Should never get here.");
+	    cNode = (ERL_NIF_TERM) NULL;
+            break;
+	 case SEXPR:  		
+	    debug("add SEXPR to tuple. Deprecated. To be removed");
+	    cNode = (ERL_NIF_TERM) NULL;
+	    break;
+	 default:
+	    debug("unknown value type!");
+	    cNode = NULL;
+	} 		
+
+	return(cNode);	
 }
+
+
+
