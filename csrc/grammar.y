@@ -200,17 +200,17 @@ select_list:
 table_expr:
 	IDENTIFIER {
 			$$ = MAKENODE(tableRefNode);
-			$$->tableName = $1;
+			$$->tableName = strdup($1);
 		   } |
 	table_expr COMMA IDENTIFIER 
 ;
 
 select_statement:
-	SELECT select_list from_clause where_clause { 
+	SELECT select_list from_clause WHERE where_clause { 
 				$$ = MAKENODE(selectStmtNode); 
 				$$->selectList = $2;
 				$$->fromClause = $3;
-				$$->whereClause = $4;
+				$$->whereClause = $5;
 }
 						      
 ;
@@ -220,10 +220,10 @@ where_clause:
 				$$ =  NULL; 
 			}
 			|
-	WHERE scalar_expr 
+	scalar_expr 
 			{
 				$$ = MAKENODE(whereClauseNode);
-				$$->expr = $2;
+				$$->expr = $1;
 			 }
 ;
 
@@ -231,6 +231,7 @@ from_clause:
 				|
 	FROM table_expr { 
 				$$ = MAKENODE(fromClauseNode); 
+				$$->item = $2;
 			}
 ;
 

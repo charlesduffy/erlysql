@@ -29,7 +29,7 @@ ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-    queryNode * ret;
+    queryNode * qryTree;
     char queryText[MAXBUFLEN];
     ERL_NIF_TERM erlParseTree;
 
@@ -42,46 +42,72 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
     if (enif_get_string(env, argv[0], queryText, MAXBUFLEN, ERL_NIF_LATIN1) < 1) {
 	return enif_make_badarg(env);
     }
-    ret = parseQuery(queryText);
-debug("returned from parseQuery");
-    erlParseTree = nodeToNifTerm(env, ret);	
 
-/*
-   erlParseTree = enif_make_tuple2(env, 
-	enif_make_int(env, 222),
-	enif_make_int(env, 333)
-	);
-*/
-   debug("returning from parseQuery_nif\n");
+    qryTree = parseQuery(queryText);
+
+    debug("returned from parseQuery");
+    
+    erlParseTree = nodeToNifTerm(env, qryTree);	
+    
+    debug("returning from parseQuery_nif\n");
+
+    //free(qryTree); //****TODO - this will cause a memory leak. Not a deep free. For testing only!
 
    return(erlParseTree);
+   // return (enif_make_int (env, 1));
 }
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
 
 
 	selectListNode *sellist = qry->selnode->selectList;
-	ERL_NIF_TERM nifList;
+	fromClauseNode *fromclause = qry->selnode->fromClause;
+	whereClauseNode *whereclause = qry->selnode->whereClause;
+	ERL_NIF_TERM nifSelectList, nifFromClause, nifWhereClause;
 	ERL_NIF_TERM nifItem;
+	ERL_NIF_TERM nifMap;
 	/* iterate over the array of pointers-to-sExpr 
 	   and print each one */	
 
-	debug("Select list: %d elements\n",sellist->nElements);
+debug("Select list: %d elements\n",sellist->nElements);
+
+	nifSelectList = enif_make_list(env, (unsigned int) 0);
 	
 	int i;	
 	scalarExpr *sExpr ;
 	for (i=0; i < sellist->nElements; i++) {
 		sExpr = *(sellist->sExpr+i);
-//		prettyPrintSexpr(sExpr);
 		nifItem = sExprToNifTerm(env, sExpr);
-		nifList = enif_make_list_cell( env, nifItem , nifList );
-		debug("+++++\n\r");
-		//sExpr++;
+		nifSelectList = enif_make_list_cell( env, nifItem , nifSelectList );
 	}
 
-debug("returning from nodeToNifTerm");
+	debug("making enif string for from clause >>%s<< ", fromclause->item->tableName);
+	//from clause
+	nifFromClause = enif_make_string (env , (const char *) fromclause->item->tableName, ERL_NIF_LATIN1);
+	//nifFromClause = enif_make_string (env , (const char *) "hello hello" , ERL_NIF_LATIN1);
+	//where clause	
+	debug("starting where clause");
+	sExpr = whereclause->expr;
+	debug("calling sExprtoNifTerm for Where clause");
+ 	nifWhereClause = sExprToNifTerm(env, sExpr);			
 
-	return nifList;
+	//make map object
+	nifMap = enif_make_new_map(env);
+
+	if ( enif_make_map_put ( env , nifMap , 
+					enif_make_atom ( env , (const char *) "select_list") ,
+					nifSelectList , &nifMap ) != 0) { 
+
+	debug("make map failed");
+
+	}
+
+
+	enif_make_map_put (env, nifMap, enif_make_atom (env , (const char *) "from_clause") , nifFromClause, &nifMap);
+	enif_make_map_put (env, nifMap, enif_make_atom (env , (const char *) "where_clause") , nifWhereClause, &nifMap);
+	
+	
+	return (nifMap);
 }
 
 static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
@@ -101,25 +127,12 @@ static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	  no:return tuple of value
 */
 
-
 	ERL_NIF_TERM lNode,rNode,cNode;
-	//is current node oper ?
-
-
-   cNode = enif_make_tuple2(env, 
-	enif_make_int(env, 222),
-	enif_make_int(env, 333)
-	);
-
-/*
-
-			cNode = enif_make_int(env, sExpr->value.value.integer_val);
-			 cNode = enif_make_atom(env, sExpr->value.value.colName);
 	
-*/
 	debug("Entering sExprToNifTerm");
 	
 	if (sExpr->value.type != OPER) {
+		debug("node is NOT oper");
 		cNode = valueExprToNifTerm(env, sExpr->value);
 		return (cNode);
 	}
@@ -133,7 +146,7 @@ static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
 	}
 
 	//make my cNode
-	cNode = enif_make_tuple2(env, lNode, rNode);
+	cNode = enif_make_tuple3(env, enif_make_int(env, sExpr->value.value.oper_val), lNode, rNode);
 
 	return (cNode);
 
@@ -180,7 +193,7 @@ debug("entering valueExprToNifTerm");
 	    break;
 	 default:
 	    debug("unknown value type!");
-	    cNode = NULL;
+	    cNode = (ERL_NIF_TERM) NULL;
 	} 		
 
 	return(cNode);	
