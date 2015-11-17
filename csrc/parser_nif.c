@@ -95,10 +95,23 @@ debug("Decoding from clause, nElements: %d", fromclause->refList->nElements);
 debug("from clause table >>%s<< ", (tref->tableName));
 
 		nifMap = enif_make_new_map(env);			
-		nifItem1 = enif_make_string (env , (const char *) tref->tableName, ERL_NIF_LATIN1);
-		nifItem = enif_make_string (env , (const char *) tref->tableAlias, ERL_NIF_LATIN1);
-		enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "name") , nifItem1, &nifMap);	
-		enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "alias") , nifItem, &nifMap);	
+		//TODO: include better checking here. 
+		nifItem1 = enif_make_string (env , (const char *) tref->tableName, ERL_NIF_LATIN1); 
+		
+		if (! enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "name") , nifItem1, &nifMap)) {
+			debug("make map failed");	
+			//handle error
+		}
+	
+		if (tref->tableAlias != NULL) {
+
+			nifItem = enif_make_string (env , (const char *) tref->tableAlias, ERL_NIF_LATIN1);
+	
+			if (enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "alias") , nifItem, &nifMap)) {
+				debug("make map failed");
+				//handle error
+			}
+		}
 		nifFromClause = enif_make_list_cell( env, nifMap , nifFromClause );
 	}
 

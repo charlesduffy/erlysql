@@ -24,7 +24,6 @@ process_query([$\\|[Q|_]]) ->
 	end;
 
 process_query(_X) ->
-	io:fwrite("No slash~n"),
 	ParseTree = parser:parseQuery(_X),
 	io:fwrite("parsetree:~n~p~n", [ParseTree]),
 	Plan = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
