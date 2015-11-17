@@ -39,7 +39,9 @@ struct s_expr {
 } ;
 
 
-/*-------------------*/
+/*
+	Select list node
+*/
 
 struct select_list_node {
 	int nElements;
@@ -48,18 +50,44 @@ struct select_list_node {
 
 typedef struct select_list_node selectListNode;
 
+
+
+/*	
+	Table reference node 
+*/
+
 struct table_ref_node {
 	char *tableName;
-} ;
+	char *tableAlias;
+};
 
 typedef struct table_ref_node tableRefNode;
 
+/*
+	Table reference list node	
+*/
+
+struct table_ref_list_node {
+	int nElements;
+	tableRefNode **tables;
+};
+
+typedef struct table_ref_list_node tableRefListNode;
+
+/*
+	FROM clause node
+*/
+
 struct from_clause_node {
 	int type;
-	tableRefNode *item;
+	tableRefListNode *refList;
 } ;
 
 typedef struct from_clause_node fromClauseNode;
+
+/*
+	WHERE clause node
+*/
 
 struct where_clause_node {
 	int type;
@@ -68,18 +96,41 @@ struct where_clause_node {
 
 typedef struct where_clause_node whereClauseNode;
 
-struct select_stmt_node {
-	selectListNode *selectList;
+/*
+	Table expression node
+*/
+struct table_expression_node {
+	
 	fromClauseNode *fromClause;
 	whereClauseNode *whereClause;
-} ;
+	
+};
 
-typedef struct select_stmt_node selectStmtNode;
+typedef struct table_expression_node tableExprNode;
+
+/*
+	Statement type enum
+*/
 
 enum statement_type { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT };
 
 typedef enum statement_type statementType;
 
+/*
+	SELECT statement node
+*/
+
+struct select_stmt_node {
+	selectListNode *selectList;
+	tableExprNode *tableExpr;
+} ;
+
+typedef struct select_stmt_node selectStmtNode;
+
+
+/*
+	Query statement node
+*/
 
 struct query_node {
 	statementType statType;

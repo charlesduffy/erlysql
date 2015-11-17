@@ -26,24 +26,24 @@ typedef void *yyscan_t;
 
 %union 
 	{
-	int	integer_val;
-	char 	*text_val;
-	float  float_val;
-	/* keyword */
-	char	*keyword;
-	/* identifier */
-	char    *identifier_val;
+	int			integer_val;
+	char 			*text_val;
+	float  			float_val;
+	char			*keyword;
+	char    		*identifier_val;
 
 	/* node types */
-	queryNode *query;
-	selectStmtNode *selectStmt;
-	selectListNode *selectList;
-	fromClauseNode *fromClause;
-	tableRefNode   *tableExpr;
-	valueExprNode  valueExpr;
-	scalarExpr *sExpr;
-	whereClauseNode *whereClause;
-	char 	       *columnName;
+	queryNode 		*query;
+	selectStmtNode 		*selectStmt;
+	selectListNode 		*selectList;
+	fromClauseNode 		*fromClause;
+	tableRefNode   		*tableRef;
+	tableRefListNode 	*tableRefList;
+	tableExprNode  		*tableExpr;
+	valueExprNode  		valueExpr;
+	scalarExpr	 	*sExpr;
+	whereClauseNode 	*whereClause;
+	char 	       		*columnName;
 }	
 
 %code{
@@ -52,7 +52,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 }
 
 /* SQL keywords */
-%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO
+%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO AS
 
 /* values and identifiers */
 %token <keyword> BIGINT 
@@ -80,15 +80,17 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 //%left         TYPECAST
 //%left         '.'
 
-%type	<query>	query_statement
-%type 	<selectStmt> select_statement
-%type 	<selectList> select_list
-%type 	<fromClause> from_clause
-%type 	<valueExpr> value_expr
-%type 	<sExpr> scalar_expr
-%type   <columnName> colref
-%type   <whereClause> where_clause
-%type 	<tableExpr> table_expr
+%type	<query>		query_statement
+%type 	<selectStmt> 	select_statement
+%type 	<selectList> 	select_list
+%type 	<fromClause> 	from_clause
+%type 	<tableRef> 	table_ref
+%type 	<tableRefList> 	table_ref_list
+%type 	<valueExpr> 	value_expr
+%type 	<sExpr> 	scalar_expr
+%type   <columnName> 	colref
+%type   <whereClause> 	where_clause
+%type 	<tableExpr> 	table_expr
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -151,39 +153,18 @@ select_list:
 				//dangerous assumption here, that we can allocate the value of the select_list
 				//at the first instance of scalar_expr.
 		 		$$ = MAKENODE(selectListNode);
-		 		//here we allocate enough memory for a single pointer to a pointer-to-sExp.
-		 		//we realloc it later for every new select list element encountered. Kinda inefficent.
 		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 
 			 	debug("First Scalar expr in select list!");
 				$$->nElements = 1;
 				*($$->sExpr) = $1;
-				//printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
+				
 			  } |
 	select_list COMMA scalar_expr  { debug("recursive scalar expr!");
-
-					  /* here's where it gets tricky...
-					 
-					  1. We increment the element count */
-
-					  $$->nElements++;
-
-					  /* 
-
-					  2. Then we enlarge the size of the array of pointers-to-sExprs by one. 
-
-				 	     Consider doing this by getting the current size of the block of memory
-					     with sizeof() then adding the size of a *scalarExpr rather than using
-					     the element count.
-					 */
-
-			//		  $$->sExpr = realloc ($$->sExpr, (size_t) sizeof(scalarExpr*) * $$->nElements);
-					  //temporarily using fixed size array to debug
-	
-					  /*then we use the element count (adjusted by minus one) as the offset into the array, and
-					  assign the new sExpr (which comes from the third rule element) */
-	
-					  *($$->sExpr + ($$->nElements - 1)) = $3;
+					  
+					*($$->sExpr + ($$->nElements)) = $3; //remove redundant parentheses
+					  
+					$$->nElements++;
 
 				//	printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 					/*----------------------
@@ -196,45 +177,91 @@ select_list:
 					  
 					} 
 ;
-	
-table_expr:
-	IDENTIFIER {
-			$$ = MAKENODE(tableRefNode);
-			$$->tableName = strdup($1);
-		   } |
-	table_expr COMMA IDENTIFIER 
-;
 
 select_statement:
-	SELECT select_list from_clause WHERE where_clause { 
-				$$ = MAKENODE(selectStmtNode); 
-				$$->selectList = $2;
-				$$->fromClause = $3;
-				$$->whereClause = $5;
-}
-						      
-;
+	SELECT select_list table_expr {
+		$$ = MAKENODE(selectStmtNode);
+		$$->selectList = $2;
+		$$->tableExpr = $3;
+	};
 
 where_clause:
-			{ 
-				$$ =  NULL; 
-			}
-			|
-	scalar_expr 
+	WHERE scalar_expr 
 			{
 				$$ = MAKENODE(whereClauseNode);
-				$$->expr = $1;
+				$$->expr = $2;
 			 }
 ;
 
 from_clause:
-				|
-	FROM table_expr { 
+	FROM table_ref_list { 
 				$$ = MAKENODE(fromClauseNode); 
-				$$->item = $2;
-			}
+				$$->refList = $2;
+			    }
 ;
 
+table_ref:
+	IDENTIFIER {
+		$$ = MAKENODE(tableRefNode);
+		debug("table_ref: table name is %s alias is not present", $1);
+		$$->tableName = strdup($1);
+		$$->tableAlias = NULL;
+	}
+	|
+	IDENTIFIER IDENTIFIER {
+		$$ = MAKENODE(tableRefNode);
+		debug("table_ref: table name is %s alias is %s ", $1, $2);
+		$$->tableName = strdup($1);
+		$$->tableAlias = strdup($2);
+	}
+	|
+	IDENTIFIER AS IDENTIFIER {
+		$$ = MAKENODE(tableRefNode);
+		debug("table_ref: table name is %s alias is %s", $1, $3);
+		$$->tableName = strdup($1);
+		$$->tableAlias = strdup($3);
+
+	}
+;
+
+table_ref_list:
+	table_ref {
+			debug("table_expr: first item: ");
+
+			$$ = MAKENODE(tableRefListNode);
+			// Assume first table reference in from clause
+			$$->tables =  malloc ( sizeof(tableRefNode) * 20); //TEMPORARY! FIX ASAP. 
+		
+			*($$->tables) = $1;
+
+			$$->nElements = 1;
+				
+		   } |
+
+	table_ref_list COMMA table_ref {
+			tableRefListNode *foo;
+			tableRefNode *bar;
+			debug("table_expr: next item. Elements (before incr): %d || %s", $$->nElements, $3->tableName);
+			*($$->tables + ($$->nElements)) = $3;			
+			foo = $$;
+			bar = *(foo->tables + $$->nElements);
+			debug("table_expr: next item. After assignment: %s", bar->tableName);
+			$$->nElements++;
+	}
+;
+
+table_expr:
+	from_clause {
+		$$ = MAKENODE(tableExprNode);
+		$$->fromClause = $1;	
+		$$->whereClause = NULL;
+	} |
+	from_clause where_clause {
+		$$ = MAKENODE(tableExprNode);
+		$$->fromClause = $1;
+		$$->whereClause = $2;
+	}
+;
 
 /*
 
@@ -253,7 +280,8 @@ scalar_expr:
 		      debug("Single value_expr in scalar_expr");
 		    }				|
 	LPAREN scalar_expr RPAREN
-				{ $$ = MAKENODE(scalarExpr);
+				{ 
+				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $2;
 				  $$->right = NULL;			  
 				}		|
@@ -264,7 +292,6 @@ scalar_expr:
 				  $$->right = $3;
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = ADDITION;	
-			
 				}		|
 				
 	scalar_expr MUL scalar_expr 		

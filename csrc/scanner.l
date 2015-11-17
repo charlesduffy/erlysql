@@ -45,6 +45,7 @@ rparen [)]
 (?i:count)		{ return COUNT; }
 (?i:set)		{ return SET; }
 (?i:into)		{ return INTO; }
+(?i:as)			{ return AS; }
 
 {space}+ 		{ } 
 ({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter. Fix this definition */

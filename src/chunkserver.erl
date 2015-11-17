@@ -30,7 +30,7 @@ start_link() ->
 %% Initialise the chunk ETS table
 %% -- add error checking
 init(Args) ->
-    io:format('$$ chunkserver $$ initialising ~n'),
+    io:format('%% chunkserver starting~n'),
     Table = ets:new(chunktable, [ set ]),
     populate_table_tmp(Table),
     State = { Table },

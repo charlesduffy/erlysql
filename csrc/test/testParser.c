@@ -33,11 +33,8 @@ TEST_SETUP(basicParser) {
 TEST_TEAR_DOWN(basicParser) {
 
    free(qry1);    
-//   free(qry2);    
    yy_delete_buffer(buf1, scanner1);
-  // yy_delete_buffer(buf2, scanner2);
    yylex_destroy(scanner1);
-   //yylex_destroy(scanner2);
 
 }
 
@@ -45,12 +42,10 @@ TEST(basicParser, elderberry)
 {
    
     int result;
-    char * queryText = "select  4-1+4/1+1, hello from bar;";	
+    char * queryText = "RHUBARB select a , b , c from bar , baz , bee as tab3;";	
     debug("query is: %s", queryText);
     buf1 = yy_scan_string(queryText, scanner1);
-//    buf2 = yy_scan_string(queryText, scanner2);
     yyparse(scanner1, qry1);
-//    yyparse(scanner2, qry2);
     result = compareSelectListNode( qry1->selnode->selectList , qry1->selnode->selectList );
     TEST_ASSERT_EQUAL(1 , result);
 }
@@ -78,7 +73,7 @@ queryNode * parseQuery (char *queryText) {
 TEST(basicParser, herring)
 {
     int result;
-    char * queryText1 = "select foo , bar from bar;";	
+    char * queryText1 = "select foo , bar from tab1 , tab2 , tab3;";	
     buf1 = yy_scan_string(queryText1, scanner1);
     yyparse(scanner1, qry1);
 	debug("** nElements %d", qry1->selnode->selectList->nElements);
@@ -89,7 +84,7 @@ TEST(basicParser, herring)
 TEST(basicParser, antioch)
 {
     int result;
-    char * queryText1 = "select  4-1+4/1+1, hello from bar;";	
+    char * queryText1 = "select  foo , bar , baz from table1 as a , table2 as b where foo < 1;";	
     buf1 = yy_scan_string(queryText1, scanner1);
     yyparse(scanner1, qry1);
     printf("%s\n", queryText1);
