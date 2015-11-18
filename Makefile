@@ -2,6 +2,8 @@
 # compile Erlang and C components
 # wraps rebar
 
+#indent -kr -ci2 -cli2 -i2 -l80 -nut
+
 ERL=$(shell which erl)
 REBAR=$(shell which rebar)
 EBIN=$(ebin/)

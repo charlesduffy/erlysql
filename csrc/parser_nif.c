@@ -10,275 +10,279 @@
 /* Node to Erlang NIF term converters */
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
-static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *, scalarExpr *) ;
-static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode );
+static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *);
+static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode);
 
 /* NIF function callable from erlang */
 
 
-static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* , int , const ERL_NIF_TERM[]);
+static ERL_NIF_TERM parseQuery_nif(ErlNifEnv *, int, const ERL_NIF_TERM[]);
 
-queryNode * parseQuery (char *queryText);
+queryNode *parseQuery(char *queryText);
 
 static ErlNifFunc nif_funcs[] = {
-    {"parseQuery", 1, parseQuery_nif}
+  {"parseQuery", 1, parseQuery_nif}
 };
 
 ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
 
 
-static ERL_NIF_TERM parseQuery_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
+                                   const ERL_NIF_TERM argv[])
 {
-    queryNode * qryTree;
-    char queryText[MAXBUFLEN];
-    ERL_NIF_TERM erlParseTree;
+  queryNode *qryTree;
+  char queryText[MAXBUFLEN];
+  ERL_NIF_TERM erlParseTree;
 
-    //consider static allocation here
-    //determine better way to get the length of the query string at runtime
-    //determine proper error handling method on malloc failure
+  //consider static allocation here
+  //determine better way to get the length of the query string at runtime
+  //determine proper error handling method on malloc failure
 
-   (void) memset (queryText, '\0', sizeof(queryText));
+  (void) memset(queryText, '\0', sizeof(queryText));
 
-    if (enif_get_string(env, argv[0], queryText, MAXBUFLEN, ERL_NIF_LATIN1) < 1) {
-	return enif_make_badarg(env);
+  if (enif_get_string(env, argv[0], queryText, MAXBUFLEN, ERL_NIF_LATIN1) < 1) {
+    return enif_make_badarg(env);
+  }
+
+  qryTree = parseQuery(queryText);
+
+  debug("returned from parseQuery");
+
+  erlParseTree = nodeToNifTerm(env, qryTree);
+
+  debug("returning from parseQuery_nif\n");
+
+  //free(qryTree); //****TODO - this will cause a memory leak. Not a deep free. For testing only!
+
+  return (erlParseTree);
+}
+
+static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
+{
+
+  selectListNode *sellist = qry->selnode->selectList;
+  fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
+  tableRefNode **tableRef =
+    qry->selnode->tableExpr->fromClause->refList->tables;
+  whereClauseNode *whereclause = qry->selnode->tableExpr->whereClause;
+  ERL_NIF_TERM nifSelectList, nifFromClause, nifWhereClause;
+  ERL_NIF_TERM nifItem, nifItem1;
+  ERL_NIF_TERM nifMap;
+  /* iterate over the array of pointers-to-sExpr 
+     and print each one */
+
+  debug("Select list: %d elements\n", sellist->nElements);
+
+  nifSelectList = enif_make_list(env, (unsigned int) 0);
+
+  int i;
+  scalarExpr *sExpr;
+  for (i = sellist->nElements - 1; i >= 0; i--) {
+    sExpr = *(sellist->sExpr + i);
+    nifItem = sExprToNifTerm(env, sExpr);
+    nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
+  }
+
+  nifFromClause = enif_make_list(env, (unsigned int) 0);
+
+  //from clause
+
+  debug("Decoding from clause, nElements: %d", fromclause->refList->nElements);
+
+  tableRefNode *tref;
+
+  for (i = fromclause->refList->nElements - 1; i >= 0; i--) {
+
+    tref = *(tableRef + i);
+
+    debug("from clause table >>%s<< ", (tref->tableName));
+
+    nifMap = enif_make_new_map(env);
+    //TODO: include better checking here. 
+    nifItem1 =
+      enif_make_string(env, (const char *) tref->tableName, ERL_NIF_LATIN1);
+
+    if (!enif_make_map_put
+        (env, nifMap, enif_make_atom(env, (const char *) "name"), nifItem1,
+         &nifMap)) {
+      debug("make map failed");
+      //handle error
     }
 
-    qryTree = parseQuery(queryText);
+    if (tref->tableAlias != NULL) {
 
-    debug("returned from parseQuery");
-    
-    erlParseTree = nodeToNifTerm(env, qryTree);	
-    
-    debug("returning from parseQuery_nif\n");
+      nifItem =
+        enif_make_string(env, (const char *) tref->tableAlias, ERL_NIF_LATIN1);
 
-    //free(qryTree); //****TODO - this will cause a memory leak. Not a deep free. For testing only!
+      if (enif_make_map_put
+          (env, nifMap, enif_make_atom(env, (const char *) "alias"), nifItem,
+           &nifMap)) {
+        debug("make map failed");
+        //handle error
+      }
+    }
+    nifFromClause = enif_make_list_cell(env, nifMap, nifFromClause);
+  }
 
-   return(erlParseTree);
+  //where clause  
+
+  if (whereclause != NULL) {
+    sExpr = whereclause->expr;
+    nifWhereClause = sExprToNifTerm(env, sExpr);
+  }
+
+  nifMap = enif_make_new_map(env);
+
+  if (!enif_make_map_put(env,
+                         nifMap,
+                         enif_make_atom(env, (const char *) "select_list"),
+                         nifSelectList, &nifMap)
+    ) {
+
+    debug("make map failed");
+    //return error condition here. 
+
+  }
+
+
+  if (!enif_make_map_put(env,
+                         nifMap,
+                         enif_make_atom(env, (const char *) "from_clause"),
+                         nifFromClause, &nifMap)
+    ) {
+
+    debug("make map failed");
+    //return error condition here
+  }
+
+  if (whereclause != NULL)
+    if (!enif_make_map_put(env,
+                           nifMap,
+                           enif_make_atom(env, (const char *) "where_clause"),
+                           nifWhereClause, &nifMap)
+      ) {
+
+      debug("make map failed");
+
+    }
+
+  return (nifMap);
 }
 
-static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *env, queryNode *qry) {
+static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr)
+{
+  /* traverse the scalarExpr and produce nested Erlang tuple 
+     representation of it 
 
-	selectListNode *sellist = qry->selnode->selectList;
-	fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
-	tableRefNode   **tableRef = qry->selnode->tableExpr->fromClause->refList->tables;
-	whereClauseNode *whereclause = qry->selnode->tableExpr->whereClause;
-	ERL_NIF_TERM nifSelectList, nifFromClause, nifWhereClause;
-	ERL_NIF_TERM nifItem, nifItem1;
-	ERL_NIF_TERM nifMap;
-	/* iterate over the array of pointers-to-sExpr 
-	   and print each one */	
+     ( 1 + ( foo * 4))
 
-debug("Select list: %d elements\n",sellist->nElements);
+     { + , 1, { * , foo , 4 }}
 
-	nifSelectList = enif_make_list(env, (unsigned int) 0);
-	
-	int i;	
-	scalarExpr *sExpr ;
-	for (i = sellist->nElements - 1; i >= 0; i--) {
-		sExpr = *(sellist->sExpr+i);
-		nifItem = sExprToNifTerm(env, sExpr);
-		nifSelectList = enif_make_list_cell( env, nifItem , nifSelectList );
-	}
-	
-	nifFromClause = enif_make_list(env, (unsigned int) 0);
+     is oper?
+     yes:is left null?
+     yes:is right null?
+     yes:return value
+     no:recurse right
+     no:recurse left
+     no:return tuple of value
+   */
 
-	//from clause
+  ERL_NIF_TERM lNode, rNode, cNode;
+  ERL_NIF_TERM cMap;
 
-debug("Decoding from clause, nElements: %d", fromclause->refList->nElements);
+  debug("Entering sExprToNifTerm");
 
-	tableRefNode *tref;
+  if (sExpr->value.type != OPER) {
+    debug("node is NOT oper");
+    cNode = valueExprToNifTerm(env, sExpr->value);
+    return (cNode);
+  }
 
-	for (i = fromclause->refList->nElements - 1; i >= 0; i--) {
+  if (sExpr->left != NULL) {
+    lNode = sExprToNifTerm(env, sExpr->left);
+  }
 
-		tref = *(tableRef + i);	
+  if (sExpr->right != NULL) {
+    rNode = sExprToNifTerm(env, sExpr->right);
+  }
+  //make my cNode
+  cMap = enif_make_new_map(env);
+  enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "type"),
+                    enif_make_atom(env, (const char *) "OPER"), &cMap);
+  enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "value"),
+                    enif_make_int(env, sExpr->value.value.oper_val), &cMap);
+  cNode = enif_make_tuple3(env, cMap, lNode, rNode);    //modify to get the text value of oper
 
-debug("from clause table >>%s<< ", (tref->tableName));
-
-		nifMap = enif_make_new_map(env);			
-		//TODO: include better checking here. 
-		nifItem1 = enif_make_string (env , (const char *) tref->tableName, ERL_NIF_LATIN1); 
-		
-		if (! enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "name") , nifItem1, &nifMap)) {
-			debug("make map failed");	
-			//handle error
-		}
-	
-		if (tref->tableAlias != NULL) {
-
-			nifItem = enif_make_string (env , (const char *) tref->tableAlias, ERL_NIF_LATIN1);
-	
-			if (enif_make_map_put(env, nifMap, enif_make_atom( env , (const char *) "alias") , nifItem, &nifMap)) {
-				debug("make map failed");
-				//handle error
-			}
-		}
-		nifFromClause = enif_make_list_cell( env, nifMap , nifFromClause );
-	}
-
-	//where clause	
-
-	if (whereclause != NULL) {
-	  	sExpr = whereclause->expr;
- 	  	nifWhereClause = sExprToNifTerm(env, sExpr);			
-	}
- 
-	nifMap = enif_make_new_map(env);
-
-	if ( ! enif_make_map_put ( env, 
-				   nifMap, 
-			 	   enif_make_atom ( env , (const char *) "select_list"),
-				   nifSelectList, 	
-				   &nifMap)
-	    ) 	{ 
-
-		debug("make map failed");
-		//return error condition here. 
-
-		}
-
-
-	if ( ! enif_make_map_put ( env, 
-				   nifMap, 
-				   enif_make_atom (env , (const char *) "from_clause"), 
-				   nifFromClause, 
-				   &nifMap) 
-	   )   	{
-
-		debug("make map failed");
-		//return error condition here
-		}
-
-	if (whereclause != NULL)
-		if ( ! enif_make_map_put ( env, 
-					   nifMap, 
-					   enif_make_atom (env , (const char *) "where_clause"),
-					   nifWhereClause,
-					   &nifMap)
-		   )  	{
-
-			debug("make map failed");
-		
-			}	
-
-	return (nifMap);
+  return (cNode);
 }
 
-static ERL_NIF_TERM sExprToNifTerm (ErlNifEnv *env , scalarExpr *sExpr) {
-	/* traverse the scalarExpr and produce nested Erlang tuple 
-	   representation of it 
+ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
+{
 
-	( 1 + ( foo * 4))
+  ERL_NIF_TERM nodeVal, nodeType;
+  ERL_NIF_TERM nodeMap;
 
-	{ + , 1, { * , foo , 4 }}
 
-	is oper?
-	  yes:is left null?
-  		yes:is right null?
-		    yes:return value
-	  	    no:recurse right
-		no:recurse left
-	  no:return tuple of value
-*/
 
-	ERL_NIF_TERM lNode,rNode,cNode;
-	ERL_NIF_TERM cMap;
-	
-	debug("Entering sExprToNifTerm");
-	
-	if (sExpr->value.type != OPER) {
-		debug("node is NOT oper");
-		cNode = valueExprToNifTerm(env, sExpr->value);
-		return (cNode);
-	}
+  debug("entering valueExprToNifTerm");
 
-	if (sExpr->left != NULL) {
-	  lNode = sExprToNifTerm (env , sExpr->left);
-	}
-	
-	if (sExpr->right != NULL) {
-	  rNode = sExprToNifTerm (env , sExpr->right);
-	}
+  valueExpr v = value.value;
 
-	//make my cNode
-	cMap = enif_make_new_map(env);
-	enif_make_map_put(env, cMap , enif_make_atom(env, (const char *) "type" ), enif_make_atom (env, (const char *) "OPER") , &cMap);
-	enif_make_map_put(env, cMap , enif_make_atom(env, (const char *) "value" ), enif_make_int(env, sExpr->value.value.oper_val) , &cMap);
-	cNode = enif_make_tuple3(env, cMap , lNode, rNode); //modify to get the text value of oper
+  //consider replacing with table driven method
+  switch (value.type) {
 
-	return (cNode);
+    case UNDEFINED:
+      debug("undefined value in s expression");
+      nodeVal = (ERL_NIF_TERM) NULL;
+      nodeType = (ERL_NIF_TERM) NULL;
+      break;
+    case COLREF:
+      debug("add Colref to tuple...");
+      nodeVal = enif_make_string(env, v.colName, ERL_NIF_LATIN1);
+      nodeType = enif_make_atom(env, (const char *) "COLREF");
+      break;
+    case INT:
+      debug("add integer to tuple...");
+      nodeVal = enif_make_int(env, v.integer_val);
+      nodeType = enif_make_atom(env, "INT");
+      break;
+    case NUM:
+      debug("add float to tuple...");
+      nodeVal = enif_make_double(env, v.numeric_val);
+      nodeType = enif_make_atom(env, "NUM");
+      break;
+    case TEXT:
+      debug("add text to tuple...");
+      nodeVal = enif_make_string(env, v.text_val, ERL_NIF_LATIN1);
+      nodeType = enif_make_atom(env, "TEXT");
+      break;
+    case OPER:
+      debug("add oper to tuple. Should never get here.");
+      nodeVal = (ERL_NIF_TERM) NULL;
+      nodeType = enif_make_atom(env, "OPER");
+      break;
+    default:
+      debug("unknown value type!");
+      nodeVal = (ERL_NIF_TERM) NULL;
+  }
+
+  nodeMap = enif_make_new_map(env);
+
+  if (!enif_make_map_put(env,
+                         nodeMap,
+                         enif_make_atom(env, (const char *) "type"),
+                         nodeType, &nodeMap)) {
+    debug("make map failed");
+    //  return (ERL_NIF_TERM) NULL; 
+  }
+
+  if (!enif_make_map_put(env,
+                         nodeMap,
+                         enif_make_atom(env, (const char *) "value"),
+                         nodeVal, &nodeMap)) {
+    debug("make map failed");
+    //return (ERL_NIF_TERM) NULL; 
+  }
+
+  return (nodeMap);
 }
-
-ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *env, valueExprNode value) {
-
-	ERL_NIF_TERM nodeVal, nodeType;
-	ERL_NIF_TERM nodeMap;
-
-
-
-debug("entering valueExprToNifTerm");
-	
-	valueExpr v = value.value;
-
-	//consider replacing with table driven method
-	switch (value.type) {
-
-   	 case UNDEFINED:
-	    debug("undefined value in s expression");
-	    nodeVal = (ERL_NIF_TERM) NULL;
-	    nodeType = (ERL_NIF_TERM) NULL;
-	    break;
-	 case COLREF:
-	    debug("add Colref to tuple...");
-	    nodeVal = enif_make_string(env, v.colName, ERL_NIF_LATIN1);
-	    nodeType = enif_make_atom(env, (const char *) "COLREF");
-	    break;
-	 case INT:
-	    debug("add integer to tuple...");
-	    nodeVal = enif_make_int(env, v.integer_val);
-	    nodeType = enif_make_atom(env, "INT");
-	    break;
-	 case NUM:
-	    debug("add float to tuple...");
-	    nodeVal = enif_make_double(env, v.numeric_val);
-	    nodeType = enif_make_atom(env, "NUM");
-	    break;
-	 case TEXT:
-	    debug("add text to tuple...");
-	    nodeVal = enif_make_string(env, v.text_val, ERL_NIF_LATIN1);
-	    nodeType = enif_make_atom(env, "TEXT");
-	    break;
-	 case OPER:
-	    debug("add oper to tuple. Should never get here.");
-	    nodeVal = (ERL_NIF_TERM) NULL;
-	    nodeType = enif_make_atom(env, "OPER");
-            break;
-	 default:
-	    debug("unknown value type!");
-	    nodeVal = (ERL_NIF_TERM) NULL;
-	} 		
-
-	nodeMap = enif_make_new_map(env);
-	
-	if ( ! enif_make_map_put ( env ,  
-				 nodeMap , 
-				 enif_make_atom ( env , (const char *) "type") ,
-				 nodeType , 
-				 &nodeMap )) { 
-	      debug("make map failed"); 
-	    //  return (ERL_NIF_TERM) NULL; 
-        } 
-	
-	if ( ! enif_make_map_put ( env ,  
-				 nodeMap , 
-				 enif_make_atom ( env , (const char *) "value") ,
-				 nodeVal , 
-				 &nodeMap )) { 
-	      debug("make map failed"); 
-	      //return (ERL_NIF_TERM) NULL; 
-        } 
-
-	return(nodeMap);	
-}
-
-
-

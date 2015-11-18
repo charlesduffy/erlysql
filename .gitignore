@@ -13,4 +13,6 @@ csrc/scanner.h
 csrc/*.swp
 csrc/*.tab.h
 csrc/*.tab.c
+csrc/*.c~
+csrc/*.h~
 priv/*

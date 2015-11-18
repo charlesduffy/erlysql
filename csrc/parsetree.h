@@ -3,26 +3,28 @@
 
 /* Helper Enums for parse nodes */
 
-typedef enum { UNDEFINED, COLREF , INT , NUM , TEXT, OPER, SEXPR } valueExprType;
+typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR } valueExprType;
 
-typedef enum { DIVISION , MULTIPLICATION , ADDITION , SUBTRACTION , MODULO, GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT, EQUAL, NOTEQUAL } operVal;
+typedef enum { DIVISION, MULTIPLICATION, ADDITION, SUBTRACTION, MODULO,
+    GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT,
+    EQUAL, NOTEQUAL } operVal;
 
 union value_expr {
-	char * colName;
-	int integer_val;
-	char * text_val;
-	double numeric_val;
-	operVal oper_val;
-} ;
+  char *colName;
+  int integer_val;
+  char *text_val;
+  double numeric_val;
+  operVal oper_val;
+};
 
 typedef union value_expr valueExpr;
 
 /* Parse Nodes */
 
 struct value_expr_node {
-	valueExprType type;
-	valueExpr value;
-} ;
+  valueExprType type;
+  valueExpr value;
+};
 
 typedef struct value_expr_node valueExprNode;
 
@@ -32,11 +34,11 @@ typedef struct s_expr scalarExpr;
 
 struct s_expr {
 
-	valueExprNode value;
-	scalarExpr * left;	
-	scalarExpr * right;	
+  valueExprNode value;
+  scalarExpr *left;
+  scalarExpr *right;
 
-} ;
+};
 
 
 /*
@@ -44,9 +46,9 @@ struct s_expr {
 */
 
 struct select_list_node {
-	int nElements;
-	scalarExpr **sExpr;
-} ;
+  int nElements;
+  scalarExpr **sExpr;
+};
 
 typedef struct select_list_node selectListNode;
 
@@ -57,8 +59,8 @@ typedef struct select_list_node selectListNode;
 */
 
 struct table_ref_node {
-	char *tableName;
-	char *tableAlias;
+  char *tableName;
+  char *tableAlias;
 };
 
 typedef struct table_ref_node tableRefNode;
@@ -68,8 +70,8 @@ typedef struct table_ref_node tableRefNode;
 */
 
 struct table_ref_list_node {
-	int nElements;
-	tableRefNode **tables;
+  int nElements;
+  tableRefNode **tables;
 };
 
 typedef struct table_ref_list_node tableRefListNode;
@@ -79,9 +81,9 @@ typedef struct table_ref_list_node tableRefListNode;
 */
 
 struct from_clause_node {
-	int type;
-	tableRefListNode *refList;
-} ;
+  int type;
+  tableRefListNode *refList;
+};
 
 typedef struct from_clause_node fromClauseNode;
 
@@ -90,9 +92,9 @@ typedef struct from_clause_node fromClauseNode;
 */
 
 struct where_clause_node {
-	int type;
-	scalarExpr *expr;	
-} ;
+  int type;
+  scalarExpr *expr;
+};
 
 typedef struct where_clause_node whereClauseNode;
 
@@ -100,10 +102,10 @@ typedef struct where_clause_node whereClauseNode;
 	Table expression node
 */
 struct table_expression_node {
-	
-	fromClauseNode *fromClause;
-	whereClauseNode *whereClause;
-	
+
+  fromClauseNode *fromClause;
+  whereClauseNode *whereClause;
+
 };
 
 typedef struct table_expression_node tableExprNode;
@@ -121,9 +123,9 @@ typedef enum statement_type statementType;
 */
 
 struct select_stmt_node {
-	selectListNode *selectList;
-	tableExprNode *tableExpr;
-} ;
+  selectListNode *selectList;
+  tableExprNode *tableExpr;
+};
 
 typedef struct select_stmt_node selectStmtNode;
 
@@ -133,12 +135,12 @@ typedef struct select_stmt_node selectStmtNode;
 */
 
 struct query_node {
-	statementType statType;
-	//union statement type
-	//*****FIX this
-	selectStmtNode *selnode;	
-	//insertStmtNode *insnode;
-	//updateStmtNode *updnode;
+  statementType statType;
+  //union statement type
+  //*****FIX this
+  selectStmtNode *selnode;
+  //insertStmtNode *insnode;
+  //updateStmtNode *updnode;
 };
 
 typedef struct query_node queryNode;
