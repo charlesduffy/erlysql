@@ -43,7 +43,7 @@ typedef void *yyscan_t;
 	valueExprNode  		valueExpr;
 	scalarExpr	 	*sExpr;
 	whereClauseNode 	*whereClause;
-	char 	       		*columnName;
+	colRef			*columnRef;
 }	
 
 %code{
@@ -78,7 +78,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 %left		LPAREN RPAREN
 %left		SEMICOLON COMMA
 //%left         TYPECAST
-//%left         '.'
+%left           POINT
 
 %type	<query>		query_statement
 %type 	<selectStmt> 	select_statement
@@ -88,7 +88,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 %type 	<tableRefList> 	table_ref_list
 %type 	<valueExpr> 	value_expr
 %type 	<sExpr> 	scalar_expr
-%type   <columnName> 	colref
+%type   <columnRef> 	colref
 %type   <whereClause> 	where_clause
 %type 	<tableExpr> 	table_expr
 
@@ -414,12 +414,13 @@ scalar_expr:
 ;
 
 value_expr:
-	colref	{ 
-			$$.type = COLREF;
-			$$.value.colName = (char *) $1;
-			debug("value_expr in parser. Colref value is: %s", $$.value.colName);
-		}				|
-	
+	colref
+	{ 
+		$$.type = COLREF;
+		$$.value.column_val = $1;
+		debug("value_expr in parser. Colref value ");
+	}
+	|
 	INTEGER	{
 			$$.type = INT;
 			$$.value.integer_val = $1;
@@ -442,7 +443,20 @@ value_expr:
 
 
 colref:
-	IDENTIFIER { $$ = (char *) $1; }
+	IDENTIFIER 
+	{ 
+		$$=MAKENODE(colRef);
+		$$->colName = $1;
+		$$->colReference = NULL; 
+	}
+	|
+	IDENTIFIER POINT IDENTIFIER  
+	{
+		$$=MAKENODE(colRef);
+		debug("colref with reference. Ref: %s , Colname: %s", $1 , $3); 
+		$$->colName = $3;
+		$$->colReference = $1; 
+	}
 ;
 
 %%

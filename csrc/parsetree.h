@@ -9,8 +9,19 @@ typedef enum { DIVISION, MULTIPLICATION, ADDITION, SUBTRACTION, MODULO,
     GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT,
     EQUAL, NOTEQUAL } operVal;
 
-union value_expr {
+/* column reference */
+
+struct column_ref {
   char *colName;
+  char *colReference;
+};
+
+typedef struct column_ref colRef;
+
+/* value expression */
+
+union value_expr {
+  colRef *column_val;
   int integer_val;
   char *text_val;
   double numeric_val;

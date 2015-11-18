@@ -27,6 +27,7 @@ semicolon [;]
 comma [,]
 lparen [(]
 rparen [)]
+point  [.]
 
 %%
  
@@ -69,5 +70,6 @@ rparen [)]
 {comma}			{ return COMMA; }
 {lparen}		{ return LPAREN; }
 {rparen}		{ return RPAREN; }
+{point}			{ return POINT; }
 
 %%

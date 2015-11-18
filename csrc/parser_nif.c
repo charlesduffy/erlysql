@@ -227,6 +227,7 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
   debug("entering valueExprToNifTerm");
 
   valueExpr v = value.value;
+  nodeMap = enif_make_new_map(env);
 
   //consider replacing with table driven method
   switch (value.type) {
@@ -238,8 +239,24 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
       break;
     case COLREF:
       debug("add Colref to tuple...");
-      nodeVal = enif_make_string(env, v.colName, ERL_NIF_LATIN1);
       nodeType = enif_make_atom(env, (const char *) "COLREF");
+
+      /*
+	 Special case: for column references we also need to encode the table reference
+	 in the map, if one is present. We re-use the nodeVal enif variable for this here. 
+	 Consider a better solution.
+      */
+      if (v.column_val->colReference != NULL) {
+      		nodeVal = enif_make_string(env, v.column_val->colReference, ERL_NIF_LATIN1);
+    	        if (!enif_make_map_put(env,
+                	         nodeMap,
+                        	 enif_make_atom(env, (const char *) "reference"),
+                	         nodeVal, &nodeMap)) {
+        	debug("make map failed");
+        	//return (ERL_NIF_TERM) NULL; 
+      	}
+      }
+      nodeVal = enif_make_string(env, v.column_val->colName, ERL_NIF_LATIN1);
       break;
     case INT:
       debug("add integer to tuple...");
@@ -266,7 +283,6 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
       nodeVal = (ERL_NIF_TERM) NULL;
   }
 
-  nodeMap = enif_make_new_map(env);
 
   if (!enif_make_map_put(env,
                          nodeMap,

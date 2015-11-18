@@ -56,15 +56,41 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 
 
+%% Make list of base relations from FromClause list
 
+mk_brels([H|T]) ->
+	N = mk_scnode(H),
+	mk_brels(T, N).
 
-get_base_relations(ParseTree) ->
+mk_brels([H|T] , Acc) ->
+	N = mk_scnode(H),
+	mk_brels(T , [N] ++ Acc);
+
+mk_brels([], Acc) -> Acc.
+
+%% Process a single FromClause entry and produce a scan node
+
+mk_scnode(N) ->
+       #{   
+	    id => 0, 	
+	    module => seqscan , 
+	    target => 0,
+	    sourcelist => [], 
+    	    instruction => #{ 	
+				relname => maps:get(name, N), 
+				alias => maps:get(alias, N),
+				projection => [] ,
+				selection =>  [] 
+			    }
+	}.
+			
+
+make_scan_nodes(ParseTree) ->
 	%% Produce list of scan nodes from parse tree	
+	%% including projections and selection predicates			
 
-	
-       	ScanNode = #{ id => 0 , module => seqscan , target => 0 , 
-	    sourcelist => list , instruction => map },
-	ScanNode.
+	BaseRels = mk_brels(maps:get(from_clause, ParseTree))
+.
 
 plan_query(ParseTree) ->
 	%% Initial planner. 
@@ -77,7 +103,7 @@ plan_query(ParseTree) ->
 	%% get base relations list
 
 %% this version assumes a single base relation and no subqueries.
-	BaseRels = get_base_relations(ParseTree),	
+	ScanNodes = make_scan_nodes(ParseTree),	
 	
 	%% get projection list
 	
@@ -85,8 +111,7 @@ plan_query(ParseTree) ->
 
 	%% get sort spec
 
-	Plan = [ 1 , 2 , 3 , 4],	
-	{ok , Plan }.	
+	{ok , ScanNodes }.	
 
 
 %%% execution plan generic node

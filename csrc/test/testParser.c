@@ -84,7 +84,7 @@ TEST(basicParser, herring)
 TEST(basicParser, antioch)
 {
     int result;
-    char * queryText1 = "select  foo , bar , baz from table1 as a , table2 as b where foo < 1;";	
+    char * queryText1 = "select  foo , bar , baz from table1 as a , table2 as b where a.foo < 1 and 1>2;";	
     buf1 = yy_scan_string(queryText1, scanner1);
     yyparse(scanner1, qry1);
     printf("%s\n", queryText1);

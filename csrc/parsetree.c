@@ -83,7 +83,7 @@ void prettyPrintSexpr(scalarExpr * sExp, int depth)
       printf("[?:undefined]");
       break;
     case COLREF:
-      printf("[%s:colref]", sExp->value.value.colName);
+      printf("[%s:colref]", sExp->value.value.column_val->colName);
       break;
     case TEXT:
       printf("[%s:text]", sExp->value.value.text_val);
