@@ -1,0 +1,97 @@
+
+digraph g {
+graph [
+rankdir = "LR"
+];
+
+node [
+fontsize = "16"
+shape = "ellipse"
+];
+
+edge [
+];
+
+
+"ParseTree" [
+label = "Select List | Table Expression "
+shape = "record"
+];
+
+"TableExpression" [
+label = "From Clause|Where Clause|Order by Clause|Having Clause"
+shape="record"
+];
+
+"FromClause" [
+label = "1 | 2 | 3"
+shape = "record"
+];
+
+"WhereClause" [
+label = "1 | 2 "
+shape = "record"
+];
+
+"SelectList" [
+label = " 1 | 2 | 3 "
+shape = "record"
+];
+
+"sexpr0-1" [
+label= "/"
+];
+
+"sexpr0-2" [
+label= "+"
+];
+
+"sexpr0-3" [
+label= "4"
+];
+
+"sexpr0-4" [
+label= "a"
+];
+
+"sexpr0-5" [
+label= "b"
+];
+
+"SelectList":f0 -> "sexpr0-1":f0 [
+id = 0
+];
+
+"sexpr0-1":f0 -> "sexpr0-2":f0 [
+id = 0
+];
+
+"sexpr0-1":f0 -> "sexpr0-3":f0 [
+id = 0
+];
+
+"sexpr0-2":f0 -> "sexpr0-4":f0 [
+id = 0
+];
+
+"sexpr0-2":f0 -> "sexpr0-5":f0 [
+id = 0
+];
+
+"ParseTree":f1 -> "SelectList":f0 [
+id = 0
+];
+
+"ParseTree":f1 -> "TableExpression":f0 [
+id = 0
+];
+
+"TableExpression":f1 -> "WhereClause":f0 [
+id = 0
+];
+
+"TableExpression":f1 -> "FromClause":f0 [
+id = 0
+];
+
+}

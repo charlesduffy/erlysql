@@ -16,10 +16,28 @@ start() ->
 %%
 %%.
 
-process_query([$\\|[Q|_]]) ->
+gv_write(T) ->
+	ParseTree = parser:parseQuery(T),
+	gv_traverse(ParseTree).
+
+gv_traverse(ParseTree) ->
+	sellist_traverse(maps:get(select_list, ParseTree)),
+	{ok}
+.	
+
+sellist_traverse([]) ->
+	{ok};
+
+sellist_traverse([H|T]) ->
+	io:fwrite("here is select list: ~n~p~n", [ H ] ),
+	sellist_traverse(T),
+	{ok}.
+
+process_query([$\\|[Q|T]]) ->
 	%%meta command. 
 	case Q of
 		$q -> ok;
+		$g -> gv_write(T);
 		_Else -> false 
 	end;
 

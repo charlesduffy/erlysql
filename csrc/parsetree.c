@@ -18,6 +18,11 @@ void prettyPrintSelectNode(selectStmtNode *);
 void prettyPrintParseTree(queryNode *);
 void prettyPrintSexpr(scalarExpr *, int depth);
 
+
+//void gv_SelectList(selectListNode *);
+//void gv_SelectNode(selectStmtNode *);
+//void gv_ParseTree(queryNode *);
+void gv_Sexpr(scalarExpr *, int depth);
 /* other fun decl */
 
 void drawbranch(int depth, char c)
@@ -63,6 +68,68 @@ queryNode *parseQuery(char *queryText)
 //    prettyPrintParseTree(qry);
   return (qry);
 }
+
+void gv_Sexpr(scalarExpr * sExp, int depth)
+{
+
+  /* scalar expressions are tree-like structures. 
+     Basic recursive tree traversal algorithm here.
+   */
+  valueExprNode v;
+  char *oper[] = { "/", "*", "+", "-", "%", ">", "<", ">=", "<=", "OR", "AND", "NOT", "=", "!=" };      //****TODO fix this nonsense!
+
+  //print three dashes, then the value of this sexpr
+
+  printf("---");
+
+  switch (sExp->value.type) {
+
+    case UNDEFINED:
+      printf("[?:undefined]");
+      break;
+    case COLREF:
+      printf("[%s:colref]", sExp->value.value.column_val->colName);
+      break;
+    case TEXT:
+      printf("[%s:text]", sExp->value.value.text_val);
+      break;
+    case INT:
+      printf("[%d:integer]", sExp->value.value.integer_val);
+      break;
+    case NUM:
+      printf("[%f:numeric]", sExp->value.value.numeric_val);
+      break;
+    case OPER:
+      printf("[%s:operator]", *(oper + sExp->value.value.oper_val));
+      break;
+    case SEXPR:
+      printf("[SEXPR]");
+      break;
+  }
+
+  if (sExp->left != NULL) {
+    printf("\n");
+    drawbranch(depth + 1, ' ');
+    printf("|\n");
+    drawbranch(depth + 1, ' ');
+    printf("+");
+    prettyPrintSexpr(sExp->left, depth + 1);
+  }
+
+  if (sExp->right != NULL) {
+    printf("\n");
+    drawbranch(depth + 1, ' ');
+    printf("|\n");
+    drawbranch(depth + 1, ' ');
+    printf("\\");
+    prettyPrintSexpr(sExp->right, depth + 1);
+
+  }
+
+
+
+}
+
 
 void prettyPrintSexpr(scalarExpr * sExp, int depth)
 {

@@ -84,32 +84,27 @@ mk_scnode(N) ->
 			    }
 	}.
 			
+%% Populate initial scan nodes with selection information
+get_sel(D)->
+	{ok}.
+
+get_sel(S , W) ->
+	{ok}	
+.
 
 make_scan_nodes(ParseTree) ->
 	%% Produce list of scan nodes from parse tree	
 	%% including projections and selection predicates			
 
-	BaseRels = mk_brels(maps:get(from_clause, ParseTree))
+	InitScanNodes = mk_brels(maps:get(from_clause, ParseTree)),
+	ScanNodes = get_sel(InitScanNodes)
 .
 
 plan_query(ParseTree) ->
 	%% Initial planner. 
 	%% Does no plan optimisation at all - merely generates a viable execution plan
 
-
-%%  #{from_clause => "bar",select_list => [foo],where_clause => {6,foo,4}}
-
-
-	%% get base relations list
-
-%% this version assumes a single base relation and no subqueries.
 	ScanNodes = make_scan_nodes(ParseTree),	
-	
-	%% get projection list
-	
-	%% get filter lists
-
-	%% get sort spec
 
 	{ok , ScanNodes }.	
 

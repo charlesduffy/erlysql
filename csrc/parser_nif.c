@@ -10,7 +10,7 @@
 /* Node to Erlang NIF term converters */
 
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
-static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *);
+static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *, int);
 static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode);
 
 /* NIF function callable from erlang */
@@ -79,7 +79,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   scalarExpr *sExpr;
   for (i = sellist->nElements - 1; i >= 0; i--) {
     sExpr = *(sellist->sExpr + i);
-    nifItem = sExprToNifTerm(env, sExpr);
+    nifItem = sExprToNifTerm(env, sExpr, 0);
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
   }
 
@@ -128,7 +128,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
   if (whereclause != NULL) {
     sExpr = whereclause->expr;
-    nifWhereClause = sExprToNifTerm(env, sExpr);
+    nifWhereClause = sExprToNifTerm(env, sExpr, 0);
   }
 
   nifMap = enif_make_new_map(env);
@@ -169,7 +169,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   return (nifMap);
 }
 
-static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr)
+static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int depth)
 {
   /* traverse the scalarExpr and produce nested Erlang tuple 
      representation of it 
@@ -195,15 +195,17 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr)
   if (sExpr->value.type != OPER) {
     debug("node is NOT oper");
     cNode = valueExprToNifTerm(env, sExpr->value);
+    if (depth == 0) 
+      cNode = enif_make_tuple1(env, cNode);
     return (cNode);
   }
 
   if (sExpr->left != NULL) {
-    lNode = sExprToNifTerm(env, sExpr->left);
+    lNode = sExprToNifTerm(env, sExpr->left, depth++);
   }
 
   if (sExpr->right != NULL) {
-    rNode = sExprToNifTerm(env, sExpr->right);
+    rNode = sExprToNifTerm(env, sExpr->right, depth++);
   }
   //make my cNode
   cMap = enif_make_new_map(env);
