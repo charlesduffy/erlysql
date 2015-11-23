@@ -56,7 +56,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 
 
-%% Make list of base relations from FromClause list
+%% @doc Make list of base relations from FromClause list
 
 mk_brels([H|T]) ->
 	N = mk_scnode(H),
@@ -68,7 +68,7 @@ mk_brels([H|T] , Acc) ->
 
 mk_brels([], Acc) -> Acc.
 
-%% Process a single FromClause entry and produce a scan node
+%% @doc Process a single FromClause entry and produce a scan node
 
 mk_scnode(N) ->
        #{   
@@ -78,13 +78,13 @@ mk_scnode(N) ->
 	    sourcelist => [], 
     	    instruction => #{ 	
 				relname => maps:get(name, N), 
-				alias => maps:get(alias, N),
+				alias => maps:get(alias, N, ""),
 				projection => [] ,
 				selection =>  [] 
 			    }
 	}.
 			
-%% Populate initial scan nodes with selection information
+%% @doc Populate initial scan nodes with selection information
 get_sel(D)->
 	{ok}.
 
@@ -92,17 +92,20 @@ get_sel(S , W) ->
 	{ok}	
 .
 
-make_scan_nodes(ParseTree) ->
-	%% Produce list of scan nodes from parse tree	
-	%% including projections and selection predicates			
 
-	InitScanNodes = mk_brels(maps:get(from_clause, ParseTree)),
-	ScanNodes = get_sel(InitScanNodes)
+%% @doc Produce list of scan nodes from parse tree	
+%%      including projections and selection predicates			
+
+make_scan_nodes(ParseTree) ->
+
+	InitScanNodes = mk_brels(maps:get(from_clause, ParseTree))
+%%	ScanNodes = get_sel(InitScanNodes)
 .
 
+%% @doc Initial planner. 
+%% 	Does no plan optimisation at all - merely generates a viable execution plan
+
 plan_query(ParseTree) ->
-	%% Initial planner. 
-	%% Does no plan optimisation at all - merely generates a viable execution plan
 
 	ScanNodes = make_scan_nodes(ParseTree),	
 

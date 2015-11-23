@@ -81,3 +81,6 @@ test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o
 
 testdebug: 	TESTCFLAGS += -DXDEBUG
 testdebug:	test
+
+edoc:
+	erl -noshell -run edoc_run packages '[""]' '[{source_path, ["src"]}, {dir, "doc"}]'
