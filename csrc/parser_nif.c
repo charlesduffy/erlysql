@@ -13,8 +13,10 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
 static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *, int);
 static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode);
 
-/* NIF function callable from erlang */
+/* External function to translate Oper codes to symbols */
+char *operSyms[] = { "/", "*", "+", "-", "%", ">", "<", ">=", "<=", "OR", "AND", "NOT", "=", "!=" };      //****TODO fix this nonsense!
 
+/* NIF functions callable from erlang */
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv *, int, const ERL_NIF_TERM[]);
 
@@ -212,7 +214,7 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
   enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "type"),
                     enif_make_atom(env, (const char *) "OPER"), &cMap);
   enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "value"),
-                    enif_make_int(env, sExpr->value.value.oper_val), &cMap);
+                    enif_make_string(env, operSyms[sExpr->value.value.oper_val], ERL_NIF_LATIN1 ), &cMap);
   cNode = enif_make_tuple3(env, cMap, lNode, rNode);    //modify to get the text value of oper
 
   return (cNode);

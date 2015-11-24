@@ -1,6 +1,5 @@
 -module(xshell).
 -export([start/0]).
--export([gv_traverse/1]).
 
 start() ->
 	io:fwrite("xshell test SQL client~n"),
@@ -22,20 +21,17 @@ start() ->
 
 gv_write(QueryText, OutFile) ->
 	ParseTree = parser:parseQuery(QueryText),
-	DotText = gv_traverse(ParseTree),
-	file:write_file(OutFile, 
-		
-				 DotText 
-			),
+	DotText = gv_traverse(ParseTree, QueryText),
+	file:write_file(OutFile, DotText ),
 	io:fwrite([DotText]),
 	{ok}
 .
 	
 %% @doc traverse the parse tree, return the dot text to write out
 
-gv_traverse(ParseTree) ->
+gv_traverse(ParseTree, QueryText) ->
 	%% Obtain dot file header
-	gv_gen_header() ++
+	gv_gen_header(QueryText) ++
 	%% Traverse select list
 	sellist_traverse(maps:get(select_list, ParseTree)) ++
 	whereclause_traverse(maps:get(where_clause, ParseTree)) ++ 
@@ -46,11 +42,11 @@ gv_traverse(ParseTree) ->
 
 %% @doc prints dotfile header text
 
-gv_gen_header() ->
-	"graph \"parse tree\" {
+gv_gen_header(QueryText) ->
+	"graph \"clusterparsetree\" {
 		node [ fontsize=12 ];
 		graph [ fontsize=10 ];
-		label = \"Parse tree\"
+		label = \""++ QueryText ++ "\"
 "
 .
 
@@ -213,9 +209,9 @@ process_query([$\\|[Q|T]]) ->
 
 process_query(_X) ->
 	ParseTree = parser:parseQuery(_X),
-	io_lib:fwrite("parsetree:~n~p~n", [ParseTree]),
+	io:fwrite("parsetree:~n~p~n", [ParseTree]),
 	Plan = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
-	io_lib:fwrite("plan:~n~p~n", [Plan]),
+	io:fwrite("plan:~n~p~n", [Plan]),
 	do_repl()	
 	.
 

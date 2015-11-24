@@ -9,6 +9,9 @@ typedef enum { DIVISION, MULTIPLICATION, ADDITION, SUBTRACTION, MODULO,
     GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT,
     EQUAL, NOTEQUAL } operVal;
 
+/* operator symbols */
+extern char *operSyms[];
+
 /* column reference */
 
 struct column_ref {
