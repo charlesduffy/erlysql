@@ -1,5 +1,6 @@
 -module(xshell).
 -export([start/0]).
+-export([gv_traverse/1]).
 
 start() ->
 	io:fwrite("xshell test SQL client~n"),
@@ -23,15 +24,58 @@ gv_write(QueryText, OutFile) ->
 	ParseTree = parser:parseQuery(QueryText),
 	DotText = gv_traverse(ParseTree),
 	file:write_file(OutFile, 
-		io_lib:fwrite(	"~p", 
-				[ DotText ])
+		
+				 DotText 
 			),
+	io:fwrite([DotText]),
+	{ok}
+.
 	
+%% @doc traverse the parse tree, return the dot text to write out
 
 gv_traverse(ParseTree) ->
-	sellist_traverse(maps:get(select_list, ParseTree), 0),
-	{ok}
+	%% Obtain dot file header
+	gv_gen_header() ++
+	%% Traverse select list
+	sellist_traverse(maps:get(select_list, ParseTree)) ++
+	whereclause_traverse(maps:get(where_clause, ParseTree)) ++ 
+	"
+	}
+	"
 .	
+
+%% @doc prints dotfile header text
+
+gv_gen_header() ->
+	"graph \"parse tree\" {
+		node [ fontsize=12 ];
+		graph [ fontsize=10 ];
+		label = \"Parse tree\"
+"
+.
+
+%% @doc Traverse where clause and print
+
+whereclause_traverse(T) -> 
+	L = proc_sexpr(T , { 0 , 0 , [] , [] } ),
+	write_whereclause_accs(L)
+.
+
+%% @doc Write out where clause dot code
+write_whereclause_accs(L) ->
+	{ _ , _ , Nodes , Links } = L,
+	"
+	subgraph clusterwhereclause 
+	{
+		label = \"Where Clause\";
+		color = \"green\"
+	" ++
+		print_nodes(Nodes, 0) ++
+		print_links(Links, 0) ++
+	"
+		}
+	"	
+.
 
 %% @doc traverse select list and process each s-expression in it
 %% Each sexpr is traversed, and each node pushes a graphviz
@@ -42,52 +86,57 @@ gv_traverse(ParseTree) ->
 %% 
 %% { select list ID , sexpr Node ID, Node Accumulator, Link Accumulator }
 
-sellist_traverse([], Sl_id) ->
-	{ok};
-sellist_traverse([H|T], Sl_id ) ->
-	%%io:fwrite("here is select list: ~n~p~n", [ H ] ),
-	L = proc_sexpr(H , { 0 , 0 , [] , [] } ),
-	%%io:fwrite("accumulators: ~n~p" , [ L ]),
-	write_accs(L),
-	sellist_traverse(T , Sl_id + 1)
-	.
+sellist_traverse(T) -> sellist_traverse(T, 1, "").
 
-write_accs(L) ->
+sellist_traverse([H|T], Sl_id , Acc ) ->
+	L = proc_sexpr(H , { Sl_id , 0 , [] , [] } ),
+	Text = write_sellist_accs(L, Sl_id),
+	sellist_traverse(T , Sl_id + 1, Acc ++ Text )
+;
 
-	Header = " digraph g { graph [ rankdir = \"LR\" ];
-		   node [ fontsize  = \"16\" shape = \"ellipse\" ];
-		   edge [ ]; ",
+sellist_traverse([], _ , TextAcc ) -> TextAcc.
+
+write_sellist_accs(L, Sl_id) ->
 	{ _ , _ , Nodes , Links } = L,
-	NodeText = print_nodes(Nodes),
-	LinkText = print_links(Links),
-	file:write_file("gv/parsetree.dot", 
-		io_lib:fwrite("~s ~n ~s ~n ~s ~n }", 
-		[ Header , NodeText , LinkText ])),
-	{ok}
+	SL = integer_to_list(Sl_id),
+	"
+	subgraph clustersellist_" ++ SL ++ " { 
+		label=\"select list item " ++ SL ++ "\"
+		color=\"blue\" 
+	" ++
+		print_nodes(Nodes, Sl_id) ++ 
+		print_links(Links, Sl_id) ++ 
+	"
+		}
+	"
 .
 
-print_links(L) -> print_links(L, "", 0).
+print_links(L, Sl_id) -> print_links(L, Sl_id, "", 0).
 
-print_links([H|T], TextAcc, LinkIdAcc) ->
+print_links([H|T], Sl_id, TextAcc, LinkIdAcc) ->
 	{ Nfrom , Nto } = H , 
-	Text = io_lib:format("\"sexpr0_~p\" -> \"sexpr0_~p\" [ id = ~p ];  ~n", [ Nfrom, Nto, LinkIdAcc ]),
-	print_links(T, string:concat(Text, TextAcc), LinkIdAcc + 1);
+	Text = lists:flatten(io_lib:format("\"sexpr~p_~p\" -- \"sexpr~p_~p\" [ id = ~p ];~n", [ Sl_id, Nfrom, Sl_id, Nto, LinkIdAcc ])),
+	print_links(T, Sl_id, string:concat(Text, TextAcc), LinkIdAcc + 1);
 
-print_links([] , TextAcc, _) -> TextAcc.
+print_links([] , _, TextAcc, _) -> TextAcc.
 
-print_nodes(L) -> print_nodes(L, "").
+print_nodes(L, Sl_id ) -> print_nodes(L, Sl_id , "").
 
-print_nodes([H|T], TextAcc) ->
+print_nodes([H|T], Sl_id , TextAcc) ->
 	{ Nid , Nlabel } = H , 
 	NLabelArg = 
 		case is_list(Nlabel) of
 		true -> "~p";
 		false -> "\"~p\""
 	end,
-	Text = io_lib:format("\"sexpr0_~p\" [ label = " ++ NLabelArg ++ "];~n~n", [ Nid, Nlabel ]),
-	print_nodes(T, string:concat(Text, TextAcc));
+	Text = lists:flatten(
+		io_lib:format("\"sexpr~p_~p\" [ label = " ++ NLabelArg ++ "];~n", 
+			[ Sl_id, Nid, Nlabel ]
+				)
+		),
+	print_nodes(T, Sl_id, string:concat(Text, TextAcc));
 
-print_nodes([] , TextAcc) -> TextAcc.
+print_nodes([] , _ , TextAcc) -> TextAcc.
 
 %% @doc recursive sexpr processor functions. Traverse the structure
 %% while pushing nodes on to a Node accumulator, and links on to a Link accumulator.
@@ -99,7 +148,7 @@ print_nodes([] , TextAcc) -> TextAcc.
 
 proc_sexpr(  V , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
 	% @doc process Leaf node
-	{ PSn_id , Plabel } = lists:last(NAcc),
+	{ PSn_id , _ } = lists:last(NAcc),
 	{	 Sl_id, 
 		 Sn_id + 1, 
 		 [ { Sn_id  , maps:get(value, V) } ] ++ NAcc,
@@ -108,7 +157,7 @@ proc_sexpr(  V , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
 ;
 proc_sexpr( { V } , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
 	% Leaf node
-	{ PSn_id , Plabel } = lists:last(NAcc),
+	{ PSn_id , _ } = lists:last(NAcc),
 	{	 Sl_id, 
 		 Sn_id + 1, 
 		 [ { Sn_id  , maps:get(value, V) } ] ++ NAcc,
@@ -117,7 +166,7 @@ proc_sexpr( { V } , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
 ;
 
 %% @doc process sexpr when we are the root node
-proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc == [] ->
+proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , _ } ) when NAcc == [] ->
 	Acc = {	 Sl_id, 
 		 Sn_id + 1, 
 		 [ { Sn_id  , maps:get(value, Op) } ],
@@ -129,7 +178,7 @@ proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc == [] ->
 
 proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc /= [] ->
 	%% @doc process sexpr when we are the parent (ie, node accumulator is empty)
-	{ PSn_id , Plabel } = lists:last(NAcc),
+	{ PSn_id , _ } = lists:last(NAcc),
 				
 	%push link to Lacc
 	
@@ -158,15 +207,15 @@ process_query([$\\|[Q|T]]) ->
 	%%meta command. 
 	case Q of
 		$q -> ok;
-		$g -> gv_write(T);
+		$g -> gv_write(T,"parsetree.dot");
 		_Else -> false 
 	end;
 
 process_query(_X) ->
 	ParseTree = parser:parseQuery(_X),
-	io:fwrite("parsetree:~n~p~n", [ParseTree]),
+	io_lib:fwrite("parsetree:~n~p~n", [ParseTree]),
 	Plan = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
-	io:fwrite("plan:~n~p~n", [Plan]),
+	io_lib:fwrite("plan:~n~p~n", [Plan]),
 	do_repl()	
 	.
 

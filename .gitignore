@@ -1,7 +1,9 @@
+parsetree.dot
 all_tests
 callgrind.out.*
 core
 grammar.output
+doc/*
 ebin/*
 .rebar/*
 *.so
