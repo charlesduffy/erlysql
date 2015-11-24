@@ -69,6 +69,15 @@ mk_brels([H|T] , Acc) ->
 mk_brels([], Acc) -> Acc.
 
 %% @doc Process a single FromClause entry and produce a scan node
+%% 
+%% To get scan node selection predicates, we need to search the Where
+%% clause to find relevant subexpressions (ie, those which do not compare
+%% attributes from different relations, becoming join conditions)
+%% 
+%% We search for the largest subexpressions containing only:
+%% 1. value expressions
+%% 2. Comparison operators
+%% 3. Attributes from the same relation
 
 mk_scnode(N) ->
        #{   
