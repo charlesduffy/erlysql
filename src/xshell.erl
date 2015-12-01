@@ -136,7 +136,7 @@ print_nodes([] , _ , TextAcc) -> TextAcc.
 
 %% @doc recursive sexpr processor functions. Traverse the structure
 %% while pushing nodes on to a Node accumulator, and links on to a Link accumulator.
-%% Returns bot accumulators for printing the Graphviz dot output. 
+%% Returns both accumulators for printing the Graphviz dot output. 
 %% @todo some leaf nodes are difficult to pattern match; some are single-element
 %% tuples, some are maps. This has to be fixed to remove redundant function declarations
 %% @todo consider putting the graphvis visualisers into their own module
