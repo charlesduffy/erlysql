@@ -141,39 +141,30 @@ print_nodes([] , _ , TextAcc) -> TextAcc.
 %% tuples, some are maps. This has to be fixed to remove redundant function declarations
 %% @todo consider putting the graphvis visualisers into their own module
 
-
-proc_sexpr(  V , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
-	% @doc process Leaf node
-	{ PSn_id , _ } = lists:last(NAcc),
-	{	 Sl_id, 
-		 Sn_id + 1, 
-		 [ { Sn_id  , maps:get(value, V) } ] ++ NAcc,
-		 LAcc ++ [ { PSn_id , Sn_id } ]
-	}
-;
-proc_sexpr( { V } , { Sl_id , Sn_id , NAcc , LAcc } ) when not is_tuple(V) ->
+proc_sexpr([ { type , _ } , { value , NodeVal } ] , { Sl_id , Sn_id , NAcc , LAcc } )  ->
 	% Leaf node
 	{ PSn_id , _ } = lists:last(NAcc),
 	{	 Sl_id, 
 		 Sn_id + 1, 
-		 [ { Sn_id  , maps:get(value, V) } ] ++ NAcc,
+		 [ { Sn_id  , NodeVal } ] ++ NAcc,
 		 LAcc ++ [ { PSn_id , Sn_id } ]
 	}
 ;
 
 %% @doc process sexpr when we are the root node
-proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , _ } ) when NAcc == [] ->
+proc_sexpr( { O , L, R } , { Sl_id , Sn_id , NAcc , _ } ) when NAcc == [] ->
+	[ { type , _ } , { value , NodeVal } ] = O,
 	Acc = {	 Sl_id, 
 		 Sn_id + 1, 
-		 [ { Sn_id  , maps:get(value, Op) } ],
+		 [ { Sn_id  , NodeVal } ],
 		 []
 	      },
 	AccL = proc_sexpr( L , Acc ),
 	proc_sexpr( R , AccL )
 ;
 
-proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc /= [] ->
-	%% @doc process sexpr when we are the parent (ie, node accumulator is empty)
+proc_sexpr( { [ { type , _ } , { value, NodeVal } ] , L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc /= [] ->
+
 	{ PSn_id , _ } = lists:last(NAcc),
 				
 	%push link to Lacc
@@ -183,7 +174,7 @@ proc_sexpr( { Op, L, R } , { Sl_id , Sn_id , NAcc , LAcc } ) when NAcc /= [] ->
 
 	Acc = {	 Sl_id, 
 		 Sn_id + 1, 
-		 NAcc ++ [ { Sn_id  , maps:get(value, Op) } ],
+		 NAcc ++ [ { Sn_id  , NodeVal } ],
 		 LAcc ++ [ { PSn_id , Sn_id } ]
 	      },
 	AccL = proc_sexpr( L , Acc ),
