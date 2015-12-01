@@ -216,8 +216,8 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
   if (sExpr->value.type != OPER) {
     debug("node is NOT oper");
     cNode = valueExprToNifTerm(env, sExpr->value);
-    if (depth == 0) 
-      cNode = enif_make_tuple1(env, cNode);
+    //if (depth == 0) 
+      //cNode = enif_make_tuple1(env, cNode);
     return (cNode);
   }
 
@@ -231,13 +231,13 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
 
   cList = enif_make_list2(
 				env, 
+				enif_make_tuple2( env, 
+						  enif_make_atom(env, (const char *) "type"), 
+						  enif_make_atom(env, (const char *) "operator")
+						),
 				enif_make_tuple2( env,
 						  enif_make_atom( env, (const char *) "value"), 
 						  enif_make_string( env, operSyms[sExpr->value.value.oper_val], ERL_NIF_LATIN1 )
-						),
-				enif_make_tuple2( env, 
-						  enif_make_atom(env, (const char *) "type"), 
-						  enif_make_atom(env, (const char *) "OPER")
 						)
 			);
 
@@ -268,7 +268,7 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
       break;
     case COLREF:
       debug("add Colref to tuple...");
-      nodeType = enif_make_atom(env, (const char *) "COLREF");
+      nodeType = enif_make_atom(env, (const char *) "colref");
 
       /*
 	 Special case: for column references we also need to encode the table reference
@@ -288,22 +288,22 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
     case INT:
       debug("add integer to tuple...");
       nodeVal = enif_make_int(env, v.integer_val);
-      nodeType = enif_make_atom(env, "INT");
+      nodeType = enif_make_atom(env, "int");
       break;
     case NUM:
       debug("add float to tuple...");
       nodeVal = enif_make_double(env, v.numeric_val);
-      nodeType = enif_make_atom(env, "NUM");
+      nodeType = enif_make_atom(env, "int");
       break;
     case TEXT:
       debug("add text to tuple...");
       nodeVal = enif_make_string(env, v.text_val, ERL_NIF_LATIN1);
-      nodeType = enif_make_atom(env, "TEXT");
+      nodeType = enif_make_atom(env, "text");
       break;
     case OPER:
       debug("add oper to tuple. Should never get here.");
       nodeVal = (ERL_NIF_TERM) NULL;
-      nodeType = enif_make_atom(env, "OPER");
+      nodeType = enif_make_atom(env, "oper_bad");
       break;
     default:
       debug("unknown value type!");
