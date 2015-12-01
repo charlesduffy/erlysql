@@ -57,14 +57,15 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %% @doc Make list of base relations from FromClause list
+%%
+%% This is a list of tuples of the form:
+%% { name:string , alias:string }
+%% 
+%% alias is blank if not present
 
-mk_brels([H|T]) ->
-	N = mk_scnode(H),
-	mk_brels(T, N).
+mk_brels([H|T]) -> mk_brels(T, { maps:get(name , H) , maps:get(alias, H, "") } ).
 
-mk_brels([H|T] , Acc) ->
-	N = mk_scnode(H),
-	mk_brels(T , [N] ++ Acc);
+mk_brels([H|T] , Acc) -> mk_brels(T , [ { maps:get(name , H) , maps:get(alias, H, "") } ] ++ Acc);
 
 mk_brels([], Acc) -> Acc.
 
@@ -101,13 +102,45 @@ get_sel(S , W) ->
 	{ok}	
 .
 
+%% @doc prototype subtree matcher
+%% 
+%% Find largest subtrees containing references to a single base
+%% relation 
+%% * Recurse left until leaf node, noting Node IDs (or pushing them on to a stack)
+%% * Note if colref, determine what relation it is member of
+%% * Go back up. 
+%% * Heuristic - check if immediate subtree matches OP,[col|val],[col|val] stereotype
+%%   -- if match, set Node ID entry for table in question to NodeID
+%%   -- No match, continue
+%% * Recurse right / left downward
+%%   -- 
+
+%% blah new idea
+%% recurse down creating a list for each node. 
+%% list contains all distinct relations in the subtree below
+%% push list recusrsively as progresses
+
+
+get_subtree({ Op , L , R } , { Relname , Relalias } ) ->
+	{ok}	
+.
+
+%%match_subtree ( { Op, L, R } , { Relname , Relalias } ) when ( Op == ">" or Op == "<" or Op == "=" or Op == "!=" )  ->
+%%	{ok}	
+%%.
+
+%% colrefs and value expr are always leaf nodes
+%% 
+
+
 
 %% @doc Produce list of scan nodes from parse tree	
 %%      including projections and selection predicates			
 
 make_scan_nodes(ParseTree) ->
 
-	InitScanNodes = mk_brels(maps:get(from_clause, ParseTree))
+	Brels = mk_brels(maps:get(from_clause, ParseTree)),
+	io:fwrite("Base relations: ~p", [ Brels ])
 %%	ScanNodes = get_sel(InitScanNodes)
 .
 
