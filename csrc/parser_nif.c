@@ -4,6 +4,7 @@
 #include "dbglog.h"
 #include <string.h>
 #include <malloc.h>
+#include <stdbool.h>
 
 #define MAXBUFLEN 1024
 
@@ -59,35 +60,54 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
   return (erlParseTree);
 }
 
+
+/* 
+	Translate a QueryNode to an Erlang NIF term 
+
+	TODO - document erlang term structure here
+*/
+
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 {
+
+  /* Declare pointers to QueryNode data structure elements */
 
   selectListNode *sellist = qry->selnode->selectList;
   fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
   tableRefNode **tableRef =
     qry->selnode->tableExpr->fromClause->refList->tables;
   whereClauseNode *whereclause = qry->selnode->tableExpr->whereClause;
+
+  /* Declare Erlang NIF terms for use */
+
   ERL_NIF_TERM nifSelectList, nifFromClause, nifWhereClause;
   ERL_NIF_TERM nifItem, nifItem1;
   ERL_NIF_TERM nifMap;
-  /* iterate over the array of pointers-to-sExpr 
-     and print each one */
 
   debug("Select list: %d elements\n", sellist->nElements);
 
-  nifSelectList = enif_make_list(env, (unsigned int) 0);
+  /* 
+     Construct select list element of Erlang parse tree
+   */	
 
   int i;
   scalarExpr *sExpr;
+     //Iterate over SELECT list items in QueryNode and push them on to 
+     //an Erlang list as S-expressions constructed from Erlang tuples
+
+  nifSelectList = enif_make_list(env, (unsigned int) 0);
+
   for (i = sellist->nElements - 1; i >= 0; i--) {
     sExpr = *(sellist->sExpr + i);
     nifItem = sExprToNifTerm(env, sExpr, 0);
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
   }
 
-  nifFromClause = enif_make_list(env, (unsigned int) 0);
+  /* 
+     Construct list of table references from the FROM clause 
+   */
 
-  //from clause
+  nifFromClause = enif_make_list(env, (unsigned int) 0);
 
   debug("Decoding from clause, nElements: %d", fromclause->refList->nElements);
 
@@ -99,41 +119,40 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
     debug("from clause table >>%s<< ", (tref->tableName));
 
+    nifItem = enif_make_list1( 	     env, 
+    				     enif_make_tuple2 ( env, 
+						        enif_make_atom(env, (const char *) "name"), 
+				     			enif_make_string(env, (const char *) tref->tableName, ERL_NIF_LATIN1)
+						      )
+				   );
+
+    /* Add the table alias to the proplist if one is present */ 
+    if (tref->tableAlias != NULL) 
+    	nifItem = enif_make_list_cell(
+					    env, 
+      					    enif_make_tuple2 (env, 
+								enif_make_atom(env, (const char *) "alias"),
+        				    			enif_make_string(env, (const char *) tref->tableAlias, ERL_NIF_LATIN1)
+							     ),
+					    nifItem
+					    );
+
+    /* Add the proplist to the from clause list */
+
+    nifFromClause = enif_make_list_cell(env, nifItem , nifFromClause );
+
+  }
+
+  /* Handle WHERE clause creation */
+
+    if (whereclause != NULL) {
+      sExpr = whereclause->expr;
+      nifWhereClause = sExprToNifTerm(env, sExpr, 0);
+    }
+
     nifMap = enif_make_new_map(env);
-    //TODO: include better checking here. 
-    nifItem1 =
-      enif_make_string(env, (const char *) tref->tableName, ERL_NIF_LATIN1);
 
-    if (!enif_make_map_put
-        (env, nifMap, enif_make_atom(env, (const char *) "name"), nifItem1,
-         &nifMap)) {
-      debug("make map failed");
-      //handle error
-    }
-
-    if (tref->tableAlias != NULL) {
-
-      nifItem =
-        enif_make_string(env, (const char *) tref->tableAlias, ERL_NIF_LATIN1);
-
-      if (enif_make_map_put
-          (env, nifMap, enif_make_atom(env, (const char *) "alias"), nifItem,
-           &nifMap)) {
-        debug("make map failed");
-        //handle error
-      }
-    }
-    nifFromClause = enif_make_list_cell(env, nifMap, nifFromClause);
-  }
-
-  //where clause  
-
-  if (whereclause != NULL) {
-    sExpr = whereclause->expr;
-    nifWhereClause = sExprToNifTerm(env, sExpr, 0);
-  }
-
-  nifMap = enif_make_new_map(env);
+  /* Handle SELECT list creation */
 
   if (!enif_make_map_put(env,
                          nifMap,
@@ -190,7 +209,7 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
    */
 
   ERL_NIF_TERM lNode, rNode, cNode;
-  ERL_NIF_TERM cMap;
+  ERL_NIF_TERM cList; //TODO rename these variables
 
   debug("Entering sExprToNifTerm");
 
@@ -209,13 +228,20 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
   if (sExpr->right != NULL) {
     rNode = sExprToNifTerm(env, sExpr->right, depth++);
   }
-  //make my cNode
-  cMap = enif_make_new_map(env);
-  enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "type"),
-                    enif_make_atom(env, (const char *) "OPER"), &cMap);
-  enif_make_map_put(env, cMap, enif_make_atom(env, (const char *) "value"),
-                    enif_make_string(env, operSyms[sExpr->value.value.oper_val], ERL_NIF_LATIN1 ), &cMap);
-  cNode = enif_make_tuple3(env, cMap, lNode, rNode);    //modify to get the text value of oper
+
+  cList = enif_make_list2(
+				env, 
+				enif_make_tuple2( env,
+						  enif_make_atom( env, (const char *) "value"), 
+						  enif_make_string( env, operSyms[sExpr->value.value.oper_val], ERL_NIF_LATIN1 )
+						),
+				enif_make_tuple2( env, 
+						  enif_make_atom(env, (const char *) "type"), 
+						  enif_make_atom(env, (const char *) "OPER")
+						)
+			);
+
+  cNode = enif_make_tuple3(env, cList, lNode, rNode); 
 
   return (cNode);
 }
@@ -224,16 +250,15 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
 {
 
   ERL_NIF_TERM nodeVal, nodeType;
-  ERL_NIF_TERM nodeMap;
-
-
+  ERL_NIF_TERM valNode;
+  ERL_NIF_TERM colRefTuple;     	/* Holds table alias value if present in a column reference */
+  bool tableRefFlag = false;		/* Set to true if a table reference is present for a column reference */
 
   debug("entering valueExprToNifTerm");
 
   valueExpr v = value.value;
-  nodeMap = enif_make_new_map(env);
 
-  //consider replacing with table driven method
+  //TODO consider replacing with table driven method
   switch (value.type) {
 
     case UNDEFINED:
@@ -247,19 +272,17 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
 
       /*
 	 Special case: for column references we also need to encode the table reference
-	 in the map, if one is present. We re-use the nodeVal enif variable for this here. 
-	 Consider a better solution.
+	 in the proplist, if one is present. 
       */
+
       if (v.column_val->colReference != NULL) {
-      		nodeVal = enif_make_string(env, v.column_val->colReference, ERL_NIF_LATIN1);
-    	        if (!enif_make_map_put(env,
-                	         nodeMap,
-                        	 enif_make_atom(env, (const char *) "reference"),
-                	         nodeVal, &nodeMap)) {
-        	debug("make map failed");
-        	//return (ERL_NIF_TERM) NULL; 
-      	}
-      }
+		tableRefFlag = true;
+    	        colRefTuple = enif_make_tuple2(
+					env, 
+					enif_make_atom(env, (const char *) "reference"),
+	        	 		enif_make_string(env, v.column_val->colReference, ERL_NIF_LATIN1)
+					);
+      } 
       nodeVal = enif_make_string(env, v.column_val->colName, ERL_NIF_LATIN1);
       break;
     case INT:
@@ -285,24 +308,28 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
     default:
       debug("unknown value type!");
       nodeVal = (ERL_NIF_TERM) NULL;
+      //TODO - handle this situation properly!
   }
 
 
-  if (!enif_make_map_put(env,
-                         nodeMap,
-                         enif_make_atom(env, (const char *) "type"),
-                         nodeType, &nodeMap)) {
-    debug("make map failed");
-    //  return (ERL_NIF_TERM) NULL; 
-  }
+  valNode = enif_make_list2(
+			    env,
+  			    enif_make_tuple2(
+    					      env, 
+    					      enif_make_atom(env, (const char *) "type"),
+       	                  		      nodeType
+					    ),
+ 			     enif_make_tuple2(
+					       env,	  
+                         		       enif_make_atom(env, (const char *) "value"),
+                         		       nodeVal
+					     )
+			  );
+   
+  /* If a table alias is present, we push it on to the proplist */
+ 
+  if (tableRefFlag == true)  
+	valNode = enif_make_list_cell(env, colRefTuple , valNode );
 
-  if (!enif_make_map_put(env,
-                         nodeMap,
-                         enif_make_atom(env, (const char *) "value"),
-                         nodeVal, &nodeMap)) {
-    debug("make map failed");
-    //return (ERL_NIF_TERM) NULL; 
-  }
-
-  return (nodeMap);
+  return (valNode);
 }
