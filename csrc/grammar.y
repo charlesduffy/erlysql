@@ -52,7 +52,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 }
 
 /* SQL keywords */
-%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO AS
+%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO AS TABLE
 
 /* values and identifiers */
 %token <keyword> BIGINT 
