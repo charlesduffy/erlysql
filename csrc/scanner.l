@@ -47,9 +47,10 @@ point  [.]
 (?i:set)		{ return SET; }
 (?i:into)		{ return INTO; }
 (?i:as)			{ return AS; }
+(?i:table)		{ return TABLE; }
 
 {space}+ 		{ } 
-({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter. Fix this definition */
+({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter, improve defn. Refactor memory handling */
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
