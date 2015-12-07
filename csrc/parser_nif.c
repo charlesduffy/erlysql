@@ -72,11 +72,11 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
   /* Declare pointers to QueryNode data structure elements */
 
-  selectListNode *sellist = qry->selnode->selectList;
-  fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
+  selectListNode *sellist = qry->query_stmt.selnode->selectList;
+  fromClauseNode *fromclause = qry->query_stmt.selnode->tableExpr->fromClause;
   tableRefNode **tableRef =
-    qry->selnode->tableExpr->fromClause->refList->tables;
-  whereClauseNode *whereclause = qry->selnode->tableExpr->whereClause;
+    qry->query_stmt.selnode->tableExpr->fromClause->refList->tables;
+  whereClauseNode *whereclause = qry->query_stmt.selnode->tableExpr->whereClause;
 
   /* Declare Erlang NIF terms for use */
 

@@ -30,6 +30,7 @@ rparen [)]
 point  [.]
 
 %%
+
  
 (?i:select)		{ return SELECT; } /* add a rule to create a state for "quoted" so we don't match these in strings */
 (?i:insert)		{ return INSERT; }
@@ -49,14 +50,19 @@ point  [.]
 (?i:as)			{ return AS; }
 (?i:table)		{ return TABLE; }
 
+(?i:int)		{ return INTEGER; }
+(?i:integer)		{ return INTEGER; }
+(?i:text)		{ return CHAR; }
+(?i:numeric)		{ return NUMERIC; }
+
 {space}+ 		{ } 
 ({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter, improve defn. Refactor memory handling */
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
 {newline} 		{ return NEWLINE;}
-{digit}+ 		{ yylval->integer_val = atoi(yytext); return INTEGER; } 
-({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUMERIC; }		
+{digit}+ 		{ yylval->integer_val = atoi(yytext); return INT_LIT; } 
+({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUM_LIT; }		
 
 {add}			{ return ADD; }
 {sub}			{ return SUB; }

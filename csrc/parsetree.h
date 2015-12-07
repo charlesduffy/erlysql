@@ -128,7 +128,7 @@ typedef struct table_expression_node tableExprNode;
 	Statement type enum
 */
 
-enum statement_type { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT };
+enum statement_type { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT };
 
 typedef enum statement_type statementType;
 
@@ -143,6 +143,40 @@ struct select_stmt_node {
 
 typedef struct select_stmt_node selectStmtNode;
 
+/* data definition language nodes */
+
+struct create_table_ref_node {
+	char *tableName;
+	char *tableSchema;
+};
+
+typedef struct create_table_ref_node createTableRefNode;
+
+struct column_definition_node {
+	char *colName;
+	valueExprType colType;
+	//TODO - here we have to add a sExpr to describe the 
+	// column value restriction for constraints			
+};
+
+typedef struct column_definition_node columnDefNode;
+
+struct column_definition_list_node {
+	columnDefNode *colDef;	
+	int nElements;
+};
+
+typedef struct column_definition_list_node columnDefListNode;
+
+/* CREATE TABLE node */
+
+struct create_table_statement_node {
+	createTableRefNode *createTable;
+	columnDefListNode *colDefList;
+};
+
+typedef struct create_table_statement_node createTableStmtNode;
+
 
 /*
 	Query statement node
@@ -150,13 +184,16 @@ typedef struct select_stmt_node selectStmtNode;
 
 struct query_node {
   statementType statType;
-  //union statement type
-  //*****FIX this
-  selectStmtNode *selnode;
-  //insertStmtNode *insnode;
-  //updateStmtNode *updnode;
+  union {
+    selectStmtNode *selnode;
+    //insertStmtNode *insnode;
+    //updateStmtNode *updnode;
+    createTableStmtNode *crTabNode;
+  } query_stmt;
 };
 
 typedef struct query_node queryNode;
+
+
 
 #endif
