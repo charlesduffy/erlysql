@@ -36,20 +36,15 @@ typedef struct {
   valueExpr value;
 } valueExprNode;
 
-//typedef struct value_expr_node valueExprNode;
-
 /* scalar expression */
 
 typedef struct s_expr scalarExpr;
 
 struct s_expr {
-
   valueExprNode value;
   scalarExpr *left;
   scalarExpr *right;
-
-} ;
-
+};
 
 /*
 	Select list node
@@ -60,10 +55,6 @@ typedef struct {
   scalarExpr **sExpr;
 } selectListNode;
 
-//typedef struct select_list_node selectListNode;
-
-
-
 /*	
 	Table reference node 
 */
@@ -72,8 +63,6 @@ typedef struct {
   char *tableName;
   char *tableAlias;
 } tableRefNode;
-
-//typedef struct table_ref_node tableRefNode;
 
 /*
 	Table reference list node	
@@ -84,8 +73,6 @@ typedef struct {
   tableRefNode **tables;
 } tableRefListNode;
 
-//typedef struct table_ref_list_node tableRefListNode;
-
 /*
 	FROM clause node
 */
@@ -95,8 +82,6 @@ typedef struct {
   tableRefListNode *refList;
 } fromClauseNode;
 
-//typedef struct from_clause_node fromClauseNode;
-
 /*
 	WHERE clause node
 */
@@ -105,8 +90,6 @@ typedef struct {
   int type;
   scalarExpr *expr;
 } whereClauseNode;
-
-//typedef struct where_clause_node whereClauseNode;
 
 /*
 	Table expression node
@@ -118,15 +101,11 @@ typedef struct {
 
 } tableExprNode;
 
-//typedef struct table_expression_node tableExprNode;
-
 /*
 	Statement type enum
 */
 
 typedef enum { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT } statementType;
-
-//typedef enum statement_type statementType;
 
 /*
 	SELECT statement node
@@ -137,16 +116,12 @@ typedef struct {
   tableExprNode *tableExpr;
 } selectStmtNode;
 
-//typedef struct select_stmt_node selectStmtNode;
-
 /* data definition language nodes */
 
 typedef struct {
 	char *tableName;
 	char *tableSchema;
-} createTableRefNode;
-
-//typedef struct create_table_ref_node createTableRefNode;
+} ddlTableRefNode;
 
 typedef struct {
 	char *colName;
@@ -155,24 +130,23 @@ typedef struct {
 	// column value restriction for constraints			
 } columnDefNode;
 
-//typedef struct column_definition_node columnDefNode;
-
 typedef struct {
 	columnDefNode **colDef;	
 	int nElements;
 } columnDefListNode;
 
-//typedef struct column_definition_list_node columnDefListNode;
-
 /* CREATE TABLE node */
 
 typedef struct {
-	createTableRefNode *createTable;
+	ddlTableRefNode *createTable;
 	columnDefListNode *colDefList;
 } createTableStmtNode;
 
-//typedef struct create_table_statement_node createTableStmtNode;
+/* DROP TABLE node */
 
+typedef struct {
+	ddlTableRefNode *dropTable;
+} dropTableStmtNode;
 
 /*
 	Query statement node
@@ -188,9 +162,5 @@ typedef struct {
     createTableStmtNode *crTabNode;
   } query_stmt;
 } queryNode;
-
-//typedef struct query_node queryNode;
-
-
 
 #endif

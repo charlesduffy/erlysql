@@ -52,7 +52,7 @@ typedef void *yyscan_t;
 
 	columnDefNode             *columnDef;
 	columnDefListNode         *columnDefList;
-	createTableRefNode        *createTableRef;
+	ddlTableRefNode        *createTableRef;
 	createTableStmtNode	  *createTableStmt;
 	valueExprType		  dataType;
 	
@@ -109,7 +109,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 %type   <columnDef>   		column_definition
 %type   <columnDefList>		column_definition_list
 %type   <dataType>		data_type
-%type   <createTableRef>	create_table_ref
+%type   <createTableRef>	ddl_table_ref
 %type 	<createTableStmt>	create_table_stmt
 
 %token  <identifier_val>  IDENTIFIER
@@ -486,21 +486,32 @@ colref:
 		$$->colReference = $1; 
 	}
 ;
+
 /* Data definition language commands */
+
+/* Drop Table */
+
+drop_table_stmt:
+	DROP TABLE ddl_table_ref
+	{
+		$$=MAKENODE(dropTableStmtNode);
+		$$->dropTable = $3;
+	}
+;
 
 /* Create Table */
 
-create_table_ref:
+ddl_table_ref:
 	IDENTIFIER 
 	{
-		$$=MAKENODE(createTableRefNode);
+		$$=MAKENODE(ddlTableRefNode);
 		$$->tableName = $1;
 		$$->tableSchema = NULL; 
 	}
 	|
 	IDENTIFIER POINT IDENTIFIER  
 	{
-		$$=MAKENODE(createTableRefNode);
+		$$=MAKENODE(ddlTableRefNode);
 		$$->tableName = $1;
 		$$->tableSchema = $3; 
 	}
@@ -523,7 +534,7 @@ data_type:
 ;
 
 create_table_stmt:
-	CREATE TABLE create_table_ref LPAREN column_definition_list RPAREN
+	CREATE TABLE ddl_table_ref LPAREN column_definition_list RPAREN
 	{
 		debug ("create table statement");
 		$$=MAKENODE(createTableStmtNode);
