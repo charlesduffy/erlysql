@@ -244,7 +244,7 @@ void prettyPrintParseTree(queryNode * qry)
 
   switch (qry->statType) {
     case SELECT_STMT:
-      prettyPrintSelectNode(qry->selnode);
+      prettyPrintSelectNode(qry->query_stmt.selnode);
       break;
     case UPDATE_STMT:
     case DELETE_STMT:

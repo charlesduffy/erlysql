@@ -14,33 +14,29 @@ extern char *operSyms[];
 
 /* column reference */
 
-struct column_ref {
+typedef struct {
   char *colName;
   char *colReference;
-};
-
-typedef struct column_ref colRef;
+} colRef;
 
 /* value expression */
 
-union value_expr {
+typedef union {
   colRef *column_val;
   int integer_val;
   char *text_val;
   double numeric_val;
   operVal oper_val;
-};
-
-typedef union value_expr valueExpr;
+} valueExpr;
 
 /* Parse Nodes */
 
-struct value_expr_node {
+typedef struct {
   valueExprType type;
   valueExpr value;
-};
+} valueExprNode;
 
-typedef struct value_expr_node valueExprNode;
+//typedef struct value_expr_node valueExprNode;
 
 /* scalar expression */
 
@@ -52,19 +48,19 @@ struct s_expr {
   scalarExpr *left;
   scalarExpr *right;
 
-};
+} ;
 
 
 /*
 	Select list node
 */
 
-struct select_list_node {
+typedef struct {
   int nElements;
   scalarExpr **sExpr;
-};
+} selectListNode;
 
-typedef struct select_list_node selectListNode;
+//typedef struct select_list_node selectListNode;
 
 
 
@@ -72,117 +68,118 @@ typedef struct select_list_node selectListNode;
 	Table reference node 
 */
 
-struct table_ref_node {
+typedef struct {
   char *tableName;
   char *tableAlias;
-};
+} tableRefNode;
 
-typedef struct table_ref_node tableRefNode;
+//typedef struct table_ref_node tableRefNode;
 
 /*
 	Table reference list node	
 */
 
-struct table_ref_list_node {
+typedef struct {
   int nElements;
   tableRefNode **tables;
-};
+} tableRefListNode;
 
-typedef struct table_ref_list_node tableRefListNode;
+//typedef struct table_ref_list_node tableRefListNode;
 
 /*
 	FROM clause node
 */
 
-struct from_clause_node {
+typedef struct {
   int type;
   tableRefListNode *refList;
-};
+} fromClauseNode;
 
-typedef struct from_clause_node fromClauseNode;
+//typedef struct from_clause_node fromClauseNode;
 
 /*
 	WHERE clause node
 */
 
-struct where_clause_node {
+typedef struct {
   int type;
   scalarExpr *expr;
-};
+} whereClauseNode;
 
-typedef struct where_clause_node whereClauseNode;
+//typedef struct where_clause_node whereClauseNode;
 
 /*
 	Table expression node
 */
-struct table_expression_node {
+typedef struct {
 
   fromClauseNode *fromClause;
   whereClauseNode *whereClause;
 
-};
+} tableExprNode;
 
-typedef struct table_expression_node tableExprNode;
+//typedef struct table_expression_node tableExprNode;
 
 /*
 	Statement type enum
 */
 
-enum statement_type { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT };
+typedef enum { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT } statementType;
 
-typedef enum statement_type statementType;
+//typedef enum statement_type statementType;
 
 /*
 	SELECT statement node
 */
 
-struct select_stmt_node {
+typedef struct {
   selectListNode *selectList;
   tableExprNode *tableExpr;
-};
+} selectStmtNode;
 
-typedef struct select_stmt_node selectStmtNode;
+//typedef struct select_stmt_node selectStmtNode;
 
 /* data definition language nodes */
 
-struct create_table_ref_node {
+typedef struct {
 	char *tableName;
 	char *tableSchema;
-};
+} createTableRefNode;
 
-typedef struct create_table_ref_node createTableRefNode;
+//typedef struct create_table_ref_node createTableRefNode;
 
-struct column_definition_node {
+typedef struct {
 	char *colName;
 	valueExprType colType;
 	//TODO - here we have to add a sExpr to describe the 
 	// column value restriction for constraints			
-};
+} columnDefNode;
 
-typedef struct column_definition_node columnDefNode;
+//typedef struct column_definition_node columnDefNode;
 
-struct column_definition_list_node {
-	columnDefNode *colDef;	
+typedef struct {
+	columnDefNode **colDef;	
 	int nElements;
-};
+} columnDefListNode;
 
-typedef struct column_definition_list_node columnDefListNode;
+//typedef struct column_definition_list_node columnDefListNode;
 
 /* CREATE TABLE node */
 
-struct create_table_statement_node {
+typedef struct {
 	createTableRefNode *createTable;
 	columnDefListNode *colDefList;
-};
+} createTableStmtNode;
 
-typedef struct create_table_statement_node createTableStmtNode;
+//typedef struct create_table_statement_node createTableStmtNode;
 
 
 /*
 	Query statement node
 */
 
-struct query_node {
+typedef struct {
+//add fn pointers to return the subcomponents here
   statementType statType;
   union {
     selectStmtNode *selnode;
@@ -190,9 +187,9 @@ struct query_node {
     //updateStmtNode *updnode;
     createTableStmtNode *crTabNode;
   } query_stmt;
-};
+} queryNode;
 
-typedef struct query_node queryNode;
+//typedef struct query_node queryNode;
 
 
 
