@@ -124,26 +124,27 @@ get_sel(S , W) ->
 
 
 find_subtrees (ParseTree) ->
-%%	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 
-	RelMap = #{ "c_custkey" => "customer" , "o_custkey" => "orders" , "l_orderkey" => "lineitem" , 
-		 "o_orderkey" => "orders" , "l_suppkey" => "lineitem" , "s_suppkey" => "supplier" , 
-		 "c_nationkey" => "customer" , "s_nationkey" => "supplier" , "n_nationkey" => "nation" , 
-		 "n_regionkey" => "nation" , "r_regionkey" => "region" , "r_name" => "region"},
+%%	RelMap = #{ "c_custkey" => "customer" , "o_custkey" => "orders" , "l_orderkey" => "lineitem" , 
+%%		 "o_orderkey" => "orders" , "l_suppkey" => "lineitem" , "s_suppkey" => "supplier" , 
+%%		 "c_nationkey" => "customer" , "s_nationkey" => "supplier" , "n_nationkey" => "nation" , 
+%%		 "n_regionkey" => "nation" , "r_regionkey" => "region" , "r_name" => "region"},
 	find_subtrees( maps:get(where_clause, ParseTree),
 		       RelMap,
-		       1,
-		       1)
+		       1,		%% NodeID
+		       1  		%% NodeRank
+		       )		
 .
 %% @doc process leaf nodes
-find_subtrees([ { type , colref } , { value , NodeVal } ], RelMap, NodeId, NodeRank ) ->
-	io:fwrite("colref leaf ! my NodeID is: ~p~n", [ NodeId ]),	
-	[ { NodeId , NodeRank , [ maps:get(NodeVal, RelMap) ] } ]
+find_subtrees([ { type , colref } , { value , NodeVal } ], RelMap, NodeId, NodeRank) ->
+%%	io:fwrite("colref leaf ! my NodeID is: ~p~n", [ NodeId ]),	
+	[ { NodeId , NodeRank , [ NodeId ],  [ maps:get(NodeVal, RelMap) ] } ]
 ;
 
 find_subtrees([ { type , _ } , { value , NodeVal } ], RelMap, NodeId, NodeRank) ->
-	io:fwrite("literal leaf ! my NodeID is: ~p~n", [ NodeId ]),	
-	[ { NodeId , NodeRank , [] } ]
+%%	io:fwrite("literal leaf ! my NodeID is: ~p~n", [ NodeId ]),	
+	[ { NodeId , NodeRank , [ NodeId ] , [] } ]
 ;
 
 
@@ -163,9 +164,9 @@ find_subtrees ({ O , L , R }, RelMap, NodeId, NodeRank ) ->
 					 		%% will be a tuple containing the NodeID and relation list
 					 		%% for the subtree rooted at the left child node.
 
-	{ _ , _ , LChRels } = LRelsH,			%% Match the left child node ID and relation list
+	{ _ , _ , LeftNodePath, LChRels } = LRelsH,			%% Match the left child node ID and relation list
 
-	LNodeId = lists:max([ RelNid || { RelNid , _ , _ } <- LRels ]),		%% Get the highet node ID from the subtree rooted at the left child node
+	LNodeId = lists:max([ RelNid || { RelNid , _ , _ , _ } <- LRels ]),		%% Get the highet node ID from the subtree rooted at the left child node
 		
 	io:fwrite("LNodeId is : ~p~n", [ LNodeId ]),	
 
@@ -173,9 +174,14 @@ find_subtrees ({ O , L , R }, RelMap, NodeId, NodeRank ) ->
 
 
 	[ RRelsH | _ ] = RRels,			
-	{ _ , _ , RChRels } = RRelsH,			%% Match the right child relation list
+	{ _ , _ , RightNodePath , RChRels } = RRelsH,			%% Match the right child relation list
 	io:fwrite("my NodeID is: ~p~n", [ NodeId ]),	
-	MyRels = { NodeId , NodeRank , lists:umerge(lists:sort(LChRels),lists:sort(RChRels)) },	%% Merge the relation lists of immediate child nodes and
+
+	MyRels = { 	NodeId , 
+			NodeRank , 
+			LeftNodePath ++ RightNodePath ++ [ NodeId ] , 
+			lists:umerge(lists:sort(LChRels),lists:sort(RChRels))           %% Merge the relation lists of immediate child nodes and
+		  },	
 											%% use this to create our relation list
 	[ MyRels ] ++  LRels ++ RRels 	
 .
@@ -197,7 +203,9 @@ make_scan_nodes(ParseTree) ->
 %%	Brels = mk_brels(maps:get(from_clause, ParseTree)),
 %%	io:fwrite("Base relations: ~p", [ Brels ])
 %%	ScanNodes = get_sel(InitScanNodes)
-	find_subtrees(ParseTree)
+	ST = find_subtrees(ParseTree),
+	
+	io:fwrite("subtrees : ~p~n~n ========= ~w~n", [ ST , ST ])
 .
 
 %% @doc Initial planner. 
