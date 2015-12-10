@@ -73,6 +73,9 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   /* Declare pointers to QueryNode data structure elements */
 
   selectListNode *sellist = qry->query_stmt.selnode->selectList;
+//  selectListNode *sellist = qry->get_select_list(qry);
+
+
   fromClauseNode *fromclause = qry->query_stmt.selnode->tableExpr->fromClause;
   tableRefNode **tableRef =
     qry->query_stmt.selnode->tableExpr->fromClause->refList->tables;
