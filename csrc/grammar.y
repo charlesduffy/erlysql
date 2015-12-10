@@ -54,6 +54,7 @@ typedef void *yyscan_t;
 	columnDefListNode         *columnDefList;
 	ddlTableRefNode        *createTableRef;
 	createTableStmtNode	  *createTableStmt;
+	dropTableStmtNode	  *dropTableStmt;
 	valueExprType		  dataType;
 	
 }	
@@ -111,6 +112,7 @@ void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
 %type   <dataType>		data_type
 %type   <createTableRef>	ddl_table_ref
 %type 	<createTableStmt>	create_table_stmt
+%type 	<dropTableStmt>		drop_table_stmt
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -142,6 +144,15 @@ query_statement:
 			  $$->statType = CREATE_TABLE_STMT;
 			  $$->query_stmt.crTabNode = $1;
 			}
+			|
+	drop_table_stmt
+			{
+			  $$ = ptree;
+			  $$->statType = DROP_TABLE_STMT;
+			  $$->query_stmt.drTabNode = $1;
+			}
+
+//TODO consider using a more generic "DDL stmt" rather than explicitly identifying every kind of DDL operation
 		
 ;
 

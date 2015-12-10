@@ -105,16 +105,22 @@ typedef struct {
 	Statement type enum
 */
 
-typedef enum { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT } statementType;
+typedef enum { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT, DROP_TABLE_STMT } statementType;
 
 /*
 	SELECT statement node
 */
+typedef struct select_statement selectStmtNode;
 
-typedef struct {
+struct select_statement {
+
+/* function pointers */
+
+  selectListNode * (*get_select_list1)(selectStmtNode *);
+
   selectListNode *selectList;
   tableExprNode *tableExpr;
-} selectStmtNode;
+};
 
 /* data definition language nodes */
 
@@ -151,16 +157,30 @@ typedef struct {
 /*
 	Query statement node
 */
+typedef struct _queryNode queryNode;
 
-typedef struct {
-//add fn pointers to return the subcomponents here
+struct _queryNode {
+
+/* 
+
+	Useful function pointers
+	
+	- destroy. Free all nodes below this
+	- get_node. Return the statement contained in the node.
+	- create. Initialise the node with default values.
+*/
+
+  selectListNode * (*get_select_list)(queryNode *); //= get_select_list0;
+
   statementType statType;
+
   union {
     selectStmtNode *selnode;
     //insertStmtNode *insnode;
     //updateStmtNode *updnode;
     createTableStmtNode *crTabNode;
+    dropTableStmtNode *drTabNode;
   } query_stmt;
-} queryNode;
+};
 
 #endif
