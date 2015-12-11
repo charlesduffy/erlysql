@@ -69,7 +69,7 @@ find_subtrees1([ { type , colref } , { value , NodeVal } ], RelMap ) ->
 	[ {type , scan } , { predicate , [ { type , colref } , { value , NodeVal } ] }, { relation , maps:get(NodeVal, RelMap) }, { leaf , true } ]
 ;
 
-find_subtrees1([ { type , NodeType } , { value , NodeVal } ], RelMap ) ->
+find_subtrees1([ { type , NodeType } , { value , NodeVal } ], _ ) ->
 	[ {type , scan } , { predicate , [ { type , NodeType } , { value , NodeVal } ] }, { relation , null } , { leaf , true } ]
 ;
 
