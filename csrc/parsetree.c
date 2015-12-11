@@ -18,12 +18,24 @@ void prettyPrintSelectNode(selectStmtNode *);
 void prettyPrintParseTree(queryNode *);
 void prettyPrintSexpr(scalarExpr *, int depth);
 
+/* TODO put these in a header file */
+
+selectListNode * get_select_list1 (selectStmtNode *);
+selectListNode * get_select_list0 (queryNode *);
 
 //void gv_SelectList(selectListNode *);
 //void gv_SelectNode(selectStmtNode *);
 //void gv_ParseTree(queryNode *);
 void gv_Sexpr(scalarExpr *, int depth);
 /* other fun decl */
+
+selectListNode * get_select_list1 (selectStmtNode *selectStmt) {
+	return(selectStmt->selectList);
+}
+
+selectListNode * get_select_list0 (queryNode *query) {
+	return(get_select_list1(query->query_stmt.selnode));
+}
 
 void drawbranch(int depth, char c)
 {
