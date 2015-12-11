@@ -154,6 +154,25 @@ typedef struct {
 	ddlTableRefNode *dropTable;
 } dropTableStmtNode;
 
+/* INSERT STATEMENT */
+
+typedef struct _insertStmtNode {
+
+} insertStmtNode;
+
+/* UPDATE STATEMENT */
+
+typedef struct _updateStmtNode {
+
+} updateStmtNode;
+
+/* DELETE STATEMENT */
+
+typedef struct _deleteStmtNode {
+
+} deleteStmtNode;
+
+
 /*
 	Query statement node
 */
@@ -171,16 +190,18 @@ struct _queryNode {
 */
 
   selectListNode * (*get_select_list)(queryNode *); //= get_select_list0;
+  fromClauseNode * (*get_from_clause)(queryNode *);
+  whereClauseNode * (*get_where_clause)(queryNode *);  
 
   statementType statType;
 
   union {
     selectStmtNode *selnode;
-    //insertStmtNode *insnode;
-    //updateStmtNode *updnode;
+    insertStmtNode *insnode;
+    updateStmtNode *updnode;
     createTableStmtNode *crTabNode;
     dropTableStmtNode *drTabNode;
-  } query_stmt;
+  };
 };
 
 #endif

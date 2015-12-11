@@ -31,7 +31,7 @@ selectListNode * get_select_list1 (selectStmtNode *selectStmt) {
 }
 
 selectListNode * get_select_list0 (queryNode *query) {
-	return(get_select_list1(query->query_stmt.selnode));
+	return(get_select_list1(query->selnode));
 }
 
 // Constructor functions

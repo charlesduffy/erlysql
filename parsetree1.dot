@@ -1,0 +1,58 @@
+graph "clusterparsetree" {
+		node [ fontsize=12 ];
+		graph [ fontsize=10 ];
+		label = " select a+1 from A, B where A.a > 10 and A.a < 20 and B.c - 10 > B.d and B.d = A.a;"
+
+	subgraph clustersellist_1 { 
+		label="select list item 1"
+		color="blue" 
+	"sexpr1_0" [ label = "+"];
+"sexpr1_1" [ label = "a"];
+"sexpr1_2" [ label = "1"];
+"sexpr1_0" -- "sexpr1_2" [ id = 1 ];
+"sexpr1_0" -- "sexpr1_1" [ id = 0 ];
+
+		}
+	
+	subgraph clusterwhereclause 
+	{
+		label = "Where Clause";
+		color = "green"
+	"sexpr0_0" [ label = "AND"];
+"sexpr0_4" [ label = "a"];
+"sexpr0_5" [ label = "10"];
+"sexpr0_3" [ label = ">"];
+"sexpr0_7" [ label = "a"];
+"sexpr0_8" [ label = "20"];
+"sexpr0_6" [ label = "<"];
+"sexpr0_2" [ label = "AND"];
+"sexpr0_11" [ label = "c"];
+"sexpr0_12" [ label = "10"];
+"sexpr0_10" [ label = "-"];
+"sexpr0_13" [ label = "d"];
+"sexpr0_9" [ label = ">"];
+"sexpr0_1" [ label = "AND"];
+"sexpr0_15" [ label = "d"];
+"sexpr0_16" [ label = "a"];
+"sexpr0_14" [ label = "="];
+"sexpr0_14" -- "sexpr0_16" [ id = 15 ];
+"sexpr0_14" -- "sexpr0_15" [ id = 14 ];
+"sexpr0_0" -- "sexpr0_14" [ id = 13 ];
+"sexpr0_9" -- "sexpr0_13" [ id = 12 ];
+"sexpr0_10" -- "sexpr0_12" [ id = 11 ];
+"sexpr0_10" -- "sexpr0_11" [ id = 10 ];
+"sexpr0_9" -- "sexpr0_10" [ id = 9 ];
+"sexpr0_1" -- "sexpr0_9" [ id = 8 ];
+"sexpr0_6" -- "sexpr0_8" [ id = 7 ];
+"sexpr0_6" -- "sexpr0_7" [ id = 6 ];
+"sexpr0_2" -- "sexpr0_6" [ id = 5 ];
+"sexpr0_3" -- "sexpr0_5" [ id = 4 ];
+"sexpr0_3" -- "sexpr0_4" [ id = 3 ];
+"sexpr0_2" -- "sexpr0_3" [ id = 2 ];
+"sexpr0_1" -- "sexpr0_2" [ id = 1 ];
+"sexpr0_0" -- "sexpr0_1" [ id = 0 ];
+
+		}
+	
+	}
+	

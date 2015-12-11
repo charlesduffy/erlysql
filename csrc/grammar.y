@@ -135,21 +135,21 @@ query_statement:
 			{ 
 			  $$ = ptree;
 			  $$->statType = SELECT_STMT;
-			  $$->query_stmt.selnode = $1;
+			  $$->selnode = $1;
 			} 
 			|
 	create_table_stmt
 			{
 			  $$ = ptree;
 			  $$->statType = CREATE_TABLE_STMT;
-			  $$->query_stmt.crTabNode = $1;
+			  $$->crTabNode = $1;
 			}
 			|
 	drop_table_stmt
 			{
 			  $$ = ptree;
 			  $$->statType = DROP_TABLE_STMT;
-			  $$->query_stmt.drTabNode = $1;
+			  $$->drTabNode = $1;
 			}
 
 //TODO consider using a more generic "DDL stmt" rather than explicitly identifying every kind of DDL operation
