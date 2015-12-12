@@ -94,12 +94,18 @@ typedef struct {
 /*
 	Table expression node
 */
-typedef struct {
+typedef struct _tableExprNode tableExprNode;
+
+struct _tableExprNode {
+
+  
+  tableExprNode * (*get_table_expr_node2)(tableExprNode *);
+  whereClauseNode * (*get_where_clause_node2)(tableExprNode *);
 
   fromClauseNode *fromClause;
   whereClauseNode *whereClause;
 
-} tableExprNode;
+};
 
 /*
 	Statement type enum
@@ -117,6 +123,7 @@ struct select_statement {
 /* function pointers */
 
   selectListNode * (*get_select_list1)(selectStmtNode *);
+  tableRefNode ** (*get_table_expr_node1)(selectStmtNode *);
 
   selectListNode *selectList;
   tableExprNode *tableExpr;
