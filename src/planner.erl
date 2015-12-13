@@ -67,6 +67,7 @@ find_subtrees1 (ParseTree) ->
 
 find_subtrees1([ { type , colref } , { value , NodeVal } ], RelMap ) ->
 	[ {type , scan } , { predicate , [ { type , colref } , { value , NodeVal } ] }, { relation , maps:get(NodeVal, RelMap) }, { leaf , true } ]
+	%% @todo get rid of the 'leaf' tag. Figure out some other way of achieving the same thing. 
 ;
 
 find_subtrees1([ { type , NodeType } , { value , NodeVal } ], _ ) ->
@@ -111,41 +112,66 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , No
 				[ {type, join} , 
 			     	{ joinpred , { [{type,NodeType},{value , NodeVal}] , LPred1 , RPred1 }} , 
 				{ left , LsubTree } , 
-				{ right, RsubTree } , { relation , null } ] ;
+				{ right, RsubTree } , { relation , null } , {leaf, false} ] ;
 
 
-			[ ] -> [ {type, join} , { joinpred , NodeVal } , {left , LsubTree } , {right, RsubTree } , { relation , null } , {leaf, false} ]
+			[ ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
 	end
 ;
-%% do merge 
+
+%% @doc merge subtrees containing the same relation into a single scan node
 merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
 	%%io:fwrite("merge_subtrees1 with scan nodes called ~n~p~n~p", [ LsubTree , RsubTree ] ),
 	[ Lpred ] = [ Lpredicate || { predicate , Lpredicate } <- LsubTree ] , 
 	[ Rpred ] = [ Rpredicate || { predicate , Rpredicate } <- RsubTree ] , 
-	[ {type, scan} , { predicate , { Self , Lpred , Rpred } } , { relation , RelName } , { leaf , false} ]
+	[ {type, scan} , { predicate , { Self , Lpred , Rpred } } , { relation , RelName } , { leaf , true } ]
 .
 
-%% @doc Produce list of scan nodes from parse tree	
-%%      including projections and selection predicates			
 
-make_scan_nodes(ParseTree) ->
+%% @doc generate code from plan tree to execute the query
+%%	generate instructions for a join node
+generate_code ( PlanTree ) ->
+	generate_code ( PlanTree, [] , 0).
 
-%%	Brels = mk_brels(maps:get(from_clause, ParseTree)),
-%%	io:fwrite("Base relations: ~p", [ Brels ])
-%%	ScanNodes = get_sel(InitScanNodes)
-	ST = find_subtrees1(ParseTree),
-	
-	io:fwrite("subtrees : ~p~n~n ========= ~n~n~w", [ ST , ST ])
+%% @doc generate code from plan tree to execute the query
+%%	generate instructions for a join node
+generate_code ( [{ type, join }|Node], InstructionList, NodeID ) ->
+
+	[{ joinpred, Predicate }, { left , Left }, { right, Right }, { relation, null }, { leaf, false }] = Node,
+	Instruction = [ { id , NodeID }, 
+			{ action , spawn },
+			{ target , NodeID - 1}, 
+			{ module , nestloop_join },
+			{ predicate , Predicate } ],
+
+	generate_code(Left, InstructionList ++ Instruction, NodeID + 1) ++
+	generate_code(Right, InstructionList ++ Instruction, NodeID + 1)
+;
+
+%% @doc generate code from plan tree to execute the query
+%%	generate instructions for a scan node
+generate_code ( [{ type, scan }|Node], InstructionList, NodeID ) ->
+
+	io:fwrite("Node is ~p~n~n----", [ Node ]),	
+	[{ predicate , Predicate }, { relation, Relation }, { leaf, true }] = Node,
+	InstructionList ++  [ { id , NodeID }, 
+			    { action , command },
+			    { target , NodeID - 1}, 
+		    	    { module , seq_scan },
+			    { predicate , Predicate },
+			    { relation , Relation }]
 .
+
+
 
 %% @doc Initial planner. 
 %% 	Does no plan optimisation at all - merely generates a viable execution plan
 
 plan_query(ParseTree) ->
 
-	ScanNodes = make_scan_nodes(ParseTree),	
-
-	{ok , ScanNodes }.	
+	PlanTree = find_subtrees1(ParseTree),	
+	Instructions = generate_code(PlanTree),
+	{ok , Instructions}.	
 
 
 %%% execution plan generic node
