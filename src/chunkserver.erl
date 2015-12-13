@@ -6,7 +6,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/0]).
+-export([start_link/1]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -19,8 +19,8 @@
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(ServerName) ->
+    gen_server:start_link({local, ServerName}, ?MODULE, [], []).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
@@ -30,9 +30,9 @@ start_link() ->
 %% Initialise the chunk ETS table
 %% -- add error checking
 init(Args) ->
-    io:format('%% chunkserver starting~n'),
-    Table = ets:new(chunktable, [ set ]),
-    populate_table_tmp(Table),
+    io:format('%% chunkserver starting - ~p~n', [ Args ]),
+    Table = ets:new(chunktable, [ set, public ]),
+    populate_table_tmp(Table, Args),
     State = { Table },
     { ok, State }.
 
@@ -86,7 +86,7 @@ scan_table(Table , Query) ->
 	{ ok , Result }.
 
 %% temporary for test data
-populate_table_tmp (Table) ->
+populate_table_tmp (Table, Args) ->
 	%%  open file
 	%%  read file line
 	%%  load ETS table

@@ -114,7 +114,7 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , No
 				{ right, RsubTree } , { relation , null } ] ;
 
 
-			[ ] -> [ {type, join} , { joinpred , NodeVal } , {left , LsubTree } , {right, RsubTree } , { relation , null } ]
+			[ ] -> [ {type, join} , { joinpred , NodeVal } , {left , LsubTree } , {right, RsubTree } , { relation , null } , {leaf, false} ]
 	end
 ;
 %% do merge 
