@@ -193,16 +193,19 @@ proc_sexpr( { [ { type , _ } , { value, NodeVal } ] , L, R } , { Sl_id , Sn_id ,
 process_query([$\\|[Q|T]]) ->
 	%%meta command. 
 	case Q of
-		$q -> ok;
-		$g -> gv_write(T,"parsetree.dot");
+		$q ->    ok;
+		$g ->    gv_write(T,"parsetree.dot"),
+			 do_repl();
 		_Else -> false 
 	end;
 
 process_query(_X) ->
 	ParseTree = parser:parseQuery(_X),
-	io:fwrite("parsetree:~n~p~n", [ParseTree]),
-	Plan = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
-	io:fwrite("plan:~n~p~n", [Plan]),
+%%	io:fwrite("parsetree:~n~p~n", [ParseTree]),
+	Program = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
+	io:fwrite("program:~n~p~n", [Program]),
+	CS = despatch:generate_childspec(Program),
+	io:fwrite("childspec:~n~p~n", [CS]),
 	do_repl()	
 	.
 

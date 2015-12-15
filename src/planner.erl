@@ -131,35 +131,43 @@ merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node
 generate_code ( PlanTree ) ->
+	io:fwrite("Plan Tree is: ~n~p~n", [ PlanTree ]),
 	generate_code ( PlanTree, [] , 0).
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node
+%% @todo avoid searching the instruction list to get the NodeID for the right subtree
+%%	and refactor to get tail recursion
+
 generate_code ( [{ type, join }|Node], InstructionList, NodeID ) ->
 
 	[{ joinpred, Predicate }, { left , Left }, { right, Right }, { relation, null }, { leaf, false }] = Node,
-	Instruction = [ { id , NodeID }, 
-			{ action , spawn },
+	Instruction = [ { action , spawn },
+			{ id , NodeID }, 
 			{ target , NodeID - 1}, 
 			{ module , nestloop_join },
 			{ predicate , Predicate } ],
+	io:fwrite("my node id ~p~n", [ NodeID ]),
+	
+	LinstrList = generate_code(Left, InstructionList ++ [ Instruction ], NodeID + 1 ),
 
-	generate_code(Left, InstructionList ++ Instruction, NodeID + 1) ++
-	generate_code(Right, InstructionList ++ Instruction, NodeID + 1)
+	[ RNodeID ] = lists:max([[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ]),  %%Silly
+	io:fwrite("my Node Id [~p] list is: ~p~n",[ NodeID,   [[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ] ]),
+	LinstrList ++ generate_code(Right, InstructionList , RNodeID + 1) 
 ;
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a scan node
 generate_code ( [{ type, scan }|Node], InstructionList, NodeID ) ->
 
-	io:fwrite("Node is ~p~n~n----", [ Node ]),	
+	io:fwrite("LEAF NodeID is ~p~n~n----", [ NodeID ]),	
 	[{ predicate , Predicate }, { relation, Relation }, { leaf, true }] = Node,
-	InstructionList ++  [ { id , NodeID }, 
-			    { action , command },
+	[[{ action , command },
+			    { id , NodeID },
 			    { target , NodeID - 1}, 
 		    	    { module , seq_scan },
 			    { predicate , Predicate },
-			    { relation , Relation }]
+			    { relation , Relation }]]
 .
 
 
@@ -170,9 +178,8 @@ generate_code ( [{ type, scan }|Node], InstructionList, NodeID ) ->
 plan_query(ParseTree) ->
 
 	PlanTree = find_subtrees1(ParseTree),	
-	Instructions = generate_code(PlanTree),
-	{ok , Instructions}.	
-
+	Program = generate_code(PlanTree),
+	{ok , Program }.	
 
 %%% execution plan generic node
 

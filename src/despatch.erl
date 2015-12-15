@@ -7,6 +7,7 @@
 %% ------------------------------------------------------------------
 
 -export([start_link/0]).
+-export([generate_childspec/1]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -47,4 +48,24 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+
+%% @doc generate a child process specification from the generated code
+generate_childspec({ok, Program}) ->
+	generate_childspec(Program, [])
+.
+
+generate_childspec([[{action , spawn}|Instr]|Program], ChildspecAcc) ->
+	[{id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate}] = Instr,
+	generate_childspec(Program,
+		 ChildspecAcc ++ 
+		[ { join_process, { nestedloop_join , start_link , [ Id ] } , permanent , 2000 , worker , [ join ] } ])
+;
+generate_childspec([[{action , _ }|_Instr]|Program], ChildspecAcc) ->
+	generate_childspec(Program,ChildspecAcc)
+;
+
+generate_childspec([], ChildspecAcc) ->
+%% add the extra bits required and return	
+	{ok , { {one_for_one, 5, 10}, ChildspecAcc }}
+.
 
