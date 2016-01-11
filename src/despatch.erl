@@ -51,29 +51,33 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc generate a child process specification from the generated code
 generate_childspec( Program ) ->
-	io:fwrite("line 54 ~p~n", [ Program ]),
-	generate_childspec(Program, [])
+%%	io:fwrite("line 54 ~p~n", [ Program ]),
+	generate_childspec(Program, [], 0)
 .
 
-generate_childspec([Instr|Program], ChildspecAcc) ->
+generate_childspec([Instr|Program], ChildspecAcc, Count) ->
 	%%[{id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate}] = Instr,
 
 	%%	{ action, Action , [ {id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate} , _Relation ]} = Instr,
 
 	case Instr of 
-	{ action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} , {relation, Relation} ]} -> norel;
-	{ action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} ]} -> rel
-end,
+	  { action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} , {relation, Relation} ]} -> norel;
+	  { action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} ]} -> rel
+	end,
 	
 	generate_childspec(Program,
 		 ChildspecAcc ++ 
-	[ { join_process, { nestedloop_join , start_link , [ Id ] } , permanent , 2000 , worker , [ Action ] } ])
+		%%[ { Count , { pipeline , start_link , [ Id ] } , permanent , 2000 , worker , [ Action ] } ], %%% removing Id
+		[ { Count , { pipeline , start_link , [ ] } , permanent , 2000 , worker , [ Action ] } ],
+		Count + 1
+	)
 ;
 
 
 
-generate_childspec([], ChildspecAcc) ->
+generate_childspec([], ChildspecAcc, Count) ->
+	ChildspecAcc
 %% add the extra bits required and return	
-	{ok , { {one_for_one, 5, 10}, ChildspecAcc }}
+%%	{ok , { {one_for_one, 5, 10}, ChildspecAcc }}
 .
 

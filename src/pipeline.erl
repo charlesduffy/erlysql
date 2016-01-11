@@ -20,7 +20,8 @@
 %% ------------------------------------------------------------------
 
 start_link() ->
-    gen_server:start_link( {local , pipeLine1 }, ?MODULE, [], []).
+%%    gen_server:start_link( {local , pipeLine1 }, ?MODULE, [], []).
+    gen_server:start_link( ?MODULE, [], []).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
