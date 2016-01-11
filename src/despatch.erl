@@ -50,19 +50,27 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 
 %% @doc generate a child process specification from the generated code
-generate_childspec({ok, Program}) ->
+generate_childspec( Program ) ->
+	io:fwrite("line 54 ~p~n", [ Program ]),
 	generate_childspec(Program, [])
 .
 
-generate_childspec([[{action , spawn}|Instr]|Program], ChildspecAcc) ->
-	[{id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate}] = Instr,
+generate_childspec([Instr|Program], ChildspecAcc) ->
+	%%[{id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate}] = Instr,
+
+	%%	{ action, Action , [ {id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate} , _Relation ]} = Instr,
+
+	case Instr of 
+	{ action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} , {relation, Relation} ]} -> norel;
+	{ action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} ]} -> rel
+end,
+	
 	generate_childspec(Program,
 		 ChildspecAcc ++ 
-		[ { join_process, { nestedloop_join , start_link , [ Id ] } , permanent , 2000 , worker , [ join ] } ])
+	[ { join_process, { nestedloop_join , start_link , [ Id ] } , permanent , 2000 , worker , [ Action ] } ])
 ;
-generate_childspec([[{action , _ }|_Instr]|Program], ChildspecAcc) ->
-	generate_childspec(Program,ChildspecAcc)
-;
+
+
 
 generate_childspec([], ChildspecAcc) ->
 %% add the extra bits required and return	

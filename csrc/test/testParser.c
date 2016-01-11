@@ -91,6 +91,24 @@ TEST(basicParser, antioch)
     TEST_ASSERT_EQUAL(1 , 1);
 }
 
+/* proposed tests for parser 
+
+- tests for arbitrary invalid input strings
+-- long length
+-- containing grabage / non UTF-8 chars
+
+- SQL language contstruct coverage tests
+
+- Long / unusual / unexpected but valid SQL statements
+-- Very long IN list (hundreds / thousands of items)
+-- Deeply nested subqueries
+-- Many joins 
+-- Many UNION statements
+
+
+
+*/
+
 TEST_GROUP_RUNNER (basicParser) {
 
 //	RUN_TEST_CASE(basicParser, elderberry);

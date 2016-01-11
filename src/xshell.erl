@@ -205,7 +205,9 @@ process_query(_X) ->
 	Program = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
 	io:fwrite("program:~n~p~n", [Program]),
 	CS = despatch:generate_childspec(Program),
-	io:fwrite("childspec:~n~p~n", [CS]),
+	io:fwrite("~n^^^^^^^^^^^^^^^^^^~n childspec:~n~p~n", [CS]),
+	Check = supervisor:check_childspecs(CS),
+	io:fwrite("~n^^^^^^^^^^^^^^^^^^~n check output :~n~p~n", [Check]),
 	do_repl()	
 	.
 

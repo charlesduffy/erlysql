@@ -55,6 +55,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
 
+
+
 find_subtrees1 (ParseTree) ->
 	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 
@@ -132,42 +134,50 @@ merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
 %%	generate instructions for a join node
 generate_code ( PlanTree ) ->
 	io:fwrite("Plan Tree is: ~n~p~n", [ PlanTree ]),
-	generate_code ( PlanTree, [] , 0).
+	generate_code ( PlanTree, 0).
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node
 %% @todo avoid searching the instruction list to get the NodeID for the right subtree
 %%	and refactor to get tail recursion
 
-generate_code ( [{ type, join }|Node], InstructionList, NodeID ) ->
+generate_code ( [{ type, join }|Node], NodeID ) ->
 
 	[{ joinpred, Predicate }, { left , Left }, { right, Right }, { relation, null }, { leaf, false }] = Node,
-	Instruction = [ { action , spawn },
+
+	Instruction = { action , spawn , [
 			{ id , NodeID }, 
 			{ target , NodeID - 1}, 
 			{ module , nestloop_join },
-			{ predicate , Predicate } ],
+			{ predicate , Predicate } ]
+		},
+
 	io:fwrite("my node id ~p~n", [ NodeID ]),
 	
-	LinstrList = generate_code(Left, InstructionList ++ [ Instruction ], NodeID + 1 ),
+	LinstrList = generate_code(Left, NodeID + 1 ),
+	io:fwrite("my Left List:  ~p~n", [ LinstrList ]),
 
-	[ RNodeID ] = lists:max([[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ]),  %%Silly
-	io:fwrite("my Node Id [~p] list is: ~p~n",[ NodeID,   [[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ] ]),
-	LinstrList ++ generate_code(Right, InstructionList , RNodeID + 1) 
+	%%[ RNodeID ] = lists:max([[ Nid ||{id , Nid} <- Instr ]  || Instr <-  LinstrList  ]),  %%Silly
+	RNodeID = 1,
+	%%io:fwrite("my Node Id [~p] list is: ~p~n",[ NodeID,   [[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ] ]),
+	lists:flatten([ Instruction ]  ++  [ LinstrList ] ++ [ generate_code(Right, RNodeID + 1) ])
 ;
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a scan node
-generate_code ( [{ type, scan }|Node], InstructionList, NodeID ) ->
+generate_code ( [{ type, scan }|Node], NodeID ) ->
 
 	io:fwrite("LEAF NodeID is ~p~n~n----", [ NodeID ]),	
+
 	[{ predicate , Predicate }, { relation, Relation }, { leaf, true }] = Node,
-	[[{ action , command },
+
+	{ action , command , [
 			    { id , NodeID },
 			    { target , NodeID - 1}, 
 		    	    { module , seq_scan },
 			    { predicate , Predicate },
-			    { relation , Relation }]]
+			    { relation , Relation } ] 
+	}
 .
 
 
@@ -179,7 +189,7 @@ plan_query(ParseTree) ->
 
 	PlanTree = find_subtrees1(ParseTree),	
 	Program = generate_code(PlanTree),
-	{ok , Program }.	
+	Program.	
 
 %%% execution plan generic node
 
