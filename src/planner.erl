@@ -59,6 +59,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 find_subtrees1 (ParseTree) ->
 	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+%% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
 
 %%	RelMap = #{ "c_custkey" => "customer" , "o_custkey" => "orders" , "l_orderkey" => "lineitem" , 
 %%		 "o_orderkey" => "orders" , "l_suppkey" => "lineitem" , "s_suppkey" => "supplier" , 
@@ -134,50 +135,65 @@ merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
 %%	generate instructions for a join node
 generate_code ( PlanTree ) ->
 	io:fwrite("Plan Tree is: ~n~p~n", [ PlanTree ]),
-	generate_code ( PlanTree, 0).
+	generate_code ( PlanTree, 0, 0, left ).
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node
 %% @todo avoid searching the instruction list to get the NodeID for the right subtree
 %%	and refactor to get tail recursion
 
-generate_code ( [{ type, join }|Node], NodeID ) ->
+generate_code ( [{ type, join }|Node], ParentNodeID,  CurMaxID, Descent ) ->
 
 	[{ joinpred, Predicate }, { left , Left }, { right, Right }, { relation, null }, { leaf, false }] = Node,
 
+%%	io:fwrite("my node id ~p~n", [ NodeID ]),
+
+	NodeID = case Descent of
+		left -> ParentNodeID + 1;
+		right -> CurMaxID + 1
+		end,
+	
 	Instruction = { action , spawn , [
 			{ id , NodeID }, 
-			{ target , NodeID - 1}, 
-			{ module , nestloop_join },
+			{ target , ParentNodeID },  
+			{ module , join },
 			{ predicate , Predicate } ]
 		},
 
-	io:fwrite("my node id ~p~n", [ NodeID ]),
-	
-	LinstrList = generate_code(Left, NodeID + 1 ),
-	io:fwrite("my Left List:  ~p~n", [ LinstrList ]),
+	{ LinstrList, LMaxID }  = generate_code(Left, NodeID, CurMaxID, left),
 
-	%%[ RNodeID ] = lists:max([[ Nid ||{id , Nid} <- Instr ]  || Instr <-  LinstrList  ]),  %%Silly
-	RNodeID = 1,
-	%%io:fwrite("my Node Id [~p] list is: ~p~n",[ NodeID,   [[ Nid ||{id , Nid} <- Instr ]  || Instr <- LinstrList ] ]),
-	lists:flatten([ Instruction ]  ++  [ LinstrList ] ++ [ generate_code(Right, RNodeID + 1) ])
+	NewMaxID = if LMaxID > CurMaxID -> LMaxID;
+			true -> CurMaxID
+		   end,
+			
+	{ RinstrList, _RMaxID }  = generate_code(Right, NodeID, NewMaxID, right),
+
+%%	io:fwrite("my Left List:  ~p~n", [ LinstrList ]),
+
+	{ lists:flatten( [ Instruction ] ++ [ LinstrList ] ++ [ RinstrList ]) , NewMaxID }
+
 ;
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a scan node
-generate_code ( [{ type, scan }|Node], NodeID ) ->
+generate_code ( [{ type, scan }|Node], ParentNodeID, CurMaxID, Descent ) ->
 
-	io:fwrite("LEAF NodeID is ~p~n~n----", [ NodeID ]),	
+	io:fwrite("LEAF NodeID is ~p  ~p ~p ~n~n----", [ ParentNodeID , CurMaxID , Descent ]),	
+	
+	NodeID = case Descent of
+		left -> ParentNodeID + 1;
+		right -> CurMaxID + 1
+		end,
 
 	[{ predicate , Predicate }, { relation, Relation }, { leaf, true }] = Node,
 
-	{ action , command , [
+	{{ action , command , [
 			    { id , NodeID },
-			    { target , NodeID - 1}, 
+			    { target , ParentNodeID }, 
 		    	    { module , seq_scan },
 			    { predicate , Predicate },
 			    { relation , Relation } ] 
-	}
+	}, NodeID }
 .
 
 
@@ -192,6 +208,17 @@ plan_query(ParseTree) ->
 	Program.	
 
 %%% execution plan generic node
+
+%% @doc Elements required in code/plan per node
+
+%% Node Type: scan, join, agg, filter
+%% Predicate: an s-expr in the case of join/scan/filter, function for agg, 
+%% Node ID: ID code for this node instance
+%% Source ID set: tuple of the source nodes for this node. (may not be required)
+%% Target ID: target node for this node. 
+
+
+%% comments below deprecated
 
 %%       #{ id => int , module => atom (name of executor module) , target => id of node to deliver tuples to , 
 %%	    sourcelist => list (nodes delivering to this node. Review need for this). , 
