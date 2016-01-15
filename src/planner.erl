@@ -61,10 +61,24 @@ find_subtrees1 (ParseTree) ->
 	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 %% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
 
-%%	RelMap = #{ "c_custkey" => "customer" , "o_custkey" => "orders" , "l_orderkey" => "lineitem" , 
-%%		 "o_orderkey" => "orders" , "l_suppkey" => "lineitem" , "s_suppkey" => "supplier" , 
-%%		 "c_nationkey" => "customer" , "s_nationkey" => "supplier" , "n_nationkey" => "nation" , 
-%%		 "n_regionkey" => "nation" , "r_regionkey" => "region" , "r_name" => "region"},
+%% We are going to pass a relmap that contains the projection list and relation list in OID form. 
+
+%% Consider adding a 'comments' or 'debug' field to the plan for inspection
+
+%% Object proplist should be improved. Something like:
+
+%% { colref , [ { name , "customer" } , { oid , 901231 } ] }
+
+%% Planner also needs to know current xation because (currently in design) DDL is transactional
+
+%% Plan flow
+%% - get select list map (Relmap). Error if rels / atts incorrect / not found
+%% - disambiguate select list references. Ie, resolve A.a , "a" to an OID for all further comparison
+%% -- probably leave the textual colref names for plan debug purposes
+%% - Process where clause and perform planning. 
+
+
+
 	find_subtrees1( maps:get(where_clause, ParseTree), RelMap)		
 .
 
@@ -112,11 +126,12 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , No
 					
 				[ LPred1 ] = [ LPr|| { predicate , LPr} <- LsubTree ] ,
  				[ RPred1 ] = [ RPr|| { predicate , RPr} <- RsubTree ] ,
-				[ {type, join} , 
-			     	{ joinpred , { [{type,NodeType},{value , NodeVal}] , LPred1 , RPred1 }} , 
-				{ left , LsubTree } , 
-				{ right, RsubTree } , { relation , null } , {leaf, false} ] ;
-
+				[ 
+					{type, join} , 
+			     		{ joinpred , { [{type,NodeType},{value , NodeVal}] , LPred1 , RPred1 }} , 
+					{ left , LsubTree } , 
+					{ right, RsubTree } , { relation , null } , {leaf, false}
+				 ] ;
 
 			[ ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
 	end

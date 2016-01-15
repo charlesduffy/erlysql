@@ -11,6 +11,7 @@
 		  xndbmicro_app,
 		  xndbmicro_sup,
 		  listener,
+		  catalogue,
 		  chunkserver,
 		  despatch,
 		  planner
