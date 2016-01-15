@@ -56,9 +56,6 @@ generate_childspec( Program ) ->
 .
 
 generate_childspec([Instr|Program], ChildspecAcc, Count) ->
-	%%[{id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate}] = Instr,
-
-	%%	{ action, Action , [ {id,Id}, {target,_Target}, {module,_Module}, {predicate,_Predicate} , _Relation ]} = Instr,
 
 	case Instr of 
 	  { action, Action , [ {id,Id}, {target,Target}, {module,Module}, {predicate,Predicate} , {relation, Relation} ]} -> norel;
@@ -67,7 +64,6 @@ generate_childspec([Instr|Program], ChildspecAcc, Count) ->
 	
 	generate_childspec(Program,
 		 ChildspecAcc ++ 
-		%%[ { Count , { pipeline , start_link , [ Id ] } , permanent , 2000 , worker , [ Action ] } ], %%% removing Id
 		[ { Count , { pipeline , start_link , [ ] } , permanent , 2000 , worker , [ Action ] } ],
 		Count + 1
 	)
@@ -77,7 +73,5 @@ generate_childspec([Instr|Program], ChildspecAcc, Count) ->
 
 generate_childspec([], ChildspecAcc, Count) ->
 	ChildspecAcc
-%% add the extra bits required and return	
-%%	{ok , { {one_for_one, 5, 10}, ChildspecAcc }}
 .
 

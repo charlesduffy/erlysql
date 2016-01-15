@@ -135,7 +135,8 @@ merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
 %%	generate instructions for a join node
 generate_code ( PlanTree ) ->
 	io:fwrite("Plan Tree is: ~n~p~n", [ PlanTree ]),
-	generate_code ( PlanTree, 0, 0, left ).
+	{ Code , _MaxID } = generate_code ( PlanTree, 0, 0, left ),
+	Code.
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node

@@ -7,6 +7,8 @@ doc/*
 ebin/*
 .rebar/*
 *.so
+crc/*.swp
+*.swp
 csrc/*.so
 csrc/*.o
 csrc/lex.yy.c
