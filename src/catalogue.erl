@@ -32,7 +32,24 @@ init(Args) ->
     init_ets_catalogues(),	
     {ok, Args}.
 
-handle_call(_Request, _From, State) ->
+%%handle_call(_Request, _From, State) ->
+%%    {reply, ok, State}.
+
+
+%% write new relation into system catalogue
+handle_call({write, Relspec } , _From, State) ->
+    insert_relation(Relspec),
+    {reply, ok, State};
+
+%% read relation from system catalogue
+handle_call({read, Relname } , _From, State) ->
+    NewState = get_relation_byname(Relname),
+    {reply, ok, NewState};
+
+%% delete relation from system catalogue
+
+handle_call({delete, Relname } , _From, State) ->
+    remove_relation(cat_relations, Relname),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
@@ -43,6 +60,7 @@ handle_info(_Info, State) ->
 
 terminate(_Reason, _State) ->
     write_ets_catalogues(),
+    io:fwrite("catalogue terminating~n"),	
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -57,9 +75,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% System catalogue format
 %% 1. relation
-%% { relname:string , oid:integer , chunkserver:integer , owner:integer }
-%% 2. attribute
-%% { attname:string , oid:integer , type:atom , order:integer }
+%% { relname:string , oid:integer , { attribute specification }}
 
 %% clumsy, rotten design. Refactor ASAP
 
@@ -67,13 +83,14 @@ get_catalogue_list() ->
     DefaultCatProps = [ bag, protected, named_table ],
     [   { cat_relations , DefaultCatProps } , 
 %%	{ cat_attributes, DefaultCatProps } ,  
-	{ cat_oid , [ ordered_set , named_table ] } ]
+	{ cat_oid , [ ordered_set , public, named_table ] } ]
 .
 
 init_ets_catalogues() ->
 
     CatList = [ ets:new(Name , Props) || { Name , Props } <- get_catalogue_list() ],
     load_catalogue_tables(CatList),
+    init_oid(),
     {ok}
 .
 
@@ -88,10 +105,12 @@ write_ets_catalogues() ->
 
 init_oid() ->
 	%% if OID table is empty, make initial entry of 1000
+
+	%% Put in a check for a corrupt OID sequence, ie, > 1 rows
 	TabSize = ets:info(cat_oid, size), 
 	if
     	     TabSize == 0 ->
-		    ets:insert(cat_oid, 1000);
+		    ets:insert(cat_oid, { 1, 1000});
        	     true -> % works as an 'else' branch
              	    {ok}
        end
@@ -102,11 +121,11 @@ init_oid() ->
 %% Probably have to be totally replaced. 
 generate_oid() ->
 	%% select MAX OID from OID table
-	Max = ets:last(cat_oid),	
+	[{ _ , Max }] = ets:lookup(cat_oid,1),	
 	%% increment
 	NewMax = Max + 1,	
 	%% write back to OID table
-	ets:insert(cat_oid, NewMax),
+	ets:insert( cat_oid, { 1 , NewMax } ),
 	%% return incremented vale
 	NewMax
 .	
@@ -147,7 +166,8 @@ insert_relation(Relation) ->
 	ets:insert(cat_relations, { OID , Relname, Attributes })
 .
 
-remove_relation(Catalogue , OID) ->
+remove_relation(Catalogue , Relname) ->
+	{ OID, _ , _ } = get_relation_byname(Relname),
 	ets:delete(Catalogue, OID)
 .
 
@@ -156,7 +176,5 @@ remove_relation(Catalogue , OID) ->
 get_relation_byname(Relname) ->
 
 %% Get table catalogue entry by name
-	ets:select(cat_relations, [{ {'$1', '$2' , '$3'},
-				     [{'==', '$2', Relname}], 
-				     '$$'}])	
+	ets:select(cat_relations ,[{ {'$1','$2','$3'},    [{'==', '$2', Relname}], ['$$']}] )
 .
