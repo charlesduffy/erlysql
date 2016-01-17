@@ -9,7 +9,7 @@
 
 -export([start_link/0]).
 
--export([get_relation_byname/1]).
+-export([get_relation_byname/1, get_relation_map/1]).
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
 %% ------------------------------------------------------------------
@@ -45,8 +45,12 @@ handle_call({write, Relspec } , _From, State) ->
 %% read relation from system catalogue
 handle_call({read, Relname } , _From, State) ->
     Relation = get_relation_byname(Relname),
-%%    error_logger:info_msg("this is a message! ~p~n", [ Relation ]),
     {reply, Relation , State};
+
+%% get relation map for planner
+handle_call({map, RelList } , _From, State) ->
+    RelMap = get_relation_map(RelList),
+    {reply, RelMap , State};
 
 %% delete relation from system catalogue
 
@@ -78,6 +82,9 @@ code_change(_OldVsn, State, _Extra) ->
 %% System catalogue format
 %% 1. relation
 %% { relname:string , oid:integer , { attribute specification }}
+
+%% 2. attribute specification
+%% [ { attname , <name:string> } , { attype , <type:atom> } , { attcons , { s-expr describing constraint }} ]  
 
 %% clumsy, rotten design. Refactor ASAP
 
@@ -180,3 +187,51 @@ get_relation_byname(Relname) ->
 %% Get table catalogue entry by name
 	ets:select(cat_relations ,[{ {'$1','$2','$3'},    [{'==', '$2', Relname}], ['$$']}] )
 .
+
+get_relation_map(RelList) ->
+
+%% Get a "relmap" for the planner
+
+%% RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+
+	get_relation_map(RelList, maps:new() )
+.
+
+
+%% 2. attribute specification
+%% [ [ { attname , <name:string> } , { attype , <type:atom> } , { attcons , { s-expr describing constraint }} ] , ... ]
+
+%% this will have to be enhanced to support type information 
+
+get_relation_map([Relation|RelList], RelMap) ->
+
+	 %% get Relation attribute spec for Relation
+
+	RelSpec = get_relation_byname(Relation),
+
+	%% filter out attribute names
+	%% add elements to Accumulator map
+	%% recursive call passing Accumulator
+	
+	get_relation_map (RelList, 
+		maps:merge( RelMap , 
+			    maps:from_list( 
+				[ { Attname , Relation } || { attname , Attname } <- lists:flatten(RelSpec) ] 
+			       )
+	      		     )
+			  )	
+
+;
+
+get_relation_map([], RelMap) ->
+	RelMap
+.
+
+
+
+
+
+
+
+
+
