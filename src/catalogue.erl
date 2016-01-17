@@ -9,6 +9,7 @@
 
 -export([start_link/0]).
 
+-export([get_relation_byname/1]).
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
 %% ------------------------------------------------------------------
@@ -43,8 +44,9 @@ handle_call({write, Relspec } , _From, State) ->
 
 %% read relation from system catalogue
 handle_call({read, Relname } , _From, State) ->
-    NewState = get_relation_byname(Relname),
-    {reply, ok, NewState};
+    Relation = get_relation_byname(Relname),
+%%    error_logger:info_msg("this is a message! ~p~n", [ Relation ]),
+    {reply, Relation , State};
 
 %% delete relation from system catalogue
 
