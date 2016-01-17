@@ -48,6 +48,8 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
+
+
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
@@ -62,13 +64,15 @@ code_change(_OldVsn, State, _Extra) ->
 %% clumsy, rotten design. Refactor ASAP
 
 get_catalogue_list() ->
-    [ cat_relations , cat_attributes ]
+    DefaultCatProps = [ bag, protected, named_table ],
+    [   { cat_relations , DefaultCatProps } , 
+%%	{ cat_attributes, DefaultCatProps } ,  
+	{ cat_oid , [ ordered_set , named_table ] } ]
 .
 
 init_ets_catalogues() ->
 
-    DefaultCatProps = [ bag, protected, named_table ],
-    CatList = [ ets:new(Name , DefaultCatProps) || Name <- get_catalogue_list() ],
+    CatList = [ ets:new(Name , Props) || { Name , Props } <- get_catalogue_list() ],
     load_catalogue_tables(CatList),
     {ok}
 .
@@ -80,6 +84,34 @@ write_ets_catalogues() ->
     {ok}
 .
 
+%% initialise OID table
+
+init_oid() ->
+	%% if OID table is empty, make initial entry of 1000
+	TabSize = ets:info(cat_oid, size), 
+	if
+    	     TabSize == 0 ->
+		    ets:insert(cat_oid, 1000);
+       	     true -> % works as an 'else' branch
+             	    {ok}
+       end
+.
+
+%% generate OIDs
+
+%% Probably have to be totally replaced. 
+generate_oid() ->
+	%% select MAX OID from OID table
+	Max = ets:last(cat_oid),	
+	%% increment
+	NewMax = Max + 1,	
+	%% write back to OID table
+	ets:insert(cat_oid, NewMax),
+	%% return incremented vale
+	NewMax
+.	
+
+%% For persistence we use a DETS table. 
 save_catalogue_tables([Catalogue|CatList]) ->
 
 	[ CatName ] = [ Name || { name , Name } <- ets:info(Catalogue) ],
@@ -106,13 +138,25 @@ load_catalogue_tables([]) ->
 	{ok}
 .
 
-get_entry(RelName) ->
-{ok}
+%% fns to add / remove relations
+
+insert_relation(Relation) ->
+	{ Relname , Attributes } = Relation,
+	OID = generate_oid(),
+	%% insert into relations ets table
+	ets:insert(cat_relations, { OID , Relname, Attributes })
 .
 
-set_entry(Oid , Catalogue , Data ) ->
-{ok}
+remove_relation(Catalogue , OID) ->
+	ets:delete(Catalogue, OID)
 .
 
-%% For loading / saving we use a DETS table. 
+%% Find relations
 
+get_relation_byname(Relname) ->
+
+%% Get table catalogue entry by name
+	ets:select(cat_relations, [{ {'$1', '$2' , '$3'},
+				     [{'==', '$2', Relname}], 
+				     '$$'}])	
+.
