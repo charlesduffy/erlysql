@@ -13,8 +13,7 @@
 		  listener,
 		  catalogue,
 		  chunkserver,
-		  despatch,
-		  planner
+		  despatch
 	    ]},
   {mod, { xndbmicro_app, []}},
   {env, []}

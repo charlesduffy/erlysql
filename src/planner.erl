@@ -1,5 +1,5 @@
 -module(planner).
--behaviour(gen_server).
+%-behaviour(gen_server).
 -define(SERVER, ?MODULE).
 
 %% ------------------------------------------------------------------
@@ -12,8 +12,8 @@
 %% gen_server Function Exports
 %% ------------------------------------------------------------------
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+%-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+%         terminate/2, code_change/3]).
 
 -export([plan_query/1]).
 %% ------------------------------------------------------------------
@@ -27,29 +27,29 @@ start_link() ->
 %% gen_server Function Definitions
 %% ------------------------------------------------------------------
 
-init(Args) ->
-    io:format("%% planner starting~n"),
-    {ok, Args}.
+%init(Args) ->
+%    io:format("** planner starting~n"),
+%    {ok, Args}.
 
-handle_call({pla, ParseTree } , _From, State) ->
-    io:fwrite("Planner received parsetree: ~n~p~n", [ ParseTree ] ),
-    plan_query(ParseTree),
-    {reply, ok, State};
+%handle_call({pla, ParseTree } , _From, State) ->
+%    io:fwrite("Planner received parsetree: ~n~p~n", [ ParseTree ] ),
+%    plan_query(ParseTree),
+%    {reply, ok, State};
 
-handle_call(_Request, _From, State) ->
-    {reply, ok, State}.
+%handle_call(_Request, _From, State) ->
+%    {reply, ok, State}.
 
-handle_cast(_Msg, State) ->
-    {noreply, State}.
+%handle_cast(_Msg, State) ->
+%    {noreply, State}.
 
-handle_info(_Info, State) ->
-    {noreply, State}.
+%handle_info(_Info, State) ->
+%    {noreply, State}.
 
-terminate(_Reason, _State) ->
-    ok.
+%terminate(_Reason, _State) ->
+%    ok.
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+%code_change(_OldVsn, State, _Extra) ->
+%    {ok, State}.
 
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
@@ -58,7 +58,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 find_subtrees1 (ParseTree) ->
-	RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+	%% RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 %% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
 
 %% We are going to pass a relmap that contains the projection list and relation list in OID form. 
@@ -77,6 +77,16 @@ find_subtrees1 (ParseTree) ->
 %% -- probably leave the textual colref names for plan debug purposes
 %% - Process where clause and perform planning. 
 
+
+	%% get relation list from parse tree
+
+	
+
+	%% get attribute relation list from system catalogue
+	
+	RelMap = proto:get_relmap(
+			       	    maps:get(from_clause, ParseTree)
+				 ),
 
 
 	find_subtrees1( maps:get(where_clause, ParseTree), RelMap)		

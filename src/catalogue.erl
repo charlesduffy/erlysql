@@ -205,9 +205,10 @@ get_relation_map(RelList) ->
 
 get_relation_map([Relation|RelList], RelMap) ->
 
-	 %% get Relation attribute spec for Relation
+	%% get Relation attribute spec for Relation
+	[{ name , RelName }] = Relation , 
 
-	RelSpec = get_relation_byname(Relation),
+	RelSpec = get_relation_byname(RelName),
 
 	%% filter out attribute names
 	%% add elements to Accumulator map
