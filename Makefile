@@ -12,6 +12,7 @@ YACC=bison -d --report-file=grammar.output --verbose
 SRCDIR=csrc
 NIFDIR=priv
 CC=gcc
+PERL=/usr/bin/perl
 ##################
 
 
@@ -40,7 +41,7 @@ TESTCFLAGS=-Icsrc/ -g
 
 ##################
 
-.PHONY: erl all 
+.PHONY: erl all gentest
 
 
 all : grammar.tab.c scanner.c  $(NIFSO)  erl
@@ -71,11 +72,17 @@ $(OBJECTS): %.o: %.c
 $(NIFSO):	$(OBJECTS)
 	$(CC) -g -shared -fpic -lfl $(patsubst %.o, $(SRCDIR)/%.o, $(OBJECTS)) -Wl,--export-dynamic -o $(NIFDIR)/$@
 
-errr:
+echoobj:
 	@echo $(OBJECTS)
 
+gentest:
+	$(PERL) $(SRCDIR)/test/genTestParser.pl > $(SRCDIR)/test/testParser.c
+
+$(SRCDIR)/test/testParser.c:
+	$(PERL) $(SRCDIR)/test/genTestParser.pl > $(SRCDIR)/test/testParser.c
+
 test:	CFLAGS = $(TESTCFLAGS)
-test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o
+test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o $(SRCDIR)/test/testParser.c
 	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o parsetree.o) -lfl -o $(TESTTARGET)
 	./$(TESTTARGET) -v	
 

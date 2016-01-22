@@ -61,7 +61,7 @@ typedef void *yyscan_t;
 
 %code{
 void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
-     fprintf (stderr, ">>> %s <<<\n", s); }
+     fprintf (stderr, "ERROR: %s \n", s); }
 }
 
 /* SQL keywords */
