@@ -20,3 +20,4 @@ csrc/*.tab.c
 csrc/*.c~
 csrc/*.h~
 priv/*
+data/*
