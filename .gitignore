@@ -21,3 +21,4 @@ csrc/*.c~
 csrc/*.h~
 priv/*
 data/*
+csrc/test/testParser.c
