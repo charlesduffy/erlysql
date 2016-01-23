@@ -2,6 +2,10 @@
 
 #include <string.h>
 #include "grammar.tab.h"
+#define YY_USER_ACTION yylloc->first_line = yylloc->last_line; \
+		       yylloc->first_column = yylloc->last_column; \
+		       yylloc->last_column++;
+		       
 
 %}
 
@@ -9,6 +13,8 @@
 %option noyywrap
 %option reentrant 
 %option bison-bridge
+%option bison-locations
+%option yylineno
 
 space	[\t ]
 newline [\r\n]

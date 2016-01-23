@@ -51,6 +51,16 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 
   debug("returned from parseQuery");
 
+
+  /* check for error cond */
+
+  if (qryTree->errFlag == 1) {
+	debug("parser returned error");
+	return(enif_make_atom(env, (const char *) "error"));
+  }
+
+  
+
   erlParseTree = nodeToNifTerm(env, qryTree);
 
   debug("returning from parseQuery_nif\n");
@@ -70,7 +80,12 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 {
 
-  /* Declare pointers to QueryNode data structure elements */
+ 
+
+
+ /* Declare pointers to QueryNode data structure elements */
+
+  
 
 //  selectListNode *sellist = qry->selnode->selectList;
   selectListNode *sellist = qry->get_select_list(qry);

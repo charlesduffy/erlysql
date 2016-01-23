@@ -1,3 +1,20 @@
+--Malformed SQL statements
+--garbage strings 
+--
+--;
+12345;
+--as0dakMACZAS:Lqpo234u9124-0123012;l1wm,d./asmaL/SNQ/LKHJE12P4 9I-305R93=WEFPK MZXC:LS  ALKSJALSIJDLAKSJDAL SJDAKSDJALS239122-/.AS,FG ,ZC?(*A&SDMNAS FKAJSDLAS
+--asdAS()_!*#12 ,as D!123
+--\n\i\k\!!
+--ddaaa;
+--
+--syntax errors
+elsec a from A,B,C;
+select a,b fro A,B,C;
+select from A,B,C;
+select a,b,c A,B,C;
+select a,b,c from;
+select a,b,c fromA,B,C;
 --Data Manipulation Language
 --SELECT statments
 --select list constructions

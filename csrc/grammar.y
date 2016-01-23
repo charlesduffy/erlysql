@@ -22,6 +22,7 @@ typedef void *yyscan_t;
 %lex-param {yyscan_t scanner}
 %parse-param {yyscan_t scanner} {queryNode * ptree}
 
+%locations
 /* semantic value */
 
 %union 
@@ -60,8 +61,13 @@ typedef void *yyscan_t;
 }	
 
 %code{
-void yyerror (yyscan_t scanner, queryNode *qry, char const *s) {
-     fprintf (stderr, "ERROR: %s \n", s); }
+
+  void yyerror (YYLTYPE *l, yyscan_t scanner, queryNode *qry, char const *s) {
+       qry->selnode = NULL;
+       qry->errFlag = 1;
+       fprintf (stderr, "ERROR: %s -- %d %d %d %d \n", s, l->first_line, l->first_column, l->last_line, l->last_column);  
+  }
+
 }
 
 /* SQL keywords */

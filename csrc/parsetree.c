@@ -8,7 +8,7 @@
 
 #define new(nodetype) new_##nodetype ( ( nodetype * ) malloc ((size_t) sizeof(nodetype)))
 
-/* constructor function definitiions */
+/* constructor function declarations */
 
 queryNode * new_queryNode ( queryNode *); 
 		      
@@ -44,7 +44,12 @@ tableRefNode ** get_table_list1 (selectStmtNode *selectStmt) {
 
 queryNode * new_queryNode ( queryNode *node) {
 //initialise query Node
+	
+	//initialse pointer-to-function
 	node->get_select_list = get_select_list0;
+	//
+	node->errNode = NULL;
+	node->errFlag = 0;
 	return(node);
 	
 }

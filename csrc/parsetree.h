@@ -114,6 +114,15 @@ struct _tableExprNode {
 typedef enum { SELECT_STMT, INSERT_STMT, UPDATE_STMT, DELETE_STMT, CREATE_TABLE_STMT, DROP_TABLE_STMT } statementType;
 
 /*
+	Error type enum
+
+	TODO: place in seperate header
+*/
+
+
+typedef enum { SYNTAX_ERROR,  } errorType;
+
+/*
 	SELECT statement node
 */
 typedef struct select_statement selectStmtNode;
@@ -179,6 +188,19 @@ typedef struct _deleteStmtNode {
 
 } deleteStmtNode;
 
+/*
+	Error report node
+
+*/
+
+typedef struct _errorNode errorNode;
+
+struct _errorNode {
+
+	int line;
+	int column;	
+
+};
 
 /*
 	Query statement node
@@ -196,11 +218,15 @@ struct _queryNode {
 	- create. Initialise the node with default values.
 */
 
+  char errFlag;
+
   selectListNode * (*get_select_list)(queryNode *); //= get_select_list0;
   fromClauseNode * (*get_from_clause)(queryNode *);
   whereClauseNode * (*get_where_clause)(queryNode *);  
 
   statementType statType;
+
+  errorNode *errNode;
 
   union {
     selectStmtNode *selnode;
