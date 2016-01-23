@@ -52,6 +52,7 @@ struct s_expr {
 
 typedef struct {
   char hasAlias;
+  char isWildcard;
   scalarExpr *sExpr;
   char *sAlias;
 } selectListItemNode;

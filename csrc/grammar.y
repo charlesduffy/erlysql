@@ -227,6 +227,8 @@ select_list:
 select_list_item:
 	scalar_expr {
 			$$->sExpr = $1;	
+			$$->hasAlias = 0;
+			$$->sAlias = NULL;
 		 } |
 
 	scalar_expr AS IDENTIFIER {
@@ -236,9 +238,10 @@ select_list_item:
 		 } |
 
 	MUL	{
-			$$.wildcard = 1;
+			$$->isWildcard = 1;
+			$$->hasAlias = 0;
+			$$->sAlias = NULL;
 			debug("WILDCARD in parser.");
-			
 		}	
 ;
 

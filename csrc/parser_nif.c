@@ -108,14 +108,17 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
   int i;
   scalarExpr *sExpr;
+  selectListItemNode *sItem;
+
      //Iterate over SELECT list items in QueryNode and push them on to 
      //an Erlang list as S-expressions constructed from Erlang tuples
 
   nifSelectList = enif_make_list(env, (unsigned int) 0);
 
+  //Replace all this with proper use of iterator functions
   for (i = sellist->nElements - 1; i >= 0; i--) {
-    sExpr = *(sellist->sExpr + i);
-    nifItem = sExprToNifTerm(env, sExpr, 0);
+    sItem = *(sellist->sItems + i);
+    nifItem = sExprToNifTerm(env, sItem->sExpr, 0);
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
   }
 

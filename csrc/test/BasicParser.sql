@@ -34,5 +34,8 @@ select a , * , b , * , c from A,B,C;
 select a/2, b+2, c, d*2 from A,B,C;
 select a/(2+4), b+2, c, d*2 from A,B,C;
 select a/(2+4), b+(6/(3-1)), c, d*2 from A,B,C;
+--select list aliases
+select a as c1 , b as c2 , c as c3 from A , B , C;
 select a/(2+4) as c1 , b+(6/(3-1)) as c2 , c as c3 , d*2 as c4 from A,B,C;
-select a/(2+4) as tab1.c1 , b+(6/(3-1)) as tab1.c2 , c as tab2.c3 , d*2  as tab3.c4 from A as tab1 ,B as tab2 ,C as tab3;
+--table expression aliases
+select tab1.a / (2 + 4) as c1 , tab1.b+(6/(3-1)) as c2 , tab2.c as c3 , tab3.d * 2  as c4 from A as tab1 ,B as tab2 ,C as tab3;
