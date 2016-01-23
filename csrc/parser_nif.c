@@ -59,8 +59,6 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 	return(enif_make_atom(env, (const char *) "error"));
   }
 
-  
-
   erlParseTree = nodeToNifTerm(env, qryTree);
 
   debug("returning from parseQuery_nif\n");
