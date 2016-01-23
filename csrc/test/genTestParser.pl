@@ -24,12 +24,13 @@ TESTRUNNER
   my $testDfn = << "TESTDFN";
     TEST(basicParser, $bpTest)
     {
-        int result;
+        char result;
         char * queryText1 = "$SqlStmt";	
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
-        printf("%s\\n", queryText1);
-        TEST_ASSERT_EQUAL(1 , 1);
+        result = qry1->errFlag;
+	printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
+        TEST_ASSERT_EQUAL(result , 0);
     }
 TESTDFN
 
@@ -58,14 +59,15 @@ my $Preamble1 = << "PREAMBLE1";
 #include <malloc.h>    
 
 YY_BUFFER_STATE buf1, buf2;
-queryNode *qry1, *qry2;
-yyscan_t scanner1 , scanner2;
+queryNode *qry1;
+yyscan_t scanner1;
 
 TEST_GROUP(basicParser);
 
 TEST_SETUP(basicParser) {
 
     qry1 = malloc(sizeof(queryNode));
+    qry1->errFlag = 0;
     yylex_init(&scanner1);
 }
 
