@@ -3,7 +3,7 @@
 
 /* Helper Enums for parse nodes */
 
-typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR } valueExprType;
+typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD } valueExprType;
 
 typedef enum { DIVISION, MULTIPLICATION, ADDITION, SUBTRACTION, MODULO,
     GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT,
@@ -47,12 +47,22 @@ struct s_expr {
 };
 
 /*
+	Select list item node
+*/
+
+typedef struct {
+  char hasAlias;
+  scalarExpr *sExpr;
+  char *sAlias;
+} selectListItemNode;
+
+/*
 	Select list node
 */
 
 typedef struct {
   int nElements;
-  scalarExpr **sExpr;
+  selectListItemNode **sItems;
 } selectListNode;
 
 /*	

@@ -29,8 +29,8 @@ TESTRUNNER
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
         result = qry1->errFlag;
-	printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
-        TEST_ASSERT_EQUAL(result , 0);
+	//printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
+        TEST_ASSERT_EQUAL_MESSAGE(0,result, queryText1);
     }
 TESTDFN
 

@@ -40,6 +40,7 @@ typedef void *yyscan_t;
 
 	selectStmtNode 		*selectStmt;
 	selectListNode 		*selectList;
+	selectListItemNode 	*selectListItem;
 	fromClauseNode 		*fromClause;
 	tableRefNode   		*tableRef;
 	tableRefListNode 	*tableRefList;
@@ -105,6 +106,7 @@ typedef void *yyscan_t;
 %type	<query>			query_statement
 %type 	<selectStmt> 		select_statement
 %type 	<selectList> 		select_list
+%type 	<selectListItem>	select_list_item
 %type 	<fromClause> 		from_clause
 %type 	<tableRef> 		table_ref
 %type 	<tableRefList> 		table_ref_list
@@ -194,24 +196,23 @@ SELECT STATEMENT
 */
 
 select_list:
-	scalar_expr	  {
+	select_list_item {
 				//dangerous assumption here, that we can allocate the value of the select_list
 				//at the first instance of scalar_expr.
 		 		$$ = MAKENODE(selectListNode);
-		 		$$->sExpr = malloc ((size_t) sizeof (scalarExpr*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		 		$$->sItems = malloc ((size_t) sizeof (selectListItemNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 
 			 	debug("First Scalar expr in select list!");
 				$$->nElements = 1;
-				*($$->sExpr) = $1;
+				*($$->sItems) = $1;
 				
 			  } |
-	select_list COMMA scalar_expr  { debug("recursive scalar expr!");
+	select_list COMMA select_list_item { debug("recursive scalar expr!");
 					  
-					*($$->sExpr + ($$->nElements)) = $3; //remove redundant parentheses
+					*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
 					  
 					$$->nElements++;
 
-				//	printf("scalar_expr: integer_value: %d\n\r" , SK->value.value.integer_val);
 					/*----------------------
 					|  this all kind of sux, of course.
 					|  suggestions for replacement:
@@ -221,6 +222,24 @@ select_list:
 					|----------------------*/
 					  
 					} 
+;
+
+select_list_item:
+	scalar_expr {
+			$$->sExpr = $1;	
+		 } |
+
+	scalar_expr AS IDENTIFIER {
+			$$->sExpr = $1;	
+			$$->hasAlias = 1;
+			$$->sAlias = $3;
+		 } |
+
+	MUL	{
+			$$.wildcard = 1;
+			debug("WILDCARD in parser.");
+			
+		}	
 ;
 
 select_statement:
@@ -464,8 +483,7 @@ value_expr:
 		$$.type = COLREF;
 		$$.value.column_val = $1;
 		debug("value_expr in parser. Colref value ");
-	}
-	|
+	} |
 	INT_LIT {
 			$$.type = INT;
 			$$.value.integer_val = $1;
@@ -482,8 +500,7 @@ value_expr:
 			$$.type = TEXT;
 			$$.value.text_val = $1;
 			debug("value_expr in parser. Text value : %s", $$.value.text_val);
-		}		
-;
+		}	;
 
 
 
