@@ -72,7 +72,7 @@ typedef void *yyscan_t;
 }
 
 /* SQL keywords */
-%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO AS TABLE
+%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO TABLE
 
 /* SQL Datatypes */
 
@@ -102,6 +102,7 @@ typedef void *yyscan_t;
 %left		SEMICOLON COMMA
 //%left         TYPECAST
 %left           POINT
+%left 		AS
 
 %type	<query>			query_statement
 %type 	<selectStmt> 		select_statement
@@ -199,19 +200,21 @@ select_list:
 	select_list_item {
 				//dangerous assumption here, that we can allocate the value of the select_list
 				//at the first instance of scalar_expr.
+				
+				//Consider hiding this preallocation code in selectListNode's constructor function
 		 		$$ = MAKENODE(selectListNode);
-		 		$$->sItems = malloc ((size_t) sizeof (selectListItemNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		 		$$->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this
 
 			 	debug("First Scalar expr in select list!");
 				$$->nElements = 1;
 				*($$->sItems) = $1;
 				
-			  } |
-	select_list COMMA select_list_item { debug("recursive scalar expr!");
-					  
-					*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
-					  
-					$$->nElements++;
+			  }
+			  |
+	select_list COMMA select_list_item { 
+				debug("recursive scalar expr!");
+				*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
+				$$->nElements++;
 
 					/*----------------------
 					|  this all kind of sux, of course.
@@ -224,25 +227,43 @@ select_list:
 					} 
 ;
 
-select_list_item:
-	scalar_expr {
-			$$->sExpr = $1;	
-			$$->hasAlias = 0;
-			$$->sAlias = NULL;
-		 } |
+/*
 
-	scalar_expr AS IDENTIFIER {
-			$$->sExpr = $1;	
-			$$->hasAlias = 1;
-			$$->sAlias = $3;
-		 } |
 
-	MUL	{
+	MUL	    {
 			$$->isWildcard = 1;
+			
 			$$->hasAlias = 0;
 			$$->sAlias = NULL;
 			debug("WILDCARD in parser.");
-		}	
+		    }
+		    |
+
+
+*/
+
+
+
+select_list_item:
+	scalar_expr {
+
+			$$ = MAKENODE(selectListItemNode);
+			$$->isWildcard = 0;
+			$$->sExpr = $1;	
+			$$->hasAlias = 0;
+			$$->sAlias = NULL;
+			debug("select_list_item: no ALIAS reduced\n");
+		    }
+		    |
+	scalar_expr AS IDENTIFIER {
+		   	 
+			$$ = MAKENODE(selectListItemNode);
+			$$->isWildcard = 0;
+			$$->sExpr = $1;
+			$$->hasAlias = 1;
+			$$->sAlias = $3;
+			debug("ALIAS in select list item: %s ", $3);
+		}
 ;
 
 select_statement:
@@ -257,7 +278,7 @@ where_clause:
 			{
 				$$ = MAKENODE(whereClauseNode);
 				$$->expr = $2;
-			 }
+			}
 ;
 
 from_clause:
@@ -270,21 +291,18 @@ from_clause:
 table_ref:
 	IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		debug("table_ref: table name is %s alias is not present", $1);
 		$$->tableName = strdup($1);
 		$$->tableAlias = NULL;
 	}
 	|
 	IDENTIFIER IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		debug("table_ref: table name is %s alias is %s ", $1, $2);
 		$$->tableName = strdup($1);
 		$$->tableAlias = strdup($2);
 	}
 	|
 	IDENTIFIER AS IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		debug("table_ref: table name is %s alias is %s", $1, $3);
 		$$->tableName = strdup($1);
 		$$->tableAlias = strdup($3);
 
@@ -293,26 +311,14 @@ table_ref:
 
 table_ref_list:
 	table_ref {
-			debug("table_expr: first item: ");
-
 			$$ = MAKENODE(tableRefListNode);
-			// Assume first table reference in from clause
 			$$->tables =  malloc ( sizeof(tableRefNode) * 20); //TEMPORARY! FIX ASAP. 
-		
 			*($$->tables) = $1;
-
 			$$->nElements = 1;
-				
-		   } |
-
+		  }
+		  |
 	table_ref_list COMMA table_ref {
-			tableRefListNode *foo; //TODO clean up this cruft
-			tableRefNode *bar;
-			debug("table_expr: next item. Elements (before incr): %d || %s", $$->nElements, $3->tableName);
 			*($$->tables + ($$->nElements)) = $3;			
-			foo = $$;
-			bar = *(foo->tables + $$->nElements);
-			debug("table_expr: next item. After assignment: %s", bar->tableName);
 			$$->nElements++;
 	}
 ;
@@ -322,7 +328,8 @@ table_expr:
 		$$ = MAKENODE(tableExprNode);
 		$$->fromClause = $1;	
 		$$->whereClause = NULL;
-	} |
+	}
+	|
 	from_clause where_clause {
 		$$ = MAKENODE(tableExprNode);
 		$$->fromClause = $1;
@@ -330,22 +337,22 @@ table_expr:
 	}
 ;
 
+
 /*
 
 EXPRESSIONS
-
-Todo: rewrite all the scalar_expr OPER scalar_expr rules.
 
 */
 
 
 scalar_expr:
-	value_expr  { $$ = MAKENODE(scalarExpr);
+	value_expr  { 
+		      $$ = MAKENODE(scalarExpr);
 		      $$->value = $1;
 		      $$->left = NULL;
 		      $$->right = NULL;
-		      debug("Single value_expr in scalar_expr");
-		    }				|
+		    }
+	        	|
 	LPAREN scalar_expr RPAREN
 				{ 
 				  $$ = MAKENODE(scalarExpr);
@@ -481,31 +488,26 @@ scalar_expr:
 ;
 
 value_expr:
-	colref
-	{ 
-		$$.type = COLREF;
-		$$.value.column_val = $1;
-		debug("value_expr in parser. Colref value ");
-	} |
+	colref  { 
+		  $$.type = COLREF;
+		  $$.value.column_val = $1;
+		}
+		|
 	INT_LIT {
-			$$.type = INT;
-			$$.value.integer_val = $1;
-			debug("value_expr in parser. Integer value is: %d", $$.value.integer_val);
-		}	 |	
+		  $$.type = INT;
+		  $$.value.integer_val = $1;
+		}
+		|	
 	NUM_LIT {
-			
-			$$.type = NUM;
-			$$.value.numeric_val = $1;
-			
-		}	|	
+		  $$.type = NUM;
+		  $$.value.numeric_val = $1;
+		}
+		|	
 	STRING  {
-			
-			$$.type = TEXT;
-			$$.value.text_val = $1;
-			debug("value_expr in parser. Text value : %s", $$.value.text_val);
-		}	;
-
-
+		  $$.type = TEXT;
+		  $$.value.text_val = $1;
+		}
+;
 
 colref:
 	IDENTIFIER 
@@ -518,7 +520,6 @@ colref:
 	IDENTIFIER POINT IDENTIFIER  
 	{
 		$$=MAKENODE(colRef);
-		debug("colref with reference. Ref: %s , Colname: %s", $1 , $3); 
 		$$->colName = $3;
 		$$->colReference = $1; 
 	}
