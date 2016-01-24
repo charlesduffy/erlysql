@@ -78,7 +78,7 @@ echoobj:
 gentest:
 	$(PERL) $(SRCDIR)/test/genTestParser.pl > $(SRCDIR)/test/testParser.c
 
-$(SRCDIR)/test/testParser.c:
+$(SRCDIR)/test/testParser.c: $(SRCDIR)/test/genTestParser.pl
 	$(PERL) $(SRCDIR)/test/genTestParser.pl > $(SRCDIR)/test/testParser.c
 
 test:	CFLAGS = $(TESTCFLAGS)
