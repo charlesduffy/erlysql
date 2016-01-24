@@ -62,7 +62,7 @@ point  [.]
 (?i:numeric)		{ return NUMERIC; }
 
 {space}+ 		{ } 
-({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;} /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
@@ -70,7 +70,8 @@ point  [.]
 {digit}+ 		{ yylval->integer_val = atoi(yytext); return INT_LIT; } 
 ({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUM_LIT; }		
 
-{add}			{ return ADD; }
+
+{add}			{ return ADD; } /* operators */
 {sub}			{ return SUB; }
 {div}			{ return DIV; }
 {mul}			{ return MUL; }
@@ -84,5 +85,7 @@ point  [.]
 {lparen}		{ return LPAREN; }
 {rparen}		{ return RPAREN; }
 {point}			{ return POINT; }
+
+
 
 %%
