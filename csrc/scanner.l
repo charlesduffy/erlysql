@@ -20,6 +20,7 @@ space	[\t ]
 newline [\r\n]
 digit 	[0-9]
 quote	'
+doublequote ["]
 alpha	[a-zA-Z]	
 alphanum [a-zA-Z_0-9]
 add	[+]
@@ -34,6 +35,7 @@ comma [,]
 lparen [(]
 rparen [)]
 point  [.]
+lead_ident [a-zA-Z_]
 
 %%
 
@@ -62,14 +64,16 @@ point  [.]
 (?i:numeric)		{ return NUMERIC; }
 
 {space}+ 		{ } 
-({alpha}+{alphanum}*) 	{ yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+
+({lead_ident}{alphanum}*) { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+({doublequote}{alphanum}+{doublequote})     { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
 
 {newline} 		{ return NEWLINE;}
 {digit}+ 		{ yylval->integer_val = atoi(yytext); return INT_LIT; } 
 ({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUM_LIT; }		
-
 
 {add}			{ return ADD; } /* operators */
 {sub}			{ return SUB; }
@@ -85,7 +89,5 @@ point  [.]
 {lparen}		{ return LPAREN; }
 {rparen}		{ return RPAREN; }
 {point}			{ return POINT; }
-
-
 
 %%
