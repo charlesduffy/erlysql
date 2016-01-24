@@ -227,20 +227,7 @@ select_list:
 					} 
 ;
 
-/*
 
-
-	MUL	    {
-			$$->isWildcard = 1;
-			
-			$$->hasAlias = 0;
-			$$->sAlias = NULL;
-			debug("WILDCARD in parser.");
-		    }
-		    |
-
-
-*/
 
 
 
@@ -253,6 +240,13 @@ select_list_item:
 			$$->hasAlias = 0;
 			$$->sAlias = NULL;
 			debug("select_list_item: no ALIAS reduced\n");
+		    }
+		    |
+	MUL	    {
+			$$ = MAKENODE(selectListItemNode);
+			$$->isWildcard = 1;
+			$$->hasAlias = 0;
+			$$->sAlias = NULL;
 		    }
 		    |
 	scalar_expr AS IDENTIFIER {
