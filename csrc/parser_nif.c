@@ -118,7 +118,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   //Replace all this with proper use of iterator functions
   for (i = sellist->nElements - 1; i >= 0; i--) {
     sItem = *(sellist->sItems + i);
-    nifItem = sExprToNifTerm(env, sItem->sExpr, 0);
+    nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
   }
 
@@ -230,13 +230,8 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
   ERL_NIF_TERM lNode, rNode, cNode;
   ERL_NIF_TERM cList; //TODO rename these variables
 
-  debug("Entering sExprToNifTerm");
-
   if (sExpr->value.type != OPER) {
-    debug("node is NOT oper");
     cNode = valueExprToNifTerm(env, sExpr->value);
-    //if (depth == 0) 
-      //cNode = enif_make_tuple1(env, cNode);
     return (cNode);
   }
 
@@ -273,8 +268,6 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
   ERL_NIF_TERM colRefTuple;     	/* Holds table alias value if present in a column reference */
   bool tableRefFlag = false;		/* Set to true if a table reference is present for a column reference */
 
-  debug("entering valueExprToNifTerm");
-
   valueExpr v = value.value;
 
   //TODO consider replacing with table driven method
@@ -294,7 +287,7 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
 	 in the proplist, if one is present. 
       */
 
-      if (v.column_val->colReference != NULL) {
+      if (v.column_val->colReference != NULL) {    //replace with some func like has_tabref
 		tableRefFlag = true;
     	        colRefTuple = enif_make_tuple2(
 					env, 
