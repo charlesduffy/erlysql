@@ -169,24 +169,26 @@ query_statement:
 
 INSERT STATEMENT
 
-----UNSUPPORTED
 
 */
 
-/*
 
 insert_statement:
-	INSERT INTO IDENTIFIER VALUES LPAREN value_list RPAREN
+	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN { 
+	
+	}
+	|
+	INSERT INTO ddl_table_ref LPAREN select_statement RPAREN {
+
+	}
 ;
 
-value_list:
-	LPAREN scalar_expr RPAREN   		|
-	scalar_expr scalar_operator scalar_expr |
-	scalar_expr COMMA scalar_expr		|
+//should take generic table expression for INSERT source
+
+insert_value_list:
 	scalar_expr			
+	insert_value_list COMMA scalar_expr		|
 ;
-
-*/
 
 
 	
@@ -285,20 +287,20 @@ from_clause:
 table_ref:
 	IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		$$->tableName = strdup($1);
+		$$->tableName = $1;
 		$$->tableAlias = NULL;
 	}
 	|
 	IDENTIFIER IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		$$->tableName = strdup($1);
-		$$->tableAlias = strdup($2);
+		$$->tableName = $1;
+		$$->tableAlias = $2;
 	}
 	|
 	IDENTIFIER AS IDENTIFIER {
 		$$ = MAKENODE(tableRefNode);
-		$$->tableName = strdup($1);
-		$$->tableAlias = strdup($3);
+		$$->tableName = $1;
+		$$->tableAlias = $3;
 
 	}
 ;
