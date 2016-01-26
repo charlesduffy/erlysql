@@ -66,7 +66,7 @@ lead_ident [a-zA-Z_]
 {space}+ 		{ } 
 
 ({lead_ident}{alphanum}*) { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
-({doublequote}{alphanum}+{doublequote})     { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+({doublequote}{alphanum}+{doublequote})     { yylval->text_val = strdup(yytext); return IDENTIFIER;}  
 
 {quote}  		{ return QUOTE;}
 ({quote}{alpha}+{quote}) { return STRING; }
