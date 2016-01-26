@@ -1,0 +1,1517 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Creator: Box::print() by Christian Lindig
+%%BoundingBox: 42 35 552 291
+%%Pages: 1
+%%EndComments
+
+gsave
+40 295 translate
+0.118384 -0.118384 scale
+% $Id$
+% Header for DDD PostScript Box output
+
+% Copyright (C) 1995-1998 Technische Universitaet Braunschweig, Germany.
+% Written by Christian Lindig <lindig@ips.cs.tu-bs.de>.
+% 
+% This file is part of DDD.
+% 
+% DDD is free software; you can redistribute it and/or
+% modify it under the terms of the GNU General Public
+% License as published by the Free Software Foundation; either
+% version 3 of the License, or (at your option) any later version.
+% 
+% DDD is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+% See the GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public
+% License along with DDD -- see the file COPYING.
+% If not, see <http://www.gnu.org/licenses/>.
+% 
+% DDD is the data display debugger.
+% For details, see the DDD World-Wide-Web page, 
+% `http://www.gnu.org/software/ddd/',
+% or send a mail to the DDD developers <ddd@gnu.org>.
+
+% Make all definitions local to the ddddict dictionary
+/ddddict 25 dict def 
+
+ddddict begin		% make dict active 
+
+
+% Global variables
+/fontSize+ 12 def
+/font+ /Courier def  
+
+
+% Some small utilities
+/cm { 28.34646 mul } bind def
+
+
+% ISOLATIN1* - reencode a font to ISO Latin 1 encoding
+%
+% newfont table oldfont isolatin1*
+
+/isolatin1* {
+	findfont
+	dup maxlength dict begin
+	{
+		1 index /FID ne { def } { pop pop } ifelse
+	} forall
+	/Encoding exch def
+	dup /FontName exch def
+	currentdict end definefont pop
+} bind def
+
+
+% Define the ISO Latin 1 encoding of a font
+ 
+/isotable[
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/space/exclam/quotedbl/numbersign
+/dollar/percent/ampersand/quoteright/parenleft/parenright/asterisk/plus/comma
+/hyphen/period/slash/zero/one/two/three/four/five/six/seven/eight/nine/colon
+/semicolon/less/equal/greater/question/at/A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S
+/T/U/V/W/X/Y/Z/bracketleft/backslash/bracketright/asciicircum/underscore
+/quoteleft/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/braceleft/bar
+/braceright/asciitilde/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef/.notdef
+/.notdef/dotlessi/grave/acute/circumflex/tilde/macron/breve/dotaccent/dieresis
+/.notdef/ring/cedilla/.notdef/hungarumlaut/ogonek/caron/.notdef/exclamdown/cent
+/sterling/currency/yen/brokenbar/section/dieresis/copyright/ordfeminine
+/guilsinglleft/logicalnot/hyphen/registered/macron/degree/plusminus/twosuperior
+/threesuperior/acute/mu/paragraph/periodcentered/cedilla/onesuperior
+/ordmasculine/guilsinglright/onequarter/onehalf/threequarters/questiondown
+/Agrave/Aacute/Acircumflex/Atilde/Adieresis/Aring/AE/Ccedilla/Egrave/Eacute
+/Ecircumflex/Edieresis/Igrave/Iacute/Icircumflex/Idieresis/Eth/Ntilde/Ograve
+/Oacute/Ocircumflex/Otilde/Odieresis/multiply/Oslash/Ugrave/Uacute/Ucircumflex
+/Udieresis/Yacute/Thorn/germandbls/agrave/aacute/acircumflex/atilde/adieresis
+/aring/ae/ccedilla/egrave/eacute/ecircumflex/edieresis/igrave/iacute
+/icircumflex/idieresis/eth/ntilde/ograve/oacute/ocircumflex/otilde/odieresis
+/divide/oslash/ugrave/uacute/ucircumflex/udieresis/yacute/thorn/ydieresis
+] def
+
+
+% YCORRECT*
+% The reference point of a string ist NOT its lower left corner but 
+% its baseline.  Therefore, the y coordinate must be corrected.  
+% Returns the correction for the current font.
+%
+% ycorrect* y
+
+/ycorrect* {
+	currentfont /FontBBox get
+	aload pop pop pop
+	currentfont /FontMatrix get dtransform
+	exch pop
+} def 
+
+
+% TEXT*
+% print out a string and make sure not to require more space than
+% specified.
+% font xsize ysize xorigin yorigin (string) text*
+
+/text* {
+
+	/string+ exch def		% set up some variables ..
+	moveto				% move to (xorigin,yorigin)
+	/ysize+ exch def
+	/xsize+ exch def
+	/thefont+ exch def
+
+	% is the right font already selected ?
+
+	thefont+ font+ ne 
+	ysize+ fontSize+ ne
+	or {	
+		% set up the right font - reencode it	
+		
+		/Symbol thefont+ eq 
+		{
+			thefont+ findfont
+		}{
+
+			/isofont+ isotable thefont+ isolatin1*	
+			/isofont+ findfont
+		}ifelse
+
+		[ysize+ 0 0 ysize+ neg 0 0] makefont
+		setfont
+		
+		/font+ thefont+ def
+		/fontSize+ ysize+ def
+	} if
+
+	% correct current point 
+
+	0 ycorrect* neg rmoveto
+
+	% string too long?  Scale it down ...
+	% The actual font is scaled. There is a good chance,
+	% that this will not happen too often when the font is not
+	% changed during the calls of text*
+
+	xsize+ string+ stringwidth pop div dup dup
+	1 lt {
+		0 0 1 0 0 6 array astore currentfont exch 
+		makefont setfont
+		pop
+	}{ 
+		% string is too short ... scale it up
+
+		1.05 gt {
+			0 0 1 0 0 6 array astore currentfont exch 
+			makefont setfont	
+		}{
+			pop
+
+		} ifelse
+	} ifelse
+	
+	string+ show
+
+} bind def
+
+	
+% ARROWLINE*
+% Draw a line of given width with an arrow at its end
+% len gives the height of the triangle forming the head of the arrow
+% and angle the angle at its top
+%	
+% angle len  x1 y1 x2 y2 linewidth arrowline*
+
+/arrowline* {
+	setlinewidth			% angle len x1 y1 x2 y2
+	/y2 exch def
+	/x2 exch def
+	/y1 exch def
+	/x1 exch def
+	/len+ exch def			% height of triangle
+
+	/alpha+ 
+		y2 y1 sub		% define alpha+
+		x2 x1 sub
+		atan
+	def
+
+	/base+				% define half of baseline
+		exch 
+		2 div dup		% angle angle
+		sin exch cos 	 	% sin(angle) cos(angle)
+		div			% tan(angle)
+		len+
+		mul			% half of baseline
+	def  
+	
+	newpath				% draw the line
+	x1 y1 moveto 
+	x2 len+ alpha+ cos mul sub 	% shorten the line to the end  
+	y2 len+ alpha+ sin mul sub 	% of the triangle
+	lineto
+	stroke		
+
+	gsave				% set the origin to the head of
+	0 setlinewidth			% the arrow and rotate the system
+	x2 y2 
+	translate			% origin now at x2 y2
+
+	alpha+ 90 sub rotate 		% rotate the system
+
+	newpath				% draw a triangle
+	0 0 moveto
+	base+ len+ neg rlineto
+	base+ 2 mul neg 0 rlineto
+	closepath
+	fill
+	
+	grestore
+} bind def
+
+% ARROWHEAD*
+% draw an arrow head inclined by alpha at (x,y)
+%
+% angle len alpha x y
+
+/arrowhead* {
+	/y exch def
+	/x exch def
+	/alpha+ exch def
+	/len+ exch def			% height of triangle
+
+	/base+				% define half of baseline
+		exch 
+		2 div dup		% angle angle
+		sin exch cos 	 	% sin(angle) cos(angle)
+		div			% tan(angle)
+		len+
+		mul			% half of baseline
+	def
+
+	gsave				% set the origin to the head of
+	0 setlinewidth			% the arrow and rotate the system
+	x y 
+	translate			% origin now at x y
+
+	alpha+ 90 sub rotate 		% rotate the system
+
+	newpath				% draw a triangle
+	0 0 moveto
+	base+ len+ neg rlineto
+	base+ 2 mul neg 0 rlineto
+	closepath
+	fill
+	
+	grestore
+} bind def
+
+
+% LINE*
+% draw a line of given width from (x1,y1) to (x2,y2)
+%
+% x1 y1 x2 y2 width line*
+
+/line* {
+	setlinewidth	% x1 y1 x2 y2
+	newpath
+	4 2 roll 	% x2 y2 x1 y1
+	moveto		% x2 y2
+	lineto		
+	stroke
+} bind def
+
+
+% CLEAN*
+%
+% fill a box given by four points with white colour ..
+% x1 y1 x2 y2 x3 y3 x4 y4 clean*
+
+/clean* {
+	gsave
+	1 setgray
+	0 setlinewidth
+	newpath
+	moveto  lineto  lineto lineto
+	closepath
+	fill
+	grestore
+} bind def
+
+
+% BOX*
+% fill a box given by four points
+%
+% x1 y1 x2 y2 x3 y3 x4 y4 box*
+
+/box* {
+	0 setlinewidth
+	newpath
+	moveto 	lineto 	lineto lineto
+	closepath
+	fill
+} bind def
+
+
+% ARC*
+% draw an ellipse with center (cx,cy), radius dx dy, starting at start
+% and ending at end.
+%
+% start end dx dy cx cy width arc*
+
+/arc* {
+	gsave
+	setlinewidth
+	translate
+	newpath
+	dup 3 1 roll		% start end dy dx dy
+	div 1 scale		% dy dx/dy 1 scale => start end dy
+	
+	0 exch  0 exch		% start end 0 0 dy 
+	5 -2 roll 		% 0 0 dy start end
+
+	dup
+	0 eq {			% replace 0 by 360
+		pop 
+		360
+	} if
+	arc
+	stroke
+	grestore
+} bind def
+
+
+% BEGINCOLOR* / ENDCOLOR*
+% Draw something using a specific foreground color
+%
+% red green blue begincolor* SOMETHING endcolor*
+
+/begincolor* {
+        currentrgbcolor         % red green blue red' green' blue'
+        6 3 roll                % red' green' blue' red green blue
+	setrgbcolor             % red' green' blue'
+} bind def
+
+/endcolor* {
+	setrgbcolor
+} bind def
+
+
+% Set up the right font to the right size
+
+/isofont+ isotable font+ isolatin1* 	% reencode font+
+					% and make it the current font
+/isofont+ findfont
+[fontSize+ 0 0 fontSize+ neg 0 0] makefont
+setfont
+
+
+%%EndProlog
+30 10 360 160 405 160 1 arrowline*
+/Helvetica-Narrow 78 13 343 158 (*\(\(\).selnode\)) text*
+30 10 651 160 982 160 1 arrowline*
+/Helvetica-Narrow 96 13 768 158 (*\(\(\).selectList\)) text*
+30 10 651 174 943 209 1 arrowline*
+/Helvetica-Narrow 90 13 752 189 (*\(\(\).tableExpr\)) text*
+30 10 982 256 581 397 1 arrowline*
+/Helvetica-Narrow 96 13 734 324 (*\(\(\).fromClause\)) text*
+30 10 1145 256 1509 413 1 arrowline*
+/Helvetica-Narrow 102 13 1276 332 (*\(\(\).whereClause\)) text*
+30 10 505 435 215 669 1 arrowline*
+/Helvetica-Narrow 78 13 321 550 (*\(\(\).refList\)) text*
+30 10 190 707 113 1190 1 arrowline*
+/Helvetica-Narrow 72 13 116 946 (*\(\(\).tables\)) text*
+30 10 112 1210 127 1389 1 arrowline*
+/Helvetica-Narrow 18 13 110 1297 (*\(\)) text*
+30 10 1589 451 2084 704 1 arrowline*
+/Helvetica-Narrow 60 13 1806 575 (*\(\(\).expr\)) text*
+30 10 2086 832 1290 1248 1 arrowline*
+/Helvetica-Narrow 60 13 1658 1038 (*\(\(\).left\)) text*
+30 10 2241 832 2446 1229 1 arrowline*
+/Helvetica-Narrow 66 13 2310 1028 (*\(\(\).right\)) text*
+30 10 1131 1376 1093 1440 1 arrowline*
+/Helvetica-Narrow 60 13 1082 1406 (*\(\(\).left\)) text*
+30 10 1297 1367 1487 1449 1 arrowline*
+/Helvetica-Narrow 66 13 1359 1406 (*\(\(\).right\)) text*
+30 10 996 1568 812 1760 1 arrowline*
+/Helvetica-Narrow 60 13 874 1662 (*\(\(\).left\)) text*
+30 10 1065 1568 1095 1760 1 arrowline*
+/Helvetica-Narrow 66 13 1047 1662 (*\(\(\).right\)) text*
+30 10 1607 1568 1577 1760 1 arrowline*
+/Helvetica-Narrow 60 13 1562 1662 (*\(\(\).left\)) text*
+30 10 1723 1568 2021 1744 1 arrowline*
+/Helvetica-Narrow 66 13 1839 1654 (*\(\(\).right\)) text*
+30 10 752 1888 752 2157 1 arrowline*
+/Helvetica-Narrow 168 13 668 2020 (*\(\(\).value.value.column_val\)) text*
+30 10 1104 1888 1104 2157 1 arrowline*
+/Helvetica-Narrow 168 13 1020 2020 (*\(\(\).value.value.column_val\)) text*
+30 10 1568 1888 1568 2157 1 arrowline*
+/Helvetica-Narrow 168 13 1484 2020 (*\(\(\).value.value.column_val\)) text*
+30 10 1162 160 1502 160 1 arrowline*
+/Helvetica-Narrow 72 13 1296 158 (*\(\(\).sItems\)) text*
+30 10 1730 160 2052 160 1 arrowline*
+/Helvetica-Narrow 18 13 1882 158 (*\(\)) text*
+30 10 2268 168 2624 197 1 arrowline*
+30 10 2792 280 2824 376 1 arrowline*
+30 10 2912 242 3550 394 1 arrowline*
+30 10 2854 520 2890 904 1 arrowline*
+30 10 2915 520 3277 904 1 arrowline*
+30 10 2907 1048 2940 1253 1 arrowline*
+30 10 3719 504 3737 664 1 arrowline*
+30 10 3750 808 3774 1093 1 arrowline*
+30 10 3820 504 4084 680 1 arrowline*
+24 74 361 74 361 246 24 246 clean*
+24 74 360 74 360 75 24 75 box* %(24, 74)(336, 1)
+24 75 25 75 25 244 24 244 box* %(24, 75)(1, 169)
+/Courier 6 13 27 90 (2) text*
+/Courier 12 13 33 90 (: ) text*
+/Courier-BoldOblique 48 13 45 90 (*qryTree) text*
+27 90 357 90 357 91 27 91 box* %(27, 90)(330, 1)
+27 93 357 93 357 94 27 94 box* %(27, 93)(330, 1)
+27 94 28 94 28 241 27 241 box* %(27, 94)(1, 147)
+/Courier 42 13 42 109 (errFlag) text*
+/Courier 18 13 138 109 ( = ) text*
+/Courier 48 13 156 109 (0 \'\\000\') text*
+/Courier 90 13 42 122 (get_select_list) text*
+/Courier 18 13 138 122 ( = ) text*
+/Courier 198 13 156 122 (0x7ffff2dbc69b <get_select_list0>) text*
+/Courier 90 13 42 135 (get_from_clause) text*
+/Courier 18 13 138 135 ( = ) text*
+/Courier 18 13 156 135 (0x0) text*
+/Courier 96 13 42 148 (get_where_clause) text*
+/Courier 18 13 138 148 ( = ) text*
+/Courier 18 13 156 148 (0x0) text*
+/Courier 48 13 42 161 (statType) text*
+/Courier 18 13 138 161 ( = ) text*
+/Courier 66 13 156 161 (SELECT_STMT) text*
+/Courier 42 13 42 174 (errNode) text*
+/Courier 18 13 138 174 ( = ) text*
+/Courier 18 13 156 174 (0x0) text*
+/Courier 42 13 42 187 (selnode) text*
+/Courier 18 13 138 187 ( = ) text*
+/Courier 84 13 156 187 (0x7fffec006a20) text*
+/Courier 42 13 42 200 (insnode) text*
+/Courier 18 13 138 200 ( = ) text*
+/Courier 84 13 156 200 (0x7fffec006a20) text*
+/Courier 42 13 42 213 (updnode) text*
+/Courier 18 13 138 213 ( = ) text*
+/Courier 84 13 156 213 (0x7fffec006a20) text*
+/Courier 54 13 42 226 (crTabNode) text*
+/Courier 18 13 138 226 ( = ) text*
+/Courier 84 13 156 226 (0x7fffec006a20) text*
+/Courier 54 13 42 239 (drTabNode) text*
+/Courier 18 13 138 239 ( = ) text*
+/Courier 84 13 156 239 (0x7fffec006a20) text*
+356 94 357 94 357 241 356 241 box* %(356, 94)(1, 147)
+27 241 357 241 357 242 27 242 box* %(27, 241)(330, 1)
+359 75 360 75 360 244 359 244 box* %(359, 75)(1, 169)
+24 244 360 244 360 245 24 245 box* %(24, 244)(336, 1)
+360 75 361 75 361 245 360 245 box* %(360, 75)(1, 170)
+25 245 361 245 361 246 25 246 box* %(25, 245)(336, 1)
+405 128 652 128 652 193 405 193 clean*
+405 128 651 128 651 129 405 129 box* %(405, 128)(246, 1)
+405 129 406 129 406 191 405 191 box* %(405, 129)(1, 62)
+408 131 648 131 648 132 408 132 box* %(408, 131)(240, 1)
+408 132 409 132 409 188 408 188 box* %(408, 132)(1, 56)
+/Courier 96 13 423 147 (get_select_list1) text*
+/Courier 18 13 543 147 ( = ) text*
+/Courier 18 13 561 147 (0x0) text*
+/Courier 120 13 423 160 (get_table_expr_node1) text*
+/Courier 18 13 543 160 ( = ) text*
+/Courier 18 13 561 160 (0x0) text*
+/Courier 60 13 423 173 (selectList) text*
+/Courier 18 13 543 173 ( = ) text*
+/Courier 84 13 561 173 (0x7fffec0062d0) text*
+/Courier 54 13 423 186 (tableExpr) text*
+/Courier 18 13 543 186 ( = ) text*
+/Courier 84 13 561 186 (0x7fffec0069f0) text*
+647 132 648 132 648 188 647 188 box* %(647, 132)(1, 56)
+408 188 648 188 648 189 408 189 box* %(408, 188)(240, 1)
+650 129 651 129 651 191 650 191 box* %(650, 129)(1, 62)
+405 191 651 191 651 192 405 192 box* %(405, 191)(246, 1)
+651 129 652 129 652 192 651 192 box* %(651, 129)(1, 63)
+406 192 652 192 652 193 406 193 box* %(406, 192)(246, 1)
+943 192 1202 192 1202 257 943 257 clean*
+943 192 1201 192 1201 193 943 193 box* %(943, 192)(258, 1)
+943 193 944 193 944 255 943 255 box* %(943, 193)(1, 62)
+946 195 1198 195 1198 196 946 196 box* %(946, 195)(252, 1)
+946 196 947 196 947 252 946 252 box* %(946, 196)(1, 56)
+/Courier 120 13 961 211 (get_table_expr_node2) text*
+/Courier 18 13 1093 211 ( = ) text*
+/Courier 18 13 1111 211 (0x0) text*
+/Courier 132 13 961 224 (get_where_clause_node2) text*
+/Courier 18 13 1093 224 ( = ) text*
+/Courier 18 13 1111 224 (0x0) text*
+/Courier 60 13 961 237 (fromClause) text*
+/Courier 18 13 1093 237 ( = ) text*
+/Courier 84 13 1111 237 (0x7fffec0066a0) text*
+/Courier 66 13 961 250 (whereClause) text*
+/Courier 18 13 1093 250 ( = ) text*
+/Courier 84 13 1111 250 (0x7fffec0069d0) text*
+1197 196 1198 196 1198 252 1197 252 box* %(1197, 196)(1, 56)
+946 252 1198 252 1198 253 946 253 box* %(946, 252)(252, 1)
+1200 193 1201 193 1201 255 1200 255 box* %(1200, 193)(1, 62)
+943 255 1201 255 1201 256 943 256 box* %(943, 255)(258, 1)
+1201 193 1202 193 1202 256 1201 256 box* %(1201, 193)(1, 63)
+944 256 1202 256 1202 257 944 257 box* %(944, 256)(258, 1)
+444 397 613 397 613 436 444 436 clean*
+444 397 612 397 612 398 444 398 box* %(444, 397)(168, 1)
+444 398 445 398 445 434 444 434 box* %(444, 398)(1, 36)
+447 400 609 400 609 401 447 401 box* %(447, 400)(162, 1)
+447 401 448 401 448 431 447 431 box* %(447, 401)(1, 30)
+/Courier 24 13 462 416 (type) text*
+/Courier 18 13 504 416 ( = ) text*
+/Courier 6 13 522 416 (5) text*
+/Courier 42 13 462 429 (refList) text*
+/Courier 18 13 504 429 ( = ) text*
+/Courier 84 13 522 429 (0x7fffec0064d0) text*
+608 401 609 401 609 431 608 431 box* %(608, 401)(1, 30)
+447 431 609 431 609 432 447 432 box* %(447, 431)(162, 1)
+611 398 612 398 612 434 611 434 box* %(611, 398)(1, 36)
+444 434 612 434 612 435 444 435 box* %(444, 434)(168, 1)
+612 398 613 398 613 435 612 435 box* %(612, 398)(1, 37)
+445 435 613 435 613 436 445 436 box* %(445, 435)(168, 1)
+102 669 283 669 283 708 102 708 clean*
+102 669 282 669 282 670 102 670 box* %(102, 669)(180, 1)
+102 670 103 670 103 706 102 706 box* %(102, 670)(1, 36)
+105 672 279 672 279 673 105 673 box* %(105, 672)(174, 1)
+105 673 106 673 106 703 105 703 box* %(105, 673)(1, 30)
+/Courier 54 13 120 688 (nElements) text*
+/Courier 18 13 174 688 ( = ) text*
+/Courier 6 13 192 688 (2) text*
+/Courier 36 13 120 701 (tables) text*
+/Courier 18 13 174 701 ( = ) text*
+/Courier 84 13 192 701 (0x7fffec0064f0) text*
+278 673 279 673 279 703 278 703 box* %(278, 673)(1, 30)
+105 703 279 703 279 704 105 704 box* %(105, 703)(174, 1)
+281 670 282 670 282 706 281 706 box* %(281, 670)(1, 36)
+102 706 282 706 282 707 102 707 box* %(102, 706)(180, 1)
+282 670 283 670 283 707 282 707 box* %(282, 670)(1, 37)
+103 707 283 707 283 708 103 708 box* %(103, 707)(180, 1)
+16 1190 209 1190 209 1210 16 1210 clean*
+16 1190 208 1190 208 1191 16 1191 box* %(16, 1190)(192, 1)
+16 1191 17 1191 17 1208 16 1208 box* %(16, 1191)(1, 17)
+/Courier 186 13 19 1206 (\(tableRefNode *\) 0x7fffec0064b0) text*
+207 1191 208 1191 208 1208 207 1208 box* %(207, 1191)(1, 17)
+16 1208 208 1208 208 1209 16 1209 box* %(16, 1208)(192, 1)
+208 1191 209 1191 209 1209 208 1209 box* %(208, 1191)(1, 18)
+17 1209 209 1209 209 1210 17 1210 box* %(17, 1209)(192, 1)
+14 1389 243 1389 243 1428 14 1428 clean*
+14 1389 242 1389 242 1390 14 1390 box* %(14, 1389)(228, 1)
+14 1390 15 1390 15 1426 14 1426 box* %(14, 1390)(1, 36)
+17 1392 239 1392 239 1393 17 1393 box* %(17, 1392)(222, 1)
+17 1393 18 1393 18 1423 17 1423 box* %(17, 1393)(1, 30)
+/Courier 54 13 32 1408 (tableName) text*
+/Courier 18 13 92 1408 ( = ) text*
+/Courier 126 13 110 1408 (0x7fffec006470 \"tab1\") text*
+/Courier 60 13 32 1421 (tableAlias) text*
+/Courier 18 13 92 1421 ( = ) text*
+/Courier 114 13 110 1421 (0x7fffec006490 \"t1\") text*
+238 1393 239 1393 239 1423 238 1423 box* %(238, 1393)(1, 30)
+17 1423 239 1423 239 1424 17 1424 box* %(17, 1423)(222, 1)
+241 1390 242 1390 242 1426 241 1426 box* %(241, 1390)(1, 36)
+14 1426 242 1426 242 1427 14 1427 box* %(14, 1426)(228, 1)
+242 1390 243 1390 243 1427 242 1427 box* %(242, 1390)(1, 37)
+15 1427 243 1427 243 1428 15 1428 box* %(15, 1427)(228, 1)
+1477 413 1628 413 1628 452 1477 452 clean*
+1477 413 1627 413 1627 414 1477 414 box* %(1477, 413)(150, 1)
+1477 414 1478 414 1478 450 1477 450 box* %(1477, 414)(1, 36)
+1480 416 1624 416 1624 417 1480 417 box* %(1480, 416)(144, 1)
+1480 417 1481 417 1481 447 1480 447 box* %(1480, 417)(1, 30)
+/Courier 24 13 1495 432 (type) text*
+/Courier 18 13 1519 432 ( = ) text*
+/Courier 6 13 1537 432 (0) text*
+/Courier 24 13 1495 445 (expr) text*
+/Courier 18 13 1519 445 ( = ) text*
+/Courier 84 13 1537 445 (0x7fffec0069a0) text*
+1623 417 1624 417 1624 447 1623 447 box* %(1623, 417)(1, 30)
+1480 447 1624 447 1624 448 1480 448 box* %(1480, 447)(144, 1)
+1626 414 1627 414 1627 450 1626 450 box* %(1626, 414)(1, 36)
+1477 450 1627 450 1627 451 1477 451 box* %(1477, 450)(150, 1)
+1627 414 1628 414 1628 451 1627 451 box* %(1627, 414)(1, 37)
+1478 451 1628 451 1628 452 1478 452 box* %(1478, 451)(150, 1)
+2067 704 2350 704 2350 833 2067 833 clean*
+2067 704 2349 704 2349 705 2067 705 box* %(2067, 704)(282, 1)
+2067 705 2068 705 2068 831 2067 831 box* %(2067, 705)(1, 126)
+2070 707 2346 707 2346 708 2070 708 box* %(2070, 707)(276, 1)
+2070 708 2071 708 2071 828 2070 828 box* %(2070, 708)(1, 120)
+/Courier 30 13 2085 761 (value) text*
+/Courier 18 13 2115 761 ( = ) text*
+2133 710 2343 710 2343 711 2133 711 box* %(2133, 710)(210, 1)
+2133 711 2134 711 2134 799 2133 799 box* %(2133, 711)(1, 88)
+/Courier 24 13 2148 726 (type) text*
+/Courier 18 13 2178 726 ( = ) text*
+/Courier 24 13 2196 726 (OPER) text*
+/Courier 30 13 2148 768 (value) text*
+/Courier 18 13 2178 768 ( = ) text*
+2196 726 2340 726 2340 727 2196 727 box* %(2196, 726)(144, 1)
+2196 727 2197 727 2197 796 2196 796 box* %(2196, 727)(1, 69)
+/Courier 60 13 2211 742 (column_val) text*
+/Courier 18 13 2277 742 ( = ) text*
+/Courier 18 13 2295 742 (...) text*
+/Courier 66 13 2211 755 (integer_val) text*
+/Courier 18 13 2277 755 ( = ) text*
+/Courier 18 13 2295 755 (...) text*
+/Courier 48 13 2211 768 (text_val) text*
+/Courier 18 13 2277 768 ( = ) text*
+/Courier 18 13 2295 768 (...) text*
+/Courier 66 13 2211 781 (numeric_val) text*
+/Courier 18 13 2277 781 ( = ) text*
+/Courier 18 13 2295 781 (...) text*
+/Courier 48 13 2211 794 (oper_val) text*
+/Courier 18 13 2277 794 ( = ) text*
+/Courier 42 13 2295 794 (BOOLAND) text*
+2339 727 2340 727 2340 796 2339 796 box* %(2339, 727)(1, 69)
+2196 796 2340 796 2340 797 2196 797 box* %(2196, 796)(144, 1)
+2342 711 2343 711 2343 799 2342 799 box* %(2342, 711)(1, 88)
+2133 799 2343 799 2343 800 2133 800 box* %(2133, 799)(210, 1)
+/Courier 24 13 2085 813 (left) text*
+/Courier 18 13 2115 813 ( = ) text*
+/Courier 84 13 2133 813 (0x7fffec0068a0) text*
+/Courier 30 13 2085 826 (right) text*
+/Courier 18 13 2115 826 ( = ) text*
+/Courier 84 13 2133 826 (0x7fffec006970) text*
+2345 708 2346 708 2346 828 2345 828 box* %(2345, 708)(1, 120)
+2070 828 2346 828 2346 829 2070 829 box* %(2070, 828)(276, 1)
+2348 705 2349 705 2349 831 2348 831 box* %(2348, 705)(1, 126)
+2067 831 2349 831 2349 832 2067 832 box* %(2067, 831)(282, 1)
+2349 705 2350 705 2350 832 2349 832 box* %(2349, 705)(1, 127)
+2068 832 2350 832 2350 833 2068 833 box* %(2068, 832)(282, 1)
+2380 1229 2549 1229 2549 1300 2380 1300 clean*
+2380 1229 2548 1229 2548 1230 2380 1230 box* %(2380, 1229)(168, 1)
+2380 1230 2381 1230 2381 1298 2380 1298 box* %(2380, 1230)(1, 68)
+2383 1232 2545 1232 2545 1233 2383 1233 box* %(2383, 1232)(162, 1)
+2383 1233 2384 1233 2384 1295 2383 1295 box* %(2383, 1233)(1, 62)
+/Courier 30 13 2398 1257 (value) text*
+/Courier 18 13 2428 1257 ( = ) text*
+2446 1235 2542 1235 2542 1236 2446 1236 box* %(2446, 1235)(96, 1)
+2446 1236 2447 1236 2447 1266 2446 1266 box* %(2446, 1236)(1, 30)
+/Courier 24 13 2461 1251 (type) text*
+/Courier 18 13 2491 1251 ( = ) text*
+/Courier 18 13 2509 1251 (...) text*
+/Courier 30 13 2461 1264 (value) text*
+/Courier 18 13 2491 1264 ( = ) text*
+/Courier 30 13 2509 1264 ({...}) text*
+2541 1236 2542 1236 2542 1266 2541 1266 box* %(2541, 1236)(1, 30)
+2446 1266 2542 1266 2542 1267 2446 1267 box* %(2446, 1266)(96, 1)
+/Courier 24 13 2398 1280 (left) text*
+/Courier 18 13 2428 1280 ( = ) text*
+/Courier 84 13 2446 1280 (0x7fffec006910) text*
+/Courier 30 13 2398 1293 (right) text*
+/Courier 18 13 2428 1293 ( = ) text*
+/Courier 84 13 2446 1293 (0x7fffec006940) text*
+2544 1233 2545 1233 2545 1295 2544 1295 box* %(2544, 1233)(1, 62)
+2383 1295 2545 1295 2545 1296 2383 1296 box* %(2383, 1295)(162, 1)
+2547 1230 2548 1230 2548 1298 2547 1298 box* %(2547, 1230)(1, 68)
+2380 1298 2548 1298 2548 1299 2380 1299 box* %(2380, 1298)(168, 1)
+2548 1230 2549 1230 2549 1299 2548 1299 box* %(2548, 1230)(1, 69)
+2381 1299 2549 1299 2549 1300 2381 1300 box* %(2381, 1299)(168, 1)
+1039 1248 1298 1248 1298 1377 1039 1377 clean*
+1039 1248 1297 1248 1297 1249 1039 1249 box* %(1039, 1248)(258, 1)
+1039 1249 1040 1249 1040 1375 1039 1375 box* %(1039, 1249)(1, 126)
+1042 1251 1294 1251 1294 1252 1042 1252 box* %(1042, 1251)(252, 1)
+1042 1252 1043 1252 1043 1372 1042 1372 box* %(1042, 1252)(1, 120)
+/Courier 30 13 1057 1305 (value) text*
+/Courier 18 13 1087 1305 ( = ) text*
+1105 1254 1291 1254 1291 1255 1105 1255 box* %(1105, 1254)(186, 1)
+1105 1255 1106 1255 1106 1343 1105 1343 box* %(1105, 1255)(1, 88)
+/Courier 24 13 1120 1270 (type) text*
+/Courier 18 13 1150 1270 ( = ) text*
+/Courier 24 13 1168 1270 (OPER) text*
+/Courier 30 13 1120 1312 (value) text*
+/Courier 18 13 1150 1312 ( = ) text*
+1168 1270 1288 1270 1288 1271 1168 1271 box* %(1168, 1270)(120, 1)
+1168 1271 1169 1271 1169 1340 1168 1340 box* %(1168, 1271)(1, 69)
+/Courier 60 13 1183 1286 (column_val) text*
+/Courier 18 13 1249 1286 ( = ) text*
+/Courier 18 13 1267 1286 (...) text*
+/Courier 66 13 1183 1299 (integer_val) text*
+/Courier 18 13 1249 1299 ( = ) text*
+/Courier 18 13 1267 1299 (...) text*
+/Courier 48 13 1183 1312 (text_val) text*
+/Courier 18 13 1249 1312 ( = ) text*
+/Courier 18 13 1267 1312 (...) text*
+/Courier 66 13 1183 1325 (numeric_val) text*
+/Courier 18 13 1249 1325 ( = ) text*
+/Courier 18 13 1267 1325 (...) text*
+/Courier 48 13 1183 1338 (oper_val) text*
+/Courier 18 13 1249 1338 ( = ) text*
+/Courier 18 13 1267 1338 (...) text*
+1287 1271 1288 1271 1288 1340 1287 1340 box* %(1287, 1271)(1, 69)
+1168 1340 1288 1340 1288 1341 1168 1341 box* %(1168, 1340)(120, 1)
+1290 1255 1291 1255 1291 1343 1290 1343 box* %(1290, 1255)(1, 88)
+1105 1343 1291 1343 1291 1344 1105 1344 box* %(1105, 1343)(186, 1)
+/Courier 24 13 1057 1357 (left) text*
+/Courier 18 13 1087 1357 ( = ) text*
+/Courier 84 13 1105 1357 (0x7fffec0067a0) text*
+/Courier 30 13 1057 1370 (right) text*
+/Courier 18 13 1087 1370 ( = ) text*
+/Courier 84 13 1105 1370 (0x7fffec006870) text*
+1293 1252 1294 1252 1294 1372 1293 1372 box* %(1293, 1252)(1, 120)
+1042 1372 1294 1372 1294 1373 1042 1373 box* %(1042, 1372)(252, 1)
+1296 1249 1297 1249 1297 1375 1296 1375 box* %(1296, 1249)(1, 126)
+1039 1375 1297 1375 1297 1376 1039 1376 box* %(1039, 1375)(258, 1)
+1297 1249 1298 1249 1298 1376 1297 1376 box* %(1297, 1249)(1, 127)
+1040 1376 1298 1376 1298 1377 1040 1377 box* %(1040, 1376)(258, 1)
+927 1440 1186 1440 1186 1569 927 1569 clean*
+927 1440 1185 1440 1185 1441 927 1441 box* %(927, 1440)(258, 1)
+927 1441 928 1441 928 1567 927 1567 box* %(927, 1441)(1, 126)
+930 1443 1182 1443 1182 1444 930 1444 box* %(930, 1443)(252, 1)
+930 1444 931 1444 931 1564 930 1564 box* %(930, 1444)(1, 120)
+/Courier 30 13 945 1497 (value) text*
+/Courier 18 13 975 1497 ( = ) text*
+993 1446 1179 1446 1179 1447 993 1447 box* %(993, 1446)(186, 1)
+993 1447 994 1447 994 1535 993 1535 box* %(993, 1447)(1, 88)
+/Courier 24 13 1008 1462 (type) text*
+/Courier 18 13 1038 1462 ( = ) text*
+/Courier 24 13 1056 1462 (OPER) text*
+/Courier 30 13 1008 1504 (value) text*
+/Courier 18 13 1038 1504 ( = ) text*
+1056 1462 1176 1462 1176 1463 1056 1463 box* %(1056, 1462)(120, 1)
+1056 1463 1057 1463 1057 1532 1056 1532 box* %(1056, 1463)(1, 69)
+/Courier 60 13 1071 1478 (column_val) text*
+/Courier 18 13 1137 1478 ( = ) text*
+/Courier 18 13 1155 1478 (...) text*
+/Courier 66 13 1071 1491 (integer_val) text*
+/Courier 18 13 1137 1491 ( = ) text*
+/Courier 18 13 1155 1491 (...) text*
+/Courier 48 13 1071 1504 (text_val) text*
+/Courier 18 13 1137 1504 ( = ) text*
+/Courier 18 13 1155 1504 (...) text*
+/Courier 66 13 1071 1517 (numeric_val) text*
+/Courier 18 13 1137 1517 ( = ) text*
+/Courier 18 13 1155 1517 (...) text*
+/Courier 48 13 1071 1530 (oper_val) text*
+/Courier 18 13 1137 1530 ( = ) text*
+/Courier 18 13 1155 1530 (...) text*
+1175 1463 1176 1463 1176 1532 1175 1532 box* %(1175, 1463)(1, 69)
+1056 1532 1176 1532 1176 1533 1056 1533 box* %(1056, 1532)(120, 1)
+1178 1447 1179 1447 1179 1535 1178 1535 box* %(1178, 1447)(1, 88)
+993 1535 1179 1535 1179 1536 993 1536 box* %(993, 1535)(186, 1)
+/Courier 24 13 945 1549 (left) text*
+/Courier 18 13 975 1549 ( = ) text*
+/Courier 84 13 993 1549 (0x7fffec006700) text*
+/Courier 30 13 945 1562 (right) text*
+/Courier 18 13 975 1562 ( = ) text*
+/Courier 84 13 993 1562 (0x7fffec006770) text*
+1181 1444 1182 1444 1182 1564 1181 1564 box* %(1181, 1444)(1, 120)
+930 1564 1182 1564 1182 1565 930 1565 box* %(930, 1564)(252, 1)
+1184 1441 1185 1441 1185 1567 1184 1567 box* %(1184, 1441)(1, 126)
+927 1567 1185 1567 1185 1568 927 1568 box* %(927, 1567)(258, 1)
+1185 1441 1186 1441 1186 1568 1185 1568 box* %(1185, 1441)(1, 127)
+928 1568 1186 1568 1186 1569 928 1569 box* %(928, 1568)(258, 1)
+1487 1440 1746 1440 1746 1569 1487 1569 clean*
+1487 1440 1745 1440 1745 1441 1487 1441 box* %(1487, 1440)(258, 1)
+1487 1441 1488 1441 1488 1567 1487 1567 box* %(1487, 1441)(1, 126)
+1490 1443 1742 1443 1742 1444 1490 1444 box* %(1490, 1443)(252, 1)
+1490 1444 1491 1444 1491 1564 1490 1564 box* %(1490, 1444)(1, 120)
+/Courier 30 13 1505 1497 (value) text*
+/Courier 18 13 1535 1497 ( = ) text*
+1553 1446 1739 1446 1739 1447 1553 1447 box* %(1553, 1446)(186, 1)
+1553 1447 1554 1447 1554 1535 1553 1535 box* %(1553, 1447)(1, 88)
+/Courier 24 13 1568 1462 (type) text*
+/Courier 18 13 1598 1462 ( = ) text*
+/Courier 24 13 1616 1462 (OPER) text*
+/Courier 30 13 1568 1504 (value) text*
+/Courier 18 13 1598 1504 ( = ) text*
+1616 1462 1736 1462 1736 1463 1616 1463 box* %(1616, 1462)(120, 1)
+1616 1463 1617 1463 1617 1532 1616 1532 box* %(1616, 1463)(1, 69)
+/Courier 60 13 1631 1478 (column_val) text*
+/Courier 18 13 1697 1478 ( = ) text*
+/Courier 18 13 1715 1478 (...) text*
+/Courier 66 13 1631 1491 (integer_val) text*
+/Courier 18 13 1697 1491 ( = ) text*
+/Courier 18 13 1715 1491 (...) text*
+/Courier 48 13 1631 1504 (text_val) text*
+/Courier 18 13 1697 1504 ( = ) text*
+/Courier 18 13 1715 1504 (...) text*
+/Courier 66 13 1631 1517 (numeric_val) text*
+/Courier 18 13 1697 1517 ( = ) text*
+/Courier 18 13 1715 1517 (...) text*
+/Courier 48 13 1631 1530 (oper_val) text*
+/Courier 18 13 1697 1530 ( = ) text*
+/Courier 18 13 1715 1530 (...) text*
+1735 1463 1736 1463 1736 1532 1735 1532 box* %(1735, 1463)(1, 69)
+1616 1532 1736 1532 1736 1533 1616 1533 box* %(1616, 1532)(120, 1)
+1738 1447 1739 1447 1739 1535 1738 1535 box* %(1738, 1447)(1, 88)
+1553 1535 1739 1535 1739 1536 1553 1536 box* %(1553, 1535)(186, 1)
+/Courier 24 13 1505 1549 (left) text*
+/Courier 18 13 1535 1549 ( = ) text*
+/Courier 84 13 1553 1549 (0x7fffec006810) text*
+/Courier 30 13 1505 1562 (right) text*
+/Courier 18 13 1535 1562 ( = ) text*
+/Courier 84 13 1553 1562 (0x7fffec006840) text*
+1741 1444 1742 1444 1742 1564 1741 1564 box* %(1741, 1444)(1, 120)
+1490 1564 1742 1564 1742 1565 1490 1565 box* %(1490, 1564)(252, 1)
+1744 1441 1745 1441 1745 1567 1744 1567 box* %(1744, 1441)(1, 126)
+1487 1567 1745 1567 1745 1568 1487 1568 box* %(1487, 1567)(258, 1)
+1745 1441 1746 1441 1746 1568 1745 1568 box* %(1745, 1441)(1, 127)
+1488 1568 1746 1568 1746 1569 1488 1569 box* %(1488, 1568)(258, 1)
+590 1760 915 1760 915 1889 590 1889 clean*
+590 1760 914 1760 914 1761 590 1761 box* %(590, 1760)(324, 1)
+590 1761 591 1761 591 1887 590 1887 box* %(590, 1761)(1, 126)
+593 1763 911 1763 911 1764 593 1764 box* %(593, 1763)(318, 1)
+593 1764 594 1764 594 1884 593 1884 box* %(593, 1764)(1, 120)
+/Courier 30 13 608 1817 (value) text*
+/Courier 18 13 638 1817 ( = ) text*
+656 1766 908 1766 908 1767 656 1767 box* %(656, 1766)(252, 1)
+656 1767 657 1767 657 1855 656 1855 box* %(656, 1767)(1, 88)
+/Courier 24 13 671 1782 (type) text*
+/Courier 18 13 701 1782 ( = ) text*
+/Courier 36 13 719 1782 (COLREF) text*
+/Courier 30 13 671 1824 (value) text*
+/Courier 18 13 701 1824 ( = ) text*
+719 1782 905 1782 905 1783 719 1783 box* %(719, 1782)(186, 1)
+719 1783 720 1783 720 1852 719 1852 box* %(719, 1783)(1, 69)
+/Courier 60 13 734 1798 (column_val) text*
+/Courier 18 13 800 1798 ( = ) text*
+/Courier 84 13 818 1798 (0x7fffec0066e0) text*
+/Courier 66 13 734 1811 (integer_val) text*
+/Courier 18 13 800 1811 ( = ) text*
+/Courier 18 13 818 1811 (...) text*
+/Courier 48 13 734 1824 (text_val) text*
+/Courier 18 13 800 1824 ( = ) text*
+/Courier 18 13 818 1824 (...) text*
+/Courier 66 13 734 1837 (numeric_val) text*
+/Courier 18 13 800 1837 ( = ) text*
+/Courier 18 13 818 1837 (...) text*
+/Courier 48 13 734 1850 (oper_val) text*
+/Courier 18 13 800 1850 ( = ) text*
+/Courier 18 13 818 1850 (...) text*
+904 1783 905 1783 905 1852 904 1852 box* %(904, 1783)(1, 69)
+719 1852 905 1852 905 1853 719 1853 box* %(719, 1852)(186, 1)
+907 1767 908 1767 908 1855 907 1855 box* %(907, 1767)(1, 88)
+656 1855 908 1855 908 1856 656 1856 box* %(656, 1855)(252, 1)
+/Courier 24 13 608 1869 (left) text*
+/Courier 18 13 638 1869 ( = ) text*
+/Courier 18 13 656 1869 (0x0) text*
+/Courier 30 13 608 1882 (right) text*
+/Courier 18 13 638 1882 ( = ) text*
+/Courier 18 13 656 1882 (0x0) text*
+910 1764 911 1764 911 1884 910 1884 box* %(910, 1764)(1, 120)
+593 1884 911 1884 911 1885 593 1885 box* %(593, 1884)(318, 1)
+913 1761 914 1761 914 1887 913 1887 box* %(913, 1761)(1, 126)
+590 1887 914 1887 914 1888 590 1888 box* %(590, 1887)(324, 1)
+914 1761 915 1761 915 1888 914 1888 box* %(914, 1761)(1, 127)
+591 1888 915 1888 915 1889 591 1889 box* %(591, 1888)(324, 1)
+942 1760 1267 1760 1267 1889 942 1889 clean*
+942 1760 1266 1760 1266 1761 942 1761 box* %(942, 1760)(324, 1)
+942 1761 943 1761 943 1887 942 1887 box* %(942, 1761)(1, 126)
+945 1763 1263 1763 1263 1764 945 1764 box* %(945, 1763)(318, 1)
+945 1764 946 1764 946 1884 945 1884 box* %(945, 1764)(1, 120)
+/Courier 30 13 960 1817 (value) text*
+/Courier 18 13 990 1817 ( = ) text*
+1008 1766 1260 1766 1260 1767 1008 1767 box* %(1008, 1766)(252, 1)
+1008 1767 1009 1767 1009 1855 1008 1855 box* %(1008, 1767)(1, 88)
+/Courier 24 13 1023 1782 (type) text*
+/Courier 18 13 1053 1782 ( = ) text*
+/Courier 36 13 1071 1782 (COLREF) text*
+/Courier 30 13 1023 1824 (value) text*
+/Courier 18 13 1053 1824 ( = ) text*
+1071 1782 1257 1782 1257 1783 1071 1783 box* %(1071, 1782)(186, 1)
+1071 1783 1072 1783 1072 1852 1071 1852 box* %(1071, 1783)(1, 69)
+/Courier 60 13 1086 1798 (column_val) text*
+/Courier 18 13 1152 1798 ( = ) text*
+/Courier 84 13 1170 1798 (0x7fffec006750) text*
+/Courier 66 13 1086 1811 (integer_val) text*
+/Courier 18 13 1152 1811 ( = ) text*
+/Courier 18 13 1170 1811 (...) text*
+/Courier 48 13 1086 1824 (text_val) text*
+/Courier 18 13 1152 1824 ( = ) text*
+/Courier 18 13 1170 1824 (...) text*
+/Courier 66 13 1086 1837 (numeric_val) text*
+/Courier 18 13 1152 1837 ( = ) text*
+/Courier 18 13 1170 1837 (...) text*
+/Courier 48 13 1086 1850 (oper_val) text*
+/Courier 18 13 1152 1850 ( = ) text*
+/Courier 18 13 1170 1850 (...) text*
+1256 1783 1257 1783 1257 1852 1256 1852 box* %(1256, 1783)(1, 69)
+1071 1852 1257 1852 1257 1853 1071 1853 box* %(1071, 1852)(186, 1)
+1259 1767 1260 1767 1260 1855 1259 1855 box* %(1259, 1767)(1, 88)
+1008 1855 1260 1855 1260 1856 1008 1856 box* %(1008, 1855)(252, 1)
+/Courier 24 13 960 1869 (left) text*
+/Courier 18 13 990 1869 ( = ) text*
+/Courier 18 13 1008 1869 (0x0) text*
+/Courier 30 13 960 1882 (right) text*
+/Courier 18 13 990 1882 ( = ) text*
+/Courier 18 13 1008 1882 (0x0) text*
+1262 1764 1263 1764 1263 1884 1262 1884 box* %(1262, 1764)(1, 120)
+945 1884 1263 1884 1263 1885 945 1885 box* %(945, 1884)(318, 1)
+1265 1761 1266 1761 1266 1887 1265 1887 box* %(1265, 1761)(1, 126)
+942 1887 1266 1887 1266 1888 942 1888 box* %(942, 1887)(324, 1)
+1266 1761 1267 1761 1267 1888 1266 1888 box* %(1266, 1761)(1, 127)
+943 1888 1267 1888 1267 1889 943 1889 box* %(943, 1888)(324, 1)
+638 2157 867 2157 867 2196 638 2196 clean*
+638 2157 866 2157 866 2158 638 2158 box* %(638, 2157)(228, 1)
+638 2158 639 2158 639 2194 638 2194 box* %(638, 2158)(1, 36)
+641 2160 863 2160 863 2161 641 2161 box* %(641, 2160)(222, 1)
+641 2161 642 2161 642 2191 641 2191 box* %(641, 2161)(1, 30)
+/Courier 42 13 656 2176 (colName) text*
+/Courier 18 13 728 2176 ( = ) text*
+/Courier 114 13 746 2176 (0x7fffec0066c0 \"c1\") text*
+/Courier 72 13 656 2189 (colReference) text*
+/Courier 18 13 728 2189 ( = ) text*
+/Courier 18 13 746 2189 (0x0) text*
+862 2161 863 2161 863 2191 862 2191 box* %(862, 2161)(1, 30)
+641 2191 863 2191 863 2192 641 2192 box* %(641, 2191)(222, 1)
+865 2158 866 2158 866 2194 865 2194 box* %(865, 2158)(1, 36)
+638 2194 866 2194 866 2195 638 2195 box* %(638, 2194)(228, 1)
+866 2158 867 2158 867 2195 866 2195 box* %(866, 2158)(1, 37)
+639 2195 867 2195 867 2196 639 2196 box* %(639, 2195)(228, 1)
+990 2157 1219 2157 1219 2196 990 2196 clean*
+990 2157 1218 2157 1218 2158 990 2158 box* %(990, 2157)(228, 1)
+990 2158 991 2158 991 2194 990 2194 box* %(990, 2158)(1, 36)
+993 2160 1215 2160 1215 2161 993 2161 box* %(993, 2160)(222, 1)
+993 2161 994 2161 994 2191 993 2191 box* %(993, 2161)(1, 30)
+/Courier 42 13 1008 2176 (colName) text*
+/Courier 18 13 1080 2176 ( = ) text*
+/Courier 114 13 1098 2176 (0x7fffec006730 \"c2\") text*
+/Courier 72 13 1008 2189 (colReference) text*
+/Courier 18 13 1080 2189 ( = ) text*
+/Courier 18 13 1098 2189 (0x0) text*
+1214 2161 1215 2161 1215 2191 1214 2191 box* %(1214, 2161)(1, 30)
+993 2191 1215 2191 1215 2192 993 2192 box* %(993, 2191)(222, 1)
+1217 2158 1218 2158 1218 2194 1217 2194 box* %(1217, 2158)(1, 36)
+990 2194 1218 2194 1218 2195 990 2195 box* %(990, 2194)(228, 1)
+1218 2158 1219 2158 1219 2195 1218 2195 box* %(1218, 2158)(1, 37)
+991 2195 1219 2195 1219 2196 991 2196 box* %(991, 2195)(228, 1)
+1406 1760 1731 1760 1731 1889 1406 1889 clean*
+1406 1760 1730 1760 1730 1761 1406 1761 box* %(1406, 1760)(324, 1)
+1406 1761 1407 1761 1407 1887 1406 1887 box* %(1406, 1761)(1, 126)
+1409 1763 1727 1763 1727 1764 1409 1764 box* %(1409, 1763)(318, 1)
+1409 1764 1410 1764 1410 1884 1409 1884 box* %(1409, 1764)(1, 120)
+/Courier 30 13 1424 1817 (value) text*
+/Courier 18 13 1454 1817 ( = ) text*
+1472 1766 1724 1766 1724 1767 1472 1767 box* %(1472, 1766)(252, 1)
+1472 1767 1473 1767 1473 1855 1472 1855 box* %(1472, 1767)(1, 88)
+/Courier 24 13 1487 1782 (type) text*
+/Courier 18 13 1517 1782 ( = ) text*
+/Courier 36 13 1535 1782 (COLREF) text*
+/Courier 30 13 1487 1824 (value) text*
+/Courier 18 13 1517 1824 ( = ) text*
+1535 1782 1721 1782 1721 1783 1535 1783 box* %(1535, 1782)(186, 1)
+1535 1783 1536 1783 1536 1852 1535 1852 box* %(1535, 1783)(1, 69)
+/Courier 60 13 1550 1798 (column_val) text*
+/Courier 18 13 1616 1798 ( = ) text*
+/Courier 84 13 1634 1798 (0x7fffec0067f0) text*
+/Courier 66 13 1550 1811 (integer_val) text*
+/Courier 18 13 1616 1811 ( = ) text*
+/Courier 18 13 1634 1811 (...) text*
+/Courier 48 13 1550 1824 (text_val) text*
+/Courier 18 13 1616 1824 ( = ) text*
+/Courier 18 13 1634 1824 (...) text*
+/Courier 66 13 1550 1837 (numeric_val) text*
+/Courier 18 13 1616 1837 ( = ) text*
+/Courier 18 13 1634 1837 (...) text*
+/Courier 48 13 1550 1850 (oper_val) text*
+/Courier 18 13 1616 1850 ( = ) text*
+/Courier 18 13 1634 1850 (...) text*
+1720 1783 1721 1783 1721 1852 1720 1852 box* %(1720, 1783)(1, 69)
+1535 1852 1721 1852 1721 1853 1535 1853 box* %(1535, 1852)(186, 1)
+1723 1767 1724 1767 1724 1855 1723 1855 box* %(1723, 1767)(1, 88)
+1472 1855 1724 1855 1724 1856 1472 1856 box* %(1472, 1855)(252, 1)
+/Courier 24 13 1424 1869 (left) text*
+/Courier 18 13 1454 1869 ( = ) text*
+/Courier 18 13 1472 1869 (0x0) text*
+/Courier 30 13 1424 1882 (right) text*
+/Courier 18 13 1454 1882 ( = ) text*
+/Courier 18 13 1472 1882 (0x0) text*
+1726 1764 1727 1764 1727 1884 1726 1884 box* %(1726, 1764)(1, 120)
+1409 1884 1727 1884 1727 1885 1409 1885 box* %(1409, 1884)(318, 1)
+1729 1761 1730 1761 1730 1887 1729 1887 box* %(1729, 1761)(1, 126)
+1406 1887 1730 1887 1730 1888 1406 1888 box* %(1406, 1887)(324, 1)
+1730 1761 1731 1761 1731 1888 1730 1888 box* %(1730, 1761)(1, 127)
+1407 1888 1731 1888 1731 1889 1407 1889 box* %(1407, 1888)(324, 1)
+1454 2157 1683 2157 1683 2196 1454 2196 clean*
+1454 2157 1682 2157 1682 2158 1454 2158 box* %(1454, 2157)(228, 1)
+1454 2158 1455 2158 1455 2194 1454 2194 box* %(1454, 2158)(1, 36)
+1457 2160 1679 2160 1679 2161 1457 2161 box* %(1457, 2160)(222, 1)
+1457 2161 1458 2161 1458 2191 1457 2191 box* %(1457, 2161)(1, 30)
+/Courier 42 13 1472 2176 (colName) text*
+/Courier 18 13 1544 2176 ( = ) text*
+/Courier 114 13 1562 2176 (0x7fffec0067d0 \"c1\") text*
+/Courier 72 13 1472 2189 (colReference) text*
+/Courier 18 13 1544 2189 ( = ) text*
+/Courier 18 13 1562 2189 (0x0) text*
+1678 2161 1679 2161 1679 2191 1678 2191 box* %(1678, 2161)(1, 30)
+1457 2191 1679 2191 1679 2192 1457 2192 box* %(1457, 2191)(222, 1)
+1681 2158 1682 2158 1682 2194 1681 2194 box* %(1681, 2158)(1, 36)
+1454 2194 1682 2194 1682 2195 1454 2195 box* %(1454, 2194)(228, 1)
+1682 2158 1683 2158 1683 2195 1682 2195 box* %(1682, 2158)(1, 37)
+1455 2195 1683 2195 1683 2196 1455 2196 box* %(1455, 2195)(228, 1)
+1999 1744 2258 1744 2258 1873 1999 1873 clean*
+1999 1744 2257 1744 2257 1745 1999 1745 box* %(1999, 1744)(258, 1)
+1999 1745 2000 1745 2000 1871 1999 1871 box* %(1999, 1745)(1, 126)
+2002 1747 2254 1747 2254 1748 2002 1748 box* %(2002, 1747)(252, 1)
+2002 1748 2003 1748 2003 1868 2002 1868 box* %(2002, 1748)(1, 120)
+/Courier 30 13 2017 1801 (value) text*
+/Courier 18 13 2047 1801 ( = ) text*
+2065 1750 2251 1750 2251 1751 2065 1751 box* %(2065, 1750)(186, 1)
+2065 1751 2066 1751 2066 1839 2065 1839 box* %(2065, 1751)(1, 88)
+/Courier 24 13 2080 1766 (type) text*
+/Courier 18 13 2110 1766 ( = ) text*
+/Courier 18 13 2128 1766 (INT) text*
+/Courier 30 13 2080 1808 (value) text*
+/Courier 18 13 2110 1808 ( = ) text*
+2128 1766 2248 1766 2248 1767 2128 1767 box* %(2128, 1766)(120, 1)
+2128 1767 2129 1767 2129 1836 2128 1836 box* %(2128, 1767)(1, 69)
+/Courier 60 13 2143 1782 (column_val) text*
+/Courier 18 13 2209 1782 ( = ) text*
+/Courier 18 13 2227 1782 (...) text*
+/Courier 66 13 2143 1795 (integer_val) text*
+/Courier 18 13 2209 1795 ( = ) text*
+/Courier 6 13 2227 1795 (0) text*
+/Courier 48 13 2143 1808 (text_val) text*
+/Courier 18 13 2209 1808 ( = ) text*
+/Courier 18 13 2227 1808 (...) text*
+/Courier 66 13 2143 1821 (numeric_val) text*
+/Courier 18 13 2209 1821 ( = ) text*
+/Courier 18 13 2227 1821 (...) text*
+/Courier 48 13 2143 1834 (oper_val) text*
+/Courier 18 13 2209 1834 ( = ) text*
+/Courier 18 13 2227 1834 (...) text*
+2247 1767 2248 1767 2248 1836 2247 1836 box* %(2247, 1767)(1, 69)
+2128 1836 2248 1836 2248 1837 2128 1837 box* %(2128, 1836)(120, 1)
+2250 1751 2251 1751 2251 1839 2250 1839 box* %(2250, 1751)(1, 88)
+2065 1839 2251 1839 2251 1840 2065 1840 box* %(2065, 1839)(186, 1)
+/Courier 24 13 2017 1853 (left) text*
+/Courier 18 13 2047 1853 ( = ) text*
+/Courier 18 13 2065 1853 (0x0) text*
+/Courier 30 13 2017 1866 (right) text*
+/Courier 18 13 2047 1866 ( = ) text*
+/Courier 18 13 2065 1866 (0x0) text*
+2253 1748 2254 1748 2254 1868 2253 1868 box* %(2253, 1748)(1, 120)
+2002 1868 2254 1868 2254 1869 2002 1869 box* %(2002, 1868)(252, 1)
+2256 1745 2257 1745 2257 1871 2256 1871 box* %(2256, 1745)(1, 126)
+1999 1871 2257 1871 2257 1872 1999 1872 box* %(1999, 1871)(258, 1)
+2257 1745 2258 1745 2258 1872 2257 1872 box* %(2257, 1745)(1, 127)
+2000 1872 2258 1872 2258 1873 2000 1873 box* %(2000, 1872)(258, 1)
+982 141 1163 141 1163 180 982 180 clean*
+982 141 1162 141 1162 142 982 142 box* %(982, 141)(180, 1)
+982 142 983 142 983 178 982 178 box* %(982, 142)(1, 36)
+985 144 1159 144 1159 145 985 145 box* %(985, 144)(174, 1)
+985 145 986 145 986 175 985 175 box* %(985, 145)(1, 30)
+/Courier 54 13 1000 160 (nElements) text*
+/Courier 18 13 1054 160 ( = ) text*
+/Courier 6 13 1072 160 (2) text*
+/Courier 36 13 1000 173 (sItems) text*
+/Courier 18 13 1054 173 ( = ) text*
+/Courier 84 13 1072 173 (0x7fffec0062f0) text*
+1158 145 1159 145 1159 175 1158 175 box* %(1158, 145)(1, 30)
+985 175 1159 175 1159 176 985 176 box* %(985, 175)(174, 1)
+1161 142 1162 142 1162 178 1161 178 box* %(1161, 142)(1, 36)
+982 178 1162 178 1162 179 982 179 box* %(982, 178)(180, 1)
+1162 142 1163 142 1163 179 1162 179 box* %(1162, 142)(1, 37)
+983 179 1163 179 1163 180 983 180 box* %(983, 179)(180, 1)
+29 30 900 30 900 66 29 66 clean*
+29 30 899 30 899 31 29 31 box* %(29, 30)(870, 1)
+29 31 30 31 30 64 29 64 box* %(29, 31)(1, 33)
+/Courier 6 13 32 46 (1) text*
+/Courier 12 13 38 46 (: ) text*
+/Courier-BoldOblique 54 13 50 46 (queryText) text*
+32 46 896 46 896 47 32 47 box* %(32, 46)(864, 1)
+/Courier 864 13 32 62 (\"select t1.a / 20 + t1.b * 3 as c1 , t2.b as c2 from tab1 as t1 , tab2 as t2 where c1 < c2 and c1 > 0 and c2 < 20 ;\", \'\\000\' <repeats 909 times>) text*
+898 31 899 31 899 64 898 64 box* %(898, 31)(1, 33)
+29 64 899 64 899 65 29 65 box* %(29, 64)(870, 1)
+899 31 900 31 900 65 899 65 box* %(899, 31)(1, 34)
+30 65 900 65 900 66 30 66 box* %(30, 65)(870, 1)
+1502 150 1731 150 1731 170 1502 170 clean*
+1502 150 1730 150 1730 151 1502 151 box* %(1502, 150)(228, 1)
+1502 151 1503 151 1503 168 1502 168 box* %(1502, 151)(1, 17)
+/Courier 222 13 1505 166 (\(selectListItemNode *\) 0x7fffec0062b0) text*
+1729 151 1730 151 1730 168 1729 168 box* %(1729, 151)(1, 17)
+1502 168 1730 168 1730 169 1502 169 box* %(1502, 168)(228, 1)
+1730 151 1731 151 1731 169 1730 169 box* %(1730, 151)(1, 18)
+1503 169 1731 169 1731 170 1503 170 box* %(1503, 169)(228, 1)
+2052 128 2269 128 2269 193 2052 193 clean*
+2052 128 2268 128 2268 129 2052 129 box* %(2052, 128)(216, 1)
+2052 129 2053 129 2053 191 2052 191 box* %(2052, 129)(1, 62)
+2055 131 2265 131 2265 132 2055 132 box* %(2055, 131)(210, 1)
+2055 132 2056 132 2056 188 2055 188 box* %(2055, 132)(1, 56)
+/Courier 48 13 2070 147 (hasAlias) text*
+/Courier 18 13 2130 147 ( = ) text*
+/Courier 48 13 2148 147 (1 \'\\001\') text*
+/Courier 60 13 2070 160 (isWildcard) text*
+/Courier 18 13 2130 160 ( = ) text*
+/Courier 48 13 2148 160 (0 \'\\000\') text*
+/Courier 30 13 2070 173 (sExpr) text*
+/Courier 18 13 2130 173 ( = ) text*
+/Courier 84 13 2148 173 (0x7fffec006260) text*
+/Courier 36 13 2070 186 (sAlias) text*
+/Courier 18 13 2130 186 ( = ) text*
+/Courier 114 13 2148 186 (0x7fffec006290 \"c1\") text*
+2264 132 2265 132 2265 188 2264 188 box* %(2264, 132)(1, 56)
+2055 188 2265 188 2265 189 2055 189 box* %(2055, 188)(210, 1)
+2267 129 2268 129 2268 191 2267 191 box* %(2267, 129)(1, 62)
+2052 191 2268 191 2268 192 2052 192 box* %(2052, 191)(216, 1)
+2268 129 2269 129 2269 192 2268 192 box* %(2268, 129)(1, 63)
+2053 192 2269 192 2269 193 2053 193 box* %(2053, 192)(216, 1)
+2624 136 2913 136 2913 281 2624 281 clean*
+2624 136 2912 136 2912 137 2624 137 box* %(2624, 136)(288, 1)
+2624 137 2625 137 2625 279 2624 279 box* %(2624, 137)(1, 142)
+/Courier 12 13 2627 152 (25) text*
+/Courier 12 13 2639 152 (: ) text*
+/Courier-BoldOblique 120 13 2651 152 (*\(\(*\(qryT...->sExpr\)) text*
+2627 152 2909 152 2909 153 2627 153 box* %(2627, 152)(282, 1)
+2627 155 2909 155 2909 156 2627 156 box* %(2627, 155)(282, 1)
+2627 156 2628 156 2628 276 2627 276 box* %(2627, 156)(1, 120)
+/Courier 30 13 2642 209 (value) text*
+/Courier 18 13 2672 209 ( = ) text*
+2690 158 2906 158 2906 159 2690 159 box* %(2690, 158)(216, 1)
+2690 159 2691 159 2691 247 2690 247 box* %(2690, 159)(1, 88)
+/Courier 24 13 2705 174 (type) text*
+/Courier 18 13 2735 174 ( = ) text*
+/Courier 24 13 2753 174 (OPER) text*
+/Courier 30 13 2705 216 (value) text*
+/Courier 18 13 2735 216 ( = ) text*
+2753 174 2903 174 2903 175 2753 175 box* %(2753, 174)(150, 1)
+2753 175 2754 175 2754 244 2753 244 box* %(2753, 175)(1, 69)
+/Courier 60 13 2768 190 (column_val) text*
+/Courier 18 13 2834 190 ( = ) text*
+/Courier 18 13 2852 190 (...) text*
+/Courier 66 13 2768 203 (integer_val) text*
+/Courier 18 13 2834 203 ( = ) text*
+/Courier 18 13 2852 203 (...) text*
+/Courier 48 13 2768 216 (text_val) text*
+/Courier 18 13 2834 216 ( = ) text*
+/Courier 18 13 2852 216 (...) text*
+/Courier 66 13 2768 229 (numeric_val) text*
+/Courier 18 13 2834 229 ( = ) text*
+/Courier 18 13 2852 229 (...) text*
+/Courier 48 13 2768 242 (oper_val) text*
+/Courier 18 13 2834 242 ( = ) text*
+/Courier 48 13 2852 242 (ADDITION) text*
+2902 175 2903 175 2903 244 2902 244 box* %(2902, 175)(1, 69)
+2753 244 2903 244 2903 245 2753 245 box* %(2753, 244)(150, 1)
+2905 159 2906 159 2906 247 2905 247 box* %(2905, 159)(1, 88)
+2690 247 2906 247 2906 248 2690 248 box* %(2690, 247)(216, 1)
+/Courier 24 13 2642 261 (left) text*
+/Courier 18 13 2672 261 ( = ) text*
+/Courier 84 13 2690 261 (0x7fffec006140) text*
+/Courier 30 13 2642 274 (right) text*
+/Courier 18 13 2672 274 ( = ) text*
+/Courier 84 13 2690 274 (0x7fffec006230) text*
+2908 156 2909 156 2909 276 2908 276 box* %(2908, 156)(1, 120)
+2627 276 2909 276 2909 277 2627 277 box* %(2627, 276)(282, 1)
+2911 137 2912 137 2912 279 2911 279 box* %(2911, 137)(1, 142)
+2624 279 2912 279 2912 280 2624 280 box* %(2624, 279)(288, 1)
+2912 137 2913 137 2913 280 2912 280 box* %(2912, 137)(1, 143)
+2625 280 2913 280 2913 281 2625 281 box* %(2625, 280)(288, 1)
+2704 376 2993 376 2993 521 2704 521 clean*
+2704 376 2992 376 2992 377 2704 377 box* %(2704, 376)(288, 1)
+2704 377 2705 377 2705 519 2704 519 box* %(2704, 377)(1, 142)
+/Courier 12 13 2707 392 (26) text*
+/Courier 12 13 2719 392 (: ) text*
+/Courier-BoldOblique 120 13 2731 392 (*\(\(\(*\(qry...\)->left\)) text*
+2707 392 2989 392 2989 393 2707 393 box* %(2707, 392)(282, 1)
+2707 395 2989 395 2989 396 2707 396 box* %(2707, 395)(282, 1)
+2707 396 2708 396 2708 516 2707 516 box* %(2707, 396)(1, 120)
+/Courier 30 13 2722 449 (value) text*
+/Courier 18 13 2752 449 ( = ) text*
+2770 398 2986 398 2986 399 2770 399 box* %(2770, 398)(216, 1)
+2770 399 2771 399 2771 487 2770 487 box* %(2770, 399)(1, 88)
+/Courier 24 13 2785 414 (type) text*
+/Courier 18 13 2815 414 ( = ) text*
+/Courier 24 13 2833 414 (OPER) text*
+/Courier 30 13 2785 456 (value) text*
+/Courier 18 13 2815 456 ( = ) text*
+2833 414 2983 414 2983 415 2833 415 box* %(2833, 414)(150, 1)
+2833 415 2834 415 2834 484 2833 484 box* %(2833, 415)(1, 69)
+/Courier 60 13 2848 430 (column_val) text*
+/Courier 18 13 2914 430 ( = ) text*
+/Courier 18 13 2932 430 (...) text*
+/Courier 66 13 2848 443 (integer_val) text*
+/Courier 18 13 2914 443 ( = ) text*
+/Courier 18 13 2932 443 (...) text*
+/Courier 48 13 2848 456 (text_val) text*
+/Courier 18 13 2914 456 ( = ) text*
+/Courier 18 13 2932 456 (...) text*
+/Courier 66 13 2848 469 (numeric_val) text*
+/Courier 18 13 2914 469 ( = ) text*
+/Courier 18 13 2932 469 (...) text*
+/Courier 48 13 2848 482 (oper_val) text*
+/Courier 18 13 2914 482 ( = ) text*
+/Courier 48 13 2932 482 (DIVISION) text*
+2982 415 2983 415 2983 484 2982 484 box* %(2982, 415)(1, 69)
+2833 484 2983 484 2983 485 2833 485 box* %(2833, 484)(150, 1)
+2985 399 2986 399 2986 487 2985 487 box* %(2985, 399)(1, 88)
+2770 487 2986 487 2986 488 2770 488 box* %(2770, 487)(216, 1)
+/Courier 24 13 2722 501 (left) text*
+/Courier 18 13 2752 501 ( = ) text*
+/Courier 84 13 2770 501 (0x7fffec002cf0) text*
+/Courier 30 13 2722 514 (right) text*
+/Courier 18 13 2752 514 ( = ) text*
+/Courier 84 13 2770 514 (0x7fffec006110) text*
+2988 396 2989 396 2989 516 2988 516 box* %(2988, 396)(1, 120)
+2707 516 2989 516 2989 517 2707 517 box* %(2707, 516)(282, 1)
+2991 377 2992 377 2992 519 2991 519 box* %(2991, 377)(1, 142)
+2704 519 2992 519 2992 520 2704 520 box* %(2704, 519)(288, 1)
+2992 377 2993 377 2993 520 2992 520 box* %(2992, 377)(1, 143)
+2705 520 2993 520 2993 521 2705 521 box* %(2705, 520)(288, 1)
+2734 904 3059 904 3059 1049 2734 1049 clean*
+2734 904 3058 904 3058 905 2734 905 box* %(2734, 904)(324, 1)
+2734 905 2735 905 2735 1047 2734 1047 box* %(2734, 905)(1, 142)
+/Courier 12 13 2737 920 (28) text*
+/Courier 12 13 2749 920 (: ) text*
+/Courier-BoldOblique 120 13 2761 920 (*\(\(\(\(*\(qr...\)->left\)) text*
+2737 920 3055 920 3055 921 2737 921 box* %(2737, 920)(318, 1)
+2737 923 3055 923 3055 924 2737 924 box* %(2737, 923)(318, 1)
+2737 924 2738 924 2738 1044 2737 1044 box* %(2737, 924)(1, 120)
+/Courier 30 13 2752 977 (value) text*
+/Courier 18 13 2782 977 ( = ) text*
+2800 926 3052 926 3052 927 2800 927 box* %(2800, 926)(252, 1)
+2800 927 2801 927 2801 1015 2800 1015 box* %(2800, 927)(1, 88)
+/Courier 24 13 2815 942 (type) text*
+/Courier 18 13 2845 942 ( = ) text*
+/Courier 36 13 2863 942 (COLREF) text*
+/Courier 30 13 2815 984 (value) text*
+/Courier 18 13 2845 984 ( = ) text*
+2863 942 3049 942 3049 943 2863 943 box* %(2863, 942)(186, 1)
+2863 943 2864 943 2864 1012 2863 1012 box* %(2863, 943)(1, 69)
+/Courier 60 13 2878 958 (column_val) text*
+/Courier 18 13 2944 958 ( = ) text*
+/Courier 84 13 2962 958 (0x7fffec005f40) text*
+/Courier 66 13 2878 971 (integer_val) text*
+/Courier 18 13 2944 971 ( = ) text*
+/Courier 18 13 2962 971 (...) text*
+/Courier 48 13 2878 984 (text_val) text*
+/Courier 18 13 2944 984 ( = ) text*
+/Courier 18 13 2962 984 (...) text*
+/Courier 66 13 2878 997 (numeric_val) text*
+/Courier 18 13 2944 997 ( = ) text*
+/Courier 18 13 2962 997 (...) text*
+/Courier 48 13 2878 1010 (oper_val) text*
+/Courier 18 13 2944 1010 ( = ) text*
+/Courier 18 13 2962 1010 (...) text*
+3048 943 3049 943 3049 1012 3048 1012 box* %(3048, 943)(1, 69)
+2863 1012 3049 1012 3049 1013 2863 1013 box* %(2863, 1012)(186, 1)
+3051 927 3052 927 3052 1015 3051 1015 box* %(3051, 927)(1, 88)
+2800 1015 3052 1015 3052 1016 2800 1016 box* %(2800, 1015)(252, 1)
+/Courier 24 13 2752 1029 (left) text*
+/Courier 18 13 2782 1029 ( = ) text*
+/Courier 18 13 2800 1029 (0x0) text*
+/Courier 30 13 2752 1042 (right) text*
+/Courier 18 13 2782 1042 ( = ) text*
+/Courier 18 13 2800 1042 (0x0) text*
+3054 924 3055 924 3055 1044 3054 1044 box* %(3054, 924)(1, 120)
+2737 1044 3055 1044 3055 1045 2737 1045 box* %(2737, 1044)(318, 1)
+3057 905 3058 905 3058 1047 3057 1047 box* %(3057, 905)(1, 142)
+2734 1047 3058 1047 3058 1048 2734 1048 box* %(2734, 1047)(324, 1)
+3058 905 3059 905 3059 1048 3058 1048 box* %(3058, 905)(1, 143)
+2735 1048 3059 1048 3059 1049 2735 1049 box* %(2735, 1048)(324, 1)
+2830 1253 3059 1253 3059 1308 2830 1308 clean*
+2830 1253 3058 1253 3058 1254 2830 1254 box* %(2830, 1253)(228, 1)
+2830 1254 2831 1254 2831 1306 2830 1306 box* %(2830, 1254)(1, 52)
+/Courier 12 13 2833 1269 (30) text*
+/Courier 12 13 2845 1269 (: ) text*
+/Courier-BoldOblique 120 13 2857 1269 (*\(\(\(\(\(\(\(*...umn_val\)) text*
+2833 1269 3055 1269 3055 1270 2833 1270 box* %(2833, 1269)(222, 1)
+2833 1272 3055 1272 3055 1273 2833 1273 box* %(2833, 1272)(222, 1)
+2833 1273 2834 1273 2834 1303 2833 1303 box* %(2833, 1273)(1, 30)
+/Courier 42 13 2848 1288 (colName) text*
+/Courier 18 13 2920 1288 ( = ) text*
+/Courier 108 13 2938 1288 (0x7fffec005f20 \"a\") text*
+/Courier 72 13 2848 1301 (colReference) text*
+/Courier 18 13 2920 1301 ( = ) text*
+/Courier 114 13 2938 1301 (0x7fffec005f00 \"t1\") text*
+3054 1273 3055 1273 3055 1303 3054 1303 box* %(3054, 1273)(1, 30)
+2833 1303 3055 1303 3055 1304 2833 1304 box* %(2833, 1303)(222, 1)
+3057 1254 3058 1254 3058 1306 3057 1306 box* %(3057, 1254)(1, 52)
+2830 1306 3058 1306 3058 1307 2830 1307 box* %(2830, 1306)(228, 1)
+3058 1254 3059 1254 3059 1307 3058 1307 box* %(3058, 1254)(1, 53)
+2831 1307 3059 1307 3059 1308 2831 1308 box* %(2831, 1307)(228, 1)
+3215 904 3474 904 3474 1049 3215 1049 clean*
+3215 904 3473 904 3473 905 3215 905 box* %(3215, 904)(258, 1)
+3215 905 3216 905 3216 1047 3215 1047 box* %(3215, 905)(1, 142)
+/Courier 12 13 3218 920 (29) text*
+/Courier 12 13 3230 920 (: ) text*
+/Courier-BoldOblique 120 13 3242 920 (*\(\(\(\(*\(qr...->right\)) text*
+3218 920 3470 920 3470 921 3218 921 box* %(3218, 920)(252, 1)
+3218 923 3470 923 3470 924 3218 924 box* %(3218, 923)(252, 1)
+3218 924 3219 924 3219 1044 3218 1044 box* %(3218, 924)(1, 120)
+/Courier 30 13 3233 977 (value) text*
+/Courier 18 13 3263 977 ( = ) text*
+3281 926 3467 926 3467 927 3281 927 box* %(3281, 926)(186, 1)
+3281 927 3282 927 3282 1015 3281 1015 box* %(3281, 927)(1, 88)
+/Courier 24 13 3296 942 (type) text*
+/Courier 18 13 3326 942 ( = ) text*
+/Courier 18 13 3344 942 (INT) text*
+/Courier 30 13 3296 984 (value) text*
+/Courier 18 13 3326 984 ( = ) text*
+3344 942 3464 942 3464 943 3344 943 box* %(3344, 942)(120, 1)
+3344 943 3345 943 3345 1012 3344 1012 box* %(3344, 943)(1, 69)
+/Courier 60 13 3359 958 (column_val) text*
+/Courier 18 13 3425 958 ( = ) text*
+/Courier 18 13 3443 958 (...) text*
+/Courier 66 13 3359 971 (integer_val) text*
+/Courier 18 13 3425 971 ( = ) text*
+/Courier 12 13 3443 971 (20) text*
+/Courier 48 13 3359 984 (text_val) text*
+/Courier 18 13 3425 984 ( = ) text*
+/Courier 18 13 3443 984 (...) text*
+/Courier 66 13 3359 997 (numeric_val) text*
+/Courier 18 13 3425 997 ( = ) text*
+/Courier 18 13 3443 997 (...) text*
+/Courier 48 13 3359 1010 (oper_val) text*
+/Courier 18 13 3425 1010 ( = ) text*
+/Courier 18 13 3443 1010 (...) text*
+3463 943 3464 943 3464 1012 3463 1012 box* %(3463, 943)(1, 69)
+3344 1012 3464 1012 3464 1013 3344 1013 box* %(3344, 1012)(120, 1)
+3466 927 3467 927 3467 1015 3466 1015 box* %(3466, 927)(1, 88)
+3281 1015 3467 1015 3467 1016 3281 1016 box* %(3281, 1015)(186, 1)
+/Courier 24 13 3233 1029 (left) text*
+/Courier 18 13 3263 1029 ( = ) text*
+/Courier 18 13 3281 1029 (0x0) text*
+/Courier 30 13 3233 1042 (right) text*
+/Courier 18 13 3263 1042 ( = ) text*
+/Courier 18 13 3281 1042 (0x0) text*
+3469 924 3470 924 3470 1044 3469 1044 box* %(3469, 924)(1, 120)
+3218 1044 3470 1044 3470 1045 3218 1045 box* %(3218, 1044)(252, 1)
+3472 905 3473 905 3473 1047 3472 1047 box* %(3472, 905)(1, 142)
+3215 1047 3473 1047 3473 1048 3215 1048 box* %(3215, 1047)(258, 1)
+3473 905 3474 905 3474 1048 3473 1048 box* %(3473, 905)(1, 143)
+3216 1048 3474 1048 3474 1049 3216 1049 box* %(3216, 1048)(258, 1)
+3582 664 3907 664 3907 809 3582 809 clean*
+3582 664 3906 664 3906 665 3582 665 box* %(3582, 664)(324, 1)
+3582 665 3583 665 3583 807 3582 807 box* %(3582, 665)(1, 142)
+/Courier 12 13 3585 680 (31) text*
+/Courier 12 13 3597 680 (: ) text*
+/Courier-BoldOblique 120 13 3609 680 (*\(\(\(\(*\(qr...\)->left\)) text*
+3585 680 3903 680 3903 681 3585 681 box* %(3585, 680)(318, 1)
+3585 683 3903 683 3903 684 3585 684 box* %(3585, 683)(318, 1)
+3585 684 3586 684 3586 804 3585 804 box* %(3585, 684)(1, 120)
+/Courier 30 13 3600 737 (value) text*
+/Courier 18 13 3630 737 ( = ) text*
+3648 686 3900 686 3900 687 3648 687 box* %(3648, 686)(252, 1)
+3648 687 3649 687 3649 775 3648 775 box* %(3648, 687)(1, 88)
+/Courier 24 13 3663 702 (type) text*
+/Courier 18 13 3693 702 ( = ) text*
+/Courier 36 13 3711 702 (COLREF) text*
+/Courier 30 13 3663 744 (value) text*
+/Courier 18 13 3693 744 ( = ) text*
+3711 702 3897 702 3897 703 3711 703 box* %(3711, 702)(186, 1)
+3711 703 3712 703 3712 772 3711 772 box* %(3711, 703)(1, 69)
+/Courier 60 13 3726 718 (column_val) text*
+/Courier 18 13 3792 718 ( = ) text*
+/Courier 84 13 3810 718 (0x7fffec0061b0) text*
+/Courier 66 13 3726 731 (integer_val) text*
+/Courier 18 13 3792 731 ( = ) text*
+/Courier 18 13 3810 731 (...) text*
+/Courier 48 13 3726 744 (text_val) text*
+/Courier 18 13 3792 744 ( = ) text*
+/Courier 18 13 3810 744 (...) text*
+/Courier 66 13 3726 757 (numeric_val) text*
+/Courier 18 13 3792 757 ( = ) text*
+/Courier 18 13 3810 757 (...) text*
+/Courier 48 13 3726 770 (oper_val) text*
+/Courier 18 13 3792 770 ( = ) text*
+/Courier 18 13 3810 770 (...) text*
+3896 703 3897 703 3897 772 3896 772 box* %(3896, 703)(1, 69)
+3711 772 3897 772 3897 773 3711 773 box* %(3711, 772)(186, 1)
+3899 687 3900 687 3900 775 3899 775 box* %(3899, 687)(1, 88)
+3648 775 3900 775 3900 776 3648 776 box* %(3648, 775)(252, 1)
+/Courier 24 13 3600 789 (left) text*
+/Courier 18 13 3630 789 ( = ) text*
+/Courier 18 13 3648 789 (0x0) text*
+/Courier 30 13 3600 802 (right) text*
+/Courier 18 13 3630 802 ( = ) text*
+/Courier 18 13 3648 802 (0x0) text*
+3902 684 3903 684 3903 804 3902 804 box* %(3902, 684)(1, 120)
+3585 804 3903 804 3903 805 3585 805 box* %(3585, 804)(318, 1)
+3905 665 3906 665 3906 807 3905 807 box* %(3905, 665)(1, 142)
+3582 807 3906 807 3906 808 3582 808 box* %(3582, 807)(324, 1)
+3906 665 3907 665 3907 808 3906 808 box* %(3906, 665)(1, 143)
+3583 808 3907 808 3907 809 3583 809 box* %(3583, 808)(324, 1)
+3662 1093 3891 1093 3891 1148 3662 1148 clean*
+3662 1093 3890 1093 3890 1094 3662 1094 box* %(3662, 1093)(228, 1)
+3662 1094 3663 1094 3663 1146 3662 1146 box* %(3662, 1094)(1, 52)
+/Courier 12 13 3665 1109 (32) text*
+/Courier 12 13 3677 1109 (: ) text*
+/Courier-BoldOblique 120 13 3689 1109 (*\(\(\(\(\(\(\(*...umn_val\)) text*
+3665 1109 3887 1109 3887 1110 3665 1110 box* %(3665, 1109)(222, 1)
+3665 1112 3887 1112 3887 1113 3665 1113 box* %(3665, 1112)(222, 1)
+3665 1113 3666 1113 3666 1143 3665 1143 box* %(3665, 1113)(1, 30)
+/Courier 42 13 3680 1128 (colName) text*
+/Courier 18 13 3752 1128 ( = ) text*
+/Courier 108 13 3770 1128 (0x7fffec006190 \"b\") text*
+/Courier 72 13 3680 1141 (colReference) text*
+/Courier 18 13 3752 1141 ( = ) text*
+/Courier 114 13 3770 1141 (0x7fffec006170 \"t1\") text*
+3886 1113 3887 1113 3887 1143 3886 1143 box* %(3886, 1113)(1, 30)
+3665 1143 3887 1143 3887 1144 3665 1144 box* %(3665, 1143)(222, 1)
+3889 1094 3890 1094 3890 1146 3889 1146 box* %(3889, 1094)(1, 52)
+3662 1146 3890 1146 3890 1147 3662 1147 box* %(3662, 1146)(228, 1)
+3890 1094 3891 1094 3891 1147 3890 1147 box* %(3890, 1094)(1, 53)
+3663 1147 3891 1147 3891 1148 3663 1148 box* %(3663, 1147)(228, 1)
+3550 360 3875 360 3875 505 3550 505 clean*
+3550 360 3874 360 3874 361 3550 361 box* %(3550, 360)(324, 1)
+3550 361 3551 361 3551 503 3550 503 box* %(3550, 361)(1, 142)
+/Courier 12 13 3553 376 (27) text*
+/Courier 12 13 3565 376 (: ) text*
+/Courier-BoldOblique 120 13 3577 376 (*\(\(\(*\(qry...->right\)) text*
+3553 376 3871 376 3871 377 3553 377 box* %(3553, 376)(318, 1)
+3553 379 3871 379 3871 380 3553 380 box* %(3553, 379)(318, 1)
+3553 380 3554 380 3554 500 3553 500 box* %(3553, 380)(1, 120)
+/Courier 30 13 3568 433 (value) text*
+/Courier 18 13 3598 433 ( = ) text*
+3616 382 3868 382 3868 383 3616 383 box* %(3616, 382)(252, 1)
+3616 383 3617 383 3617 471 3616 471 box* %(3616, 383)(1, 88)
+/Courier 24 13 3631 398 (type) text*
+/Courier 18 13 3661 398 ( = ) text*
+/Courier 24 13 3679 398 (OPER) text*
+/Courier 30 13 3631 440 (value) text*
+/Courier 18 13 3661 440 ( = ) text*
+3679 398 3865 398 3865 399 3679 399 box* %(3679, 398)(186, 1)
+3679 399 3680 399 3680 468 3679 468 box* %(3679, 399)(1, 69)
+/Courier 60 13 3694 414 (column_val) text*
+/Courier 18 13 3760 414 ( = ) text*
+/Courier 18 13 3778 414 (...) text*
+/Courier 66 13 3694 427 (integer_val) text*
+/Courier 18 13 3760 427 ( = ) text*
+/Courier 18 13 3778 427 (...) text*
+/Courier 48 13 3694 440 (text_val) text*
+/Courier 18 13 3760 440 ( = ) text*
+/Courier 18 13 3778 440 (...) text*
+/Courier 66 13 3694 453 (numeric_val) text*
+/Courier 18 13 3760 453 ( = ) text*
+/Courier 18 13 3778 453 (...) text*
+/Courier 48 13 3694 466 (oper_val) text*
+/Courier 18 13 3760 466 ( = ) text*
+/Courier 84 13 3778 466 (MULTIPLICATION) text*
+3864 399 3865 399 3865 468 3864 468 box* %(3864, 399)(1, 69)
+3679 468 3865 468 3865 469 3679 469 box* %(3679, 468)(186, 1)
+3867 383 3868 383 3868 471 3867 471 box* %(3867, 383)(1, 88)
+3616 471 3868 471 3868 472 3616 472 box* %(3616, 471)(252, 1)
+/Courier 24 13 3568 485 (left) text*
+/Courier 18 13 3598 485 ( = ) text*
+/Courier 84 13 3616 485 (0x7fffec0061d0) text*
+/Courier 30 13 3568 498 (right) text*
+/Courier 18 13 3598 498 ( = ) text*
+/Courier 84 13 3616 498 (0x7fffec006200) text*
+3870 380 3871 380 3871 500 3870 500 box* %(3870, 380)(1, 120)
+3553 500 3871 500 3871 501 3553 501 box* %(3553, 500)(318, 1)
+3873 361 3874 361 3874 503 3873 503 box* %(3873, 361)(1, 142)
+3550 503 3874 503 3874 504 3550 504 box* %(3550, 503)(324, 1)
+3874 361 3875 361 3875 504 3874 504 box* %(3874, 361)(1, 143)
+3551 504 3875 504 3875 505 3551 505 box* %(3551, 504)(324, 1)
+4063 680 4322 680 4322 825 4063 825 clean*
+4063 680 4321 680 4321 681 4063 681 box* %(4063, 680)(258, 1)
+4063 681 4064 681 4064 823 4063 823 box* %(4063, 681)(1, 142)
+/Courier 12 13 4066 696 (33) text*
+/Courier 12 13 4078 696 (: ) text*
+/Courier-BoldOblique 120 13 4090 696 (*\(\(\(\(*\(qr...->right\)) text*
+4066 696 4318 696 4318 697 4066 697 box* %(4066, 696)(252, 1)
+4066 699 4318 699 4318 700 4066 700 box* %(4066, 699)(252, 1)
+4066 700 4067 700 4067 820 4066 820 box* %(4066, 700)(1, 120)
+/Courier 30 13 4081 753 (value) text*
+/Courier 18 13 4111 753 ( = ) text*
+4129 702 4315 702 4315 703 4129 703 box* %(4129, 702)(186, 1)
+4129 703 4130 703 4130 791 4129 791 box* %(4129, 703)(1, 88)
+/Courier 24 13 4144 718 (type) text*
+/Courier 18 13 4174 718 ( = ) text*
+/Courier 18 13 4192 718 (INT) text*
+/Courier 30 13 4144 760 (value) text*
+/Courier 18 13 4174 760 ( = ) text*
+4192 718 4312 718 4312 719 4192 719 box* %(4192, 718)(120, 1)
+4192 719 4193 719 4193 788 4192 788 box* %(4192, 719)(1, 69)
+/Courier 60 13 4207 734 (column_val) text*
+/Courier 18 13 4273 734 ( = ) text*
+/Courier 18 13 4291 734 (...) text*
+/Courier 66 13 4207 747 (integer_val) text*
+/Courier 18 13 4273 747 ( = ) text*
+/Courier 6 13 4291 747 (3) text*
+/Courier 48 13 4207 760 (text_val) text*
+/Courier 18 13 4273 760 ( = ) text*
+/Courier 18 13 4291 760 (...) text*
+/Courier 66 13 4207 773 (numeric_val) text*
+/Courier 18 13 4273 773 ( = ) text*
+/Courier 18 13 4291 773 (...) text*
+/Courier 48 13 4207 786 (oper_val) text*
+/Courier 18 13 4273 786 ( = ) text*
+/Courier 18 13 4291 786 (...) text*
+4311 719 4312 719 4312 788 4311 788 box* %(4311, 719)(1, 69)
+4192 788 4312 788 4312 789 4192 789 box* %(4192, 788)(120, 1)
+4314 703 4315 703 4315 791 4314 791 box* %(4314, 703)(1, 88)
+4129 791 4315 791 4315 792 4129 792 box* %(4129, 791)(186, 1)
+/Courier 24 13 4081 805 (left) text*
+/Courier 18 13 4111 805 ( = ) text*
+/Courier 18 13 4129 805 (0x0) text*
+/Courier 30 13 4081 818 (right) text*
+/Courier 18 13 4111 818 ( = ) text*
+/Courier 18 13 4129 818 (0x0) text*
+4317 700 4318 700 4318 820 4317 820 box* %(4317, 700)(1, 120)
+4066 820 4318 820 4318 821 4066 821 box* %(4066, 820)(252, 1)
+4320 681 4321 681 4321 823 4320 823 box* %(4320, 681)(1, 142)
+4063 823 4321 823 4321 824 4063 824 box* %(4063, 823)(258, 1)
+4321 681 4322 681 4322 824 4321 824 box* %(4321, 681)(1, 143)
+4064 824 4322 824 4322 825 4064 825 box* %(4064, 824)(258, 1)
+%%Trailer
+
+% $Id$
+% Trailer for DDD PostScript Box output
+
+grestore
+showpage
+end		% of ddddict 
