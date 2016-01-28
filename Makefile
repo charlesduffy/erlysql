@@ -46,7 +46,8 @@ TESTCFLAGS=-Icsrc/ -g
 
 all : grammar.tab.c scanner.c  $(NIFSO)  erl
 
-debug: CFLAGS += -DXDEBUG
+debug: CFLAGS += -DXDEBUG 
+debug: REBAR  += debug_info=1
 debug: all
 
 $(SRCDIR)/scanner.c : scanner.l grammar.tab.c 
