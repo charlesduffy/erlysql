@@ -1,22 +1,6 @@
---Malformed SQL statements
---specific bugfix
---https://trello.com/c/8YXSi9LP
+--SQL Test source file
 select a+1 from a, b where ( a + 1 ) > ( c + 1) / d;
 select foo , baz , (1+a) from bar , bat , boo where baz < 1;
---garbage strings 
---
---;
---12345;
---as0dakMACZAS:Lqpo234u9124-0123012;l1wm,d./asmaL/SNQ/LKHJE12P4 9I-305R93=WEFPK MZXC:LS  ALKSJALSIJDLAKSJDAL SJDAKSDJALS239122-/.AS,FG ,ZC?(*A&SDMNAS FKAJSDLAS
---asdAS()_!*#12 ,as D!123
---
---syntax errors
---elsec a from A,B,C;
---select a,b fro A,B,C;
---select from A,B,C;
---select a,b,c A,B,C;
---select a,b,c from;
---select a,b,c fromA,B,C;
 --Data Manipulation Language
 --SELECT statments
 --select list constructions
@@ -42,3 +26,18 @@ select a from foo as \"1\";
 select \"1\".a from foo as \"1\";
 select tab1.a as col1, tab2.b as col2 from A as tab1, B as tab2 where col1 < 20 and col2  > 5 and col1 > col2 ;
 SELECT n_name + 1 FROM customer, orders, lineitem, supplier, nation, region WHERE c_custkey = o_custkey AND l_orderkey = o_orderkey AND l_suppkey = s_suppkey AND c_nationkey = s_nationkey AND s_nationkey = n_nationkey AND n_regionkey = r_regionkey AND r_name = 'ASIA';
+--DDL
+create table test_foo1 ( a integer , b integer , c numeric , d text );
+drop table test_foo1;
+--GROUP BY
+select a , b , c  from A,B,C group by a;
+select a , b , c  from A,B,C group by a , b ;
+select a , b , c  from A,B,C group by a , b , c ;
+--ORDER BY
+select a , b , c  from A,B,C order by a ;
+select a , b , c  from A,B,C order by a asc;
+select a , b , c  from A,B,C order by a , b  ;
+select a , b , c  from A,B,C order by a , b , c;
+select a , b , c  from A,B,C order by a asc , b  , c;
+select a , b , c  from A,B,C order by a desc, b asc , c desc;
+--EXPLICIT JOIN
