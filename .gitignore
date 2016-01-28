@@ -3,6 +3,7 @@ all_tests
 callgrind.out.*
 core
 grammar.output
+grammar.xml
 doc/*
 ebin/*
 .rebar/*
