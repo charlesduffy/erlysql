@@ -50,6 +50,12 @@ typedef void *yyscan_t;
 	whereClauseNode 	*whereClause;
 	colRef			*columnRef;
 
+	/* DML Nodes - INSERT */
+
+	insertStmtNode		*insertStmt;
+	insertColListNode	*insertColList;
+	insertValListNode	*insertValList;
+
 	/* DDL Nodes - CREATE TABLE */
 
 	columnDefNode             *columnDef;
@@ -119,6 +125,9 @@ typedef void *yyscan_t;
 %type   <columnDef>   		column_definition
 %type   <columnDefList>		column_definition_list
 %type   <dataType>		data_type
+%type   <insertStmt>		insert_statement
+%type   <insertValList>		insert_value_list
+%type   <insertColList>		column_list
 %type   <createTableRef>	ddl_table_ref
 %type 	<createTableStmt>	create_table_stmt
 %type 	<dropTableStmt>		drop_table_stmt
@@ -145,6 +154,13 @@ query_statement:
 			  $$ = ptree;
 			  $$->statType = SELECT_STMT;
 			  $$->selnode = $1;
+			} 
+			|
+	insert_statement	
+			{ 
+			  $$ = ptree;
+			  $$->statType = INSERT_STMT;
+			  $$->insnode = $1;
 			} 
 			|
 	create_table_stmt
@@ -174,20 +190,60 @@ INSERT STATEMENT
 
 
 insert_statement:
-	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN { 
-	
+
+	INSERT INTO ddl_table_ref LPAREN column_list RPAREN VALUES LPAREN insert_value_list RPAREN { 
+		$$ = MAKENODE(insertStmtNode);
+		$$->table = $3;
+		$$->collist = $5;
+		$$->vallist = $9;	
+		$$->selnode = NULL;
 	}
 	|
-	INSERT INTO ddl_table_ref LPAREN select_statement RPAREN {
-
+	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN { 
+		$$ = MAKENODE(insertStmtNode);
+		$$->table = $3;
+		$$->collist = NULL;
+		$$->vallist = $6;	
+		$$->selnode = NULL;
+	}
+	|
+	INSERT INTO ddl_table_ref select_statement {
+		$$ = MAKENODE(insertStmtNode);
+		$$->table = $3;
+		$$->collist = NULL;
+		$$->vallist = NULL;	
+		$$->selnode = $4;
 	}
 ;
+
+column_list:
+	IDENTIFIER {
+		$$ = MAKENODE(insertColListNode);
+		$$->cItems = malloc ((size_t) sizeof (insertColListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		$$->nElements = 1;
+		*($$->cItems) = $1;
+	} 
+	|
+	column_list COMMA IDENTIFIER {
+		*($$->cItems + ($$->nElements)) = $3; //remove redundant parentheses
+		$$->nElements++;
+	}
+;	
 
 //should take generic table expression for INSERT source
 
 insert_value_list:
-	scalar_expr			
-	insert_value_list COMMA scalar_expr		|
+	scalar_expr { 
+		$$ = MAKENODE(insertValListNode);
+		$$->vItems = malloc ((size_t) sizeof (insertValListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		$$->nElements = 1;
+		*($$->vItems) = $1;
+	}	
+	|		
+	insert_value_list COMMA scalar_expr {	
+		*($$->vItems + ($$->nElements)) = $3; //remove redundant parentheses
+		$$->nElements++;
+	}
 ;
 
 

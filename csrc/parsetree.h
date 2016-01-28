@@ -183,8 +183,23 @@ typedef struct {
 
 /* INSERT STATEMENT */
 
-typedef struct _insertStmtNode {
+/* optional column list for insert statement */
 
+typedef struct _insertColListNode {
+	int nElements;
+	char **cItems;		
+} insertColListNode;
+
+typedef struct _insertValListNode {
+	int nElements;
+	scalarExpr **vItems;	
+} insertValListNode;
+
+typedef struct _insertStmtNode {
+	ddlTableRefNode *table;
+	insertColListNode *collist;
+	insertValListNode *vallist;
+	selectStmtNode *selnode;	
 } insertStmtNode;
 
 /* UPDATE STATEMENT */
