@@ -199,7 +199,7 @@ insert_statement:
 		$$->selnode = NULL;
 	}
 	|
-	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN { 
+	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN {  //todo - seperate out the 'values' table
 		$$ = MAKENODE(insertStmtNode);
 		$$->table = $3;
 		$$->collist = NULL;
@@ -618,7 +618,7 @@ data_type:
 			$$ = NUM;
 		}
 		|
-	STRING  {
+	CHAR	{
 			$$ = TEXT;	
 		}
 ;
@@ -651,7 +651,8 @@ column_definition_list:
 	}
 ;
 
-column_definition: IDENTIFIER data_type
+column_definition: 
+	IDENTIFIER data_type
 	{
 		$$ = MAKENODE(columnDefNode);
 		$$->colName = $1;
