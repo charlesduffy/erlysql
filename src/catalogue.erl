@@ -52,6 +52,12 @@ handle_call({map, RelList } , _From, State) ->
     RelMap = get_relation_map(RelList),
     {reply, RelMap , State};
 
+%% get relation map for planner
+handle_call({save, RelList } , _From, State) ->
+    io:fwrite("SAVE!~n"),
+    RelSav = write_ets_catalogues(),
+    {reply, RelSav , State};
+
 %% delete relation from system catalogue
 
 handle_call({delete, Relname } , _From, State) ->
@@ -142,8 +148,17 @@ generate_oid() ->
 %% For persistence we use a DETS table. 
 save_catalogue_tables([Catalogue|CatList]) ->
 
-	[ CatName ] = [ Name || { name , Name } <- ets:info(Catalogue) ],
-	{ ok , DetsName } = dets:open_file(lists:flatten(io:format("~s~s", [ ?CATALOGUE_PATH,CatName ])) , [ {type,bag} ]),
+	{ Cat , Catprops } = Catalogue,
+%%
+%%	CatType = case Catprops of
+%%	
+%%		[ bag , _ , _ ] -> bag;
+%%		[ ordered_set , _ , _ ] -> ordered_set 
+%%	end ,
+	
+	[ CatName ] = [ Name || { name , Name } <- ets:info(Cat) ],
+	io:fwrite("Saving catalogue: ~s~s~n" , [ ?CATALOGUE_PATH , CatName ] ),
+	{ ok , DetsName } = dets:open_file(io_lib:format("~s~s", [ "/home/ccd/xndb-micro/data/catalogue_data/", CatName ]) , [ {type, bag } ]),
 	ets:to_dets(CatName, DetsName ),
 	save_catalogue_tables(CatList)	
 ;
@@ -156,6 +171,8 @@ load_catalogue_tables([Catalogue|CatList]) ->
 	% create / load DETS table
 	% for eat ETS catalogue, load the corresponding DETS and copy 
 
+	%% trash all this rubbish when catserver is rewritten
+	%% also no need for lists:flatten etc
 	[ CatName ] = [ Name || { name , Name } <- ets:info(Catalogue) ],
 	{ ok , DetsName } = dets:open_file(lists:flatten(io_lib:format("~s~s", [ ?CATALOGUE_PATH,CatName ])) , [ {type,bag} ]),
 	dets:to_ets(DetsName , CatName),
