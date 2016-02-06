@@ -9,7 +9,7 @@
 
 
 find_subtrees1 (ParseTree) ->
-	%% RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+%%	 RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 %% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
 
 %% We are going to pass a relmap that contains the projection list and relation list in OID form. 
@@ -37,8 +37,8 @@ find_subtrees1 (ParseTree) ->
 	
 	RelMap = proto:get_relmap(
 			       	    maps:get(from_clause, ParseTree)
-				 ),
-
+			 ),
+io:fwrite("RelMap is: ~p~n", [ RelMap ] ),
 
 	find_subtrees1( maps:get(where_clause, ParseTree), RelMap)		
 .
@@ -180,9 +180,14 @@ generate_code ( [{ type, scan }|Node], ParentNodeID, CurMaxID, Descent ) ->
 
 plan_query(ParseTree) ->
 
-	PlanTree = find_subtrees1(ParseTree),	
-	Program = generate_code(PlanTree),
-	Program.	
+%%	PlanTree = find_subtrees1(ParseTree),	
+%%	Program = generate_code(PlanTree),
+%%	Program.
+
+	generate_code(
+			find_subtrees1(ParseTree)
+		     )
+.	
 
 %%% execution plan generic node
 
