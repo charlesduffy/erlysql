@@ -30,7 +30,7 @@ OBJECTS=parser_nif.o scanner.o grammar.tab.o parsetree.o
 ##################
 #test harness
 
-UNITYROOT=$(HOME)/Unity
+UNITYROOT=util/Unity
 TESTDIR=$(SRCDIR)/test
 TESTINC=-I$(SRCDIR) -I$(UNITYROOT)/src -I$(UNITYROOT)/extras/fixture/src
 TESTSRC=$(UNITYROOT)/src/unity.c \
