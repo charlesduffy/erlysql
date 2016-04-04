@@ -7,12 +7,18 @@
 %% ------------------------------------------------------------------
 
 
+%% @doc <h2> subtree finder </h2>
+%% this is some more text
 
 find_subtrees1 (ParseTree) ->
-%%	 RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
+%%  RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
 %% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
 
 %% We are going to pass a relmap that contains the projection list and relation list in OID form. 
+
+%% example catalogue insertion commands
+%% gen_server:call(catalogue, { write , { "A" , [  [ {attname , "a" } , {atttype, integer }   ] , [ {attname, "b" } , {atttype,integer  }   ]    ] }}).
+%% gen_server:call(catalogue, { write , { "B" , [  [ {attname , "c" } , {atttype, integer }   ] , [ {attname, "d" } , {atttype,integer  }   ]    ] }}).
 
 %% Consider adding a 'comments' or 'debug' field to the plan for inspection
 
@@ -191,7 +197,7 @@ plan_query(ParseTree) ->
 
 %%% execution plan generic node
 
-%% @doc Elements required in code/plan per node
+%%  Elements required in code/plan per node
 
 %% Node Type: scan, join, agg, filter
 %% Predicate: an s-expr in the case of join/scan/filter, function for agg, 

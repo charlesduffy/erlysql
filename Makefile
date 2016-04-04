@@ -90,5 +90,7 @@ test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o $(SRCDIR)/test
 testdebug: 	TESTCFLAGS += -DXDEBUG
 testdebug:	test
 
+#edoc:application(xndbmicro, "src/" , [{foo,bar}, {private,true}]).
+
 edoc:
 	erl -noshell -run edoc_run packages '[""]' '[{source_path, ["src"]}, {dir, "doc"}]'

@@ -51,7 +51,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @doc generate a child process specification from the generated code
 generate_childspec( Program ) ->
-%%	io:fwrite("line 54 ~p~n", [ Program ]),
+	io:fwrite("line 54 ~p~n", [ Program ]),
 	generate_childspec(Program, [], 0)
 .
 

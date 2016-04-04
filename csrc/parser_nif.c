@@ -61,10 +61,6 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 
   erlParseTree = nodeToNifTerm(env, qryTree);
 
-  debug("returning from parseQuery_nif\n");
-
-  //free(qryTree); //****TODO - this will cause a memory leak. Not a deep free. For testing only!
-
   return (erlParseTree);
 }
 
@@ -78,20 +74,15 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 {
 
- 
-
-
  /* Declare pointers to QueryNode data structure elements */
 
-  
-
-//  selectListNode *sellist = qry->selnode->selectList;
   selectListNode *sellist = qry->get_select_list(qry);
 
-
   fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
+
   tableRefNode **tableRef =
     qry->selnode->tableExpr->fromClause->refList->tables;
+
   whereClauseNode *whereclause = qry->selnode->tableExpr->whereClause;
 
   /* Declare Erlang NIF terms for use */
@@ -172,7 +163,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
     nifMap = enif_make_new_map(env);
 
   /* Handle SELECT list creation */
-
+// TODO break these out to functions
   if (!enif_make_map_put(env,
                          nifMap,
                          enif_make_atom(env, (const char *) "select_list"),
@@ -229,18 +220,22 @@ static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv * env, scalarExpr * sExpr, int dept
 
   ERL_NIF_TERM lNode, rNode, cNode;
   ERL_NIF_TERM cList; //TODO rename these variables
-
+printf("\n\rDepth is: %d\t ", depth);
   if (sExpr->value.type != OPER) {
     cNode = valueExprToNifTerm(env, sExpr->value);
+    if (depth == 0) {
+      /* This is to ensure that single-element s-expressions are returned properly wrapped in a tuple */
+      cNode = enif_make_tuple1(env, cNode);	
+    }
     return (cNode);
   }
 
   if (sExpr->left != NULL) {
-    lNode = sExprToNifTerm(env, sExpr->left, depth++);
+    lNode = sExprToNifTerm(env, sExpr->left, depth+1);
   }
 
   if (sExpr->right != NULL) {
-    rNode = sExprToNifTerm(env, sExpr->right, depth++);
+    rNode = sExprToNifTerm(env, sExpr->right, depth+1);
   }
 
   cList = enif_make_list2(
@@ -281,7 +276,9 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
     case COLREF:
       debug("add Colref to tuple...");
       nodeType = enif_make_atom(env, (const char *) "colref");
+	printf("colref value: %s\n\r", v.column_val->colReference);
 
+	fflush(stdout);
       /*
 	 Special case: for column references we also need to encode the table reference
 	 in the proplist, if one is present. 
@@ -299,6 +296,8 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
       break;
     case INT:
       debug("add integer to tuple...");
+	printf("integer value: %d\n\r", v.integer_val);
+	fflush(stdout);
       nodeVal = enif_make_int(env, v.integer_val);
       nodeType = enif_make_atom(env, "int");
       break;

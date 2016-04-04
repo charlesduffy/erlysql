@@ -21,6 +21,7 @@ start() ->
 
 gv_write(QueryText, OutFile) ->
 	ParseTree = parser:parseQuery(QueryText),
+io:fwrite("Parse Tree: ~n ~p" , [ ParseTree ] ),
 	DotText = gv_traverse(ParseTree, QueryText),
 	file:write_file(OutFile, DotText ),
 	io:fwrite([DotText]),
@@ -34,6 +35,7 @@ gv_traverse(ParseTree, QueryText) ->
 	gv_gen_header(QueryText) ++
 	%% Traverse select list
 	sellist_traverse(maps:get(select_list, ParseTree)) ++
+%% @todo add some logic to detect presence of where clause
 	whereclause_traverse(maps:get(where_clause, ParseTree)) ++ 
 	"
 	}
@@ -141,8 +143,21 @@ print_nodes([] , _ , TextAcc) -> TextAcc.
 %% tuples, some are maps. This has to be fixed to remove redundant function declarations
 %% @todo consider putting the graphvis visualisers into their own module
 
+proc_sexpr({[ { type , _ } , { value , NodeVal } ]} , { Sl_id , Sn_id , NAcc , LAcc } )  when NAcc == []  ->
+	% Leaf node
+	%% consider moving pattern to generic proplist.
+	%%{ PSn_id , _ } = lists:last(NAcc),
+	{	 Sl_id, 
+		 1, 
+		 [ { Sn_id  , NodeVal } ] ,
+		 []
+	}
+;
+
 proc_sexpr([ { type , _ } , { value , NodeVal } ] , { Sl_id , Sn_id , NAcc , LAcc } )  ->
 	% Leaf node
+	%% consider moving pattern to generic proplist.
+io:fwrite("NAcc is: ~n ~p" , [ NAcc ]),
 	{ PSn_id , _ } = lists:last(NAcc),
 	{	 Sl_id, 
 		 Sn_id + 1, 
@@ -153,6 +168,7 @@ proc_sexpr([ { type , _ } , { value , NodeVal } ] , { Sl_id , Sn_id , NAcc , LAc
 
 %% @doc process sexpr when we are the root node
 proc_sexpr( { O , L, R } , { Sl_id , Sn_id , NAcc , _ } ) when NAcc == [] ->
+io:fwrite("line 159 NAcc is: ~n ~p" , [ NAcc ]),
 	[ { type , _ } , { value , NodeVal } ] = O,
 	Acc = {	 Sl_id, 
 		 Sn_id + 1, 
