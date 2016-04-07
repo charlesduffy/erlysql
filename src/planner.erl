@@ -1,6 +1,6 @@
 -module(planner).
 
--export([plan_query/1]).
+-export([plan_query/1, find_subtrees1/1]).
 
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
@@ -150,8 +150,6 @@ generate_code ( [{ type, join }|Node], ParentNodeID,  CurMaxID, Descent ) ->
 		   end,
 			
 	{ RinstrList, _RMaxID }  = generate_code(Right, NodeID, NewMaxID, right),
-
-%%	io:fwrite("my Left List:  ~p~n", [ LinstrList ]),
 
 	{ lists:flatten( [ Instruction ] ++ [ LinstrList ] ++ [ RinstrList ]) , NewMaxID }
 
