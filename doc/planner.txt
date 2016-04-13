@@ -1,0 +1,17 @@
+1. Parse tree heuristics
+
+
+* Obtain range table (list of relations to scan)
+
+* For initial no-op planner: find feasible plan
+
+====
+
+data structures
+
+plan node:
+	type: 	J join
+		F filter
+		T transform
+
+
