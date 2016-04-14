@@ -341,6 +341,12 @@ select_statement:
 where_clause:
 	WHERE scalar_expr 
 			{
+		/* consider a test here that enforces the root node of the 
+			s-expression to be one with a boolean value output.
+			Otherwise it is possible to supply other values to 
+			the WHERE clause
+		*/
+
 				$$ = MAKENODE(whereClauseNode);
 				$$->expr = $2;
 			}
