@@ -93,9 +93,14 @@ typedef void *yyscan_t;
 %token <keyword> QUOTE COMMA NEWLINE 
 
 /* operators */
+
+/* fix precedence */
+
 %left           OR
 %left           AND
 %left		NE
+%left 		IN
+%right		NOT
 %right		EQ
 %nonassoc	LT GT
 %nonassoc	LE GE
@@ -131,6 +136,7 @@ typedef void *yyscan_t;
 %type   <createTableRef>	ddl_table_ref
 %type 	<createTableStmt>	create_table_stmt
 %type 	<dropTableStmt>		drop_table_stmt
+%type	<sExpr>			in_list
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -187,6 +193,7 @@ INSERT STATEMENT
 
 
 */
+
 
 
 insert_statement:
@@ -281,7 +288,13 @@ select_list:
 					|  ^ preallocate a large number of select list items, and realloc in the event the number exceeds. Suggest say 2000 items. 
 					|    -- problem with that is that the sExprs can be arbitrarily complex...how deep to pre-allocate them?
 					|----------------------*/
-					  
+			
+					/* idea
+						use the makenode() functions as constructors, 	
+						replace explicit calls to malloc() here with something like "addnode()" 
+						which handles all the allocation, does pre-allocation for performance, etc
+					*/
+		  
 					} 
 ;
 
@@ -417,7 +430,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = ADDITION;	
+				  $$->value.value.oper_val = _ADD;	
 				}		|
 				
 	scalar_expr MUL scalar_expr 		
@@ -426,7 +439,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = MULTIPLICATION;	
+				  $$->value.value.oper_val = _MUL;	
 			
 				}		|
 	
@@ -436,7 +449,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = DIVISION;	
+				  $$->value.value.oper_val = _DIV;	
 			
 				}		|
 
@@ -446,7 +459,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = MODULO;	
+				  $$->value.value.oper_val = _MOD;	
 			
 				}		|
 
@@ -456,7 +469,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = BOOLAND;	
+				  $$->value.value.oper_val = _AND;	
 			
 				}		|
 
@@ -466,7 +479,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = BOOLOR;	
+				  $$->value.value.oper_val = _OR;	
 			
 				}		|
 
@@ -476,7 +489,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = EQUAL ;	
+				  $$->value.value.oper_val = _EQ ;	
 			
 				}		|
 
@@ -486,7 +499,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = NOTEQUAL;	
+				  $$->value.value.oper_val = _NE;	
 			
 				}		|
 
@@ -496,7 +509,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = GREATERTHAN;	
+				  $$->value.value.oper_val = _GT;	
 			
 				}		|
 
@@ -506,7 +519,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = LESSTHAN;	
+				  $$->value.value.oper_val = _LT;	
 			
 				}		|
 
@@ -516,7 +529,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = GREATERTHANOE;	
+				  $$->value.value.oper_val = _GTE;	
 			
 				}		|
 	scalar_expr LE scalar_expr 	
@@ -525,7 +538,7 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = LESSTHANOE;	
+				  $$->value.value.oper_val = _LTE;	
 			
 				}		|
 
@@ -535,7 +548,23 @@ scalar_expr:
 				  $$->left = $1;
 				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = SUBTRACTION;	
+				  $$->value.value.oper_val = _SUB;	
+				}		|
+	scalar_expr IN LPAREN in_list RPAREN
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $4;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = _IN;	
+				}		|	
+	scalar_expr NOT IN LPAREN in_list RPAREN
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $5;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = _NOT_IN;	
 				}		
 ;
 
@@ -574,6 +603,39 @@ colref:
 		$$=MAKENODE(colRef);
 		$$->colName = $3;
 		$$->colReference = $1; 
+	}
+;
+
+/* Cheating slightly, we treat the in_list as a specialised s_expression
+	It seems to make more sense to do this than to make the in_list a value
+	expression itself in the grammar, even though we store the in_list data
+	in a C valueExprNode
+
+	IN-list can be a list of literal items, or a query expression
+ */
+
+in_list:
+	scalar_expr {
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = NULL;
+				  $$->right = NULL;
+				  $$->value.type = IN_LIST;
+				  $$->value.value.in_list_val = MAKENODE(inListNode);
+				  $$->value.value.in_list_val->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this;
+
+				/* all the below messing around with long struct references are silly,
+				   should all be replaced with some getter/setter function
+				   or encapsulated "nodeadd()"  */
+			
+			 	debug("First Scalar expr in IN list!");
+				$$->value.value.in_list_val->nElements = 1; 
+				*($$->value.value.in_list_val->sItems) = $1;
+				
+		} |
+	in_list COMMA scalar_expr {
+				debug("IN list recursive scalar expr!");
+				*($$->value.value.in_list_val->sItems + ($$->value.value.in_list_val->nElements)) = $3; //remove redundant parentheses
+				$$->value.value.in_list_val->nElements++;
 	}
 ;
 

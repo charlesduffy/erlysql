@@ -1,3 +1,4 @@
+select a+1  from A , B where a in (1,2,3,4);
 --SQL Test source file
 select a+1 from a, b where ( a + 1 ) > ( c + 1) / d;
 select foo , baz , (1+a) from bar , bat , boo where baz < 1;

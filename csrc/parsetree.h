@@ -3,14 +3,22 @@
 
 /* Helper Enums for parse nodes */
 
-typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD } valueExprType;
+typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST } valueExprType;
 
-typedef enum { DIVISION, MULTIPLICATION, ADDITION, SUBTRACTION, MODULO,
-    GREATERTHAN, LESSTHAN, GREATERTHANOE, LESSTHANOE, BOOLOR, BOOLAND, BOOLNOT,
-    EQUAL, NOTEQUAL } operVal;
+typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN } operVal;
 
 /* operator symbols */
 extern char *operSyms[];
+
+typedef struct s_expr scalarExpr;
+/*
+	IN list node
+*/
+
+typedef struct {
+  int nElements;
+  scalarExpr **sItems;
+} inListNode;
 
 /* column reference */
 
@@ -22,11 +30,12 @@ typedef struct {
 /* value expression */
 
 typedef union {
-  colRef *column_val;
+  colRef *column_val;  //consider static allocation
   int integer_val;
   char *text_val;
   double numeric_val;
   operVal oper_val;
+  inListNode *in_list_val;
 } valueExpr;
 
 /* Parse Nodes */
@@ -65,6 +74,7 @@ typedef struct {
   int nElements;
   selectListItemNode **sItems;
 } selectListNode;
+
 
 /*	
 	Table reference node 
