@@ -41,3 +41,6 @@ select a , b , c  from A,B,C order by a , b , c;
 select a , b , c  from A,B,C order by a asc , b  , c;
 select a , b , c  from A,B,C order by a desc, b asc , c desc;
 --EXPLICIT JOIN
+---MALFORMED WHERE
+select a, b, c from A,B,C where a + 1 - 1 and - 1 or - and + ;
+select 1 , 2 , 4 and 1 from A; 
