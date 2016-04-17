@@ -3,14 +3,26 @@
 
 /* Helper Enums for parse nodes */
 
-typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST } valueExprType;
+typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
 
-typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN } operVal;
+typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
+		_BETWEEN, _NOT_BETWEEN } operVal;
 
 /* operator symbols */
 extern char *operSyms[];
 
 typedef struct s_expr scalarExpr;
+
+/*
+	BETWEEN predicate node
+
+*/
+
+typedef struct {
+	scalarExpr *rangeStart;
+	scalarExpr *rangeEnd;
+} betweenPredNode;
+
 /*
 	IN list node
 */
@@ -36,6 +48,7 @@ typedef union {
   double numeric_val;
   operVal oper_val;
   inListNode *in_list_val;
+  betweenPredNode *between_pred_val;
 } valueExpr;
 
 /* Parse Nodes */

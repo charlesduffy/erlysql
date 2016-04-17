@@ -7,10 +7,6 @@
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
-#define MAKESCALAR(optype) \
-		$$ = MAKENODE(scalarExpr);\
-		$$->value = 
-
 typedef void *yyscan_t;
 
 }
@@ -104,6 +100,7 @@ typedef void *yyscan_t;
 %right		EQ
 %nonassoc	LT GT
 %nonassoc	LE GE
+%nonassoc 	BETWEEN
 %left           ADD SUB
 %left           MUL DIV MOD
 %left           EXP
@@ -136,7 +133,8 @@ typedef void *yyscan_t;
 %type   <createTableRef>	ddl_table_ref
 %type 	<createTableStmt>	create_table_stmt
 %type 	<dropTableStmt>		drop_table_stmt
-%type	<sExpr>			in_list
+%type	<sExpr>			in_predicate
+%type	<sExpr>			between_predicate
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -556,7 +554,7 @@ scalar_expr:
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _SUB;	
 				}		|
-	scalar_expr IN LPAREN in_list RPAREN
+	scalar_expr IN LPAREN in_predicate RPAREN
 				{
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
@@ -564,13 +562,29 @@ scalar_expr:
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _IN;	
 				}		|	
-	scalar_expr NOT IN LPAREN in_list RPAREN
+	scalar_expr NOT IN LPAREN in_predicate RPAREN
 				{
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $5;
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _NOT_IN;	
+				}		|	
+	scalar_expr BETWEEN between_predicate
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $3;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = _BETWEEN;	
+				}		|	
+	scalar_expr NOT BETWEEN between_predicate
+				{
+				  $$ = MAKENODE(scalarExpr);
+				  $$->left = $1;
+				  $$->right = $4;
+				  $$->value.type = OPER;
+				  $$->value.value.oper_val = _NOT_BETWEEN;	
 				}		
 ;
 
@@ -612,22 +626,23 @@ colref:
 	}
 ;
 
-/* Cheating slightly, we treat the in_list as a specialised s_expression
-	It seems to make more sense to do this than to make the in_list a value
-	expression itself in the grammar, even though we store the in_list data
+/* Cheating slightly, we treat the in_predicate as a specialised s_expression
+	It seems to make more sense to do this than to make the in_predicate a value
+	expression itself in the grammar, even though we store the in_predicate data
 	in a C valueExprNode
 
 	IN-list can be a list of literal items, or a query expression
  */
 
-in_list:
+in_predicate:
 	scalar_expr {
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = NULL;
 				  $$->right = NULL;
 				  $$->value.type = IN_LIST;
 				  $$->value.value.in_list_val = MAKENODE(inListNode);
-				  $$->value.value.in_list_val->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this;
+				  $$->value.value.in_list_val->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); 
+					//TEMP fixed size of 20 here, to debug issues with this;
 
 				/* all the below messing around with long struct references are silly,
 				   should all be replaced with some getter/setter function
@@ -638,12 +653,23 @@ in_list:
 				*($$->value.value.in_list_val->sItems) = $1;
 				
 		} |
-	in_list COMMA scalar_expr {
+	in_predicate COMMA scalar_expr {
 				debug("IN list recursive scalar expr!");
 				*($$->value.value.in_list_val->sItems + ($$->value.value.in_list_val->nElements)) = $3; //remove redundant parentheses
 				$$->value.value.in_list_val->nElements++;
 	}
 ;
+
+between_predicate:
+	scalar_expr AND scalar_expr {
+				$$ = MAKENODE(scalarExpr);
+				$$->left = NULL;
+				$$->right = NULL;	
+				$$->value.type = BETWEEN_PREDICATE;
+				$$->value.value.between_pred_val = MAKENODE(betweenPredNode);
+				$$->value.value.between_pred_val->rangeStart = $1;
+				$$->value.value.between_pred_val->rangeEnd = $3;
+};
 
 /* Data definition language commands */
 

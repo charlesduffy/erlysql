@@ -52,6 +52,7 @@ lead_ident [a-zA-Z_]
 (?i:and)		{ return AND; }
 (?i:or)			{ return OR; }
 (?i:in)			{ return IN; }
+(?i:between)		{ return BETWEEN; }
 (?i:not)		{ return NOT; }
 (?i:sum)		{ return SUM; }
 (?i:count)		{ return COUNT; }
