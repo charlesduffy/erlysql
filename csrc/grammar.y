@@ -2,11 +2,35 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include "parsetree.h"
 #include "dbglog.h"
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
+#define add_list_item(nodetype,node,item) {                                                     		\
+      listInfoBlock list = (node)->listInfo;                                                      		\
+      nodetype **resizePtr;                                                                     		\
+        size_t nodeAllocSize = (size_t) sizeof(nodetype *) * nodetype##_allocnmemb;             		\
+          if (list.nElements == 0) {                                                           			\
+                node->sItems = malloc(nodeAllocSize);                                           		\
+                if (node->sItems == NULL) yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item"));   \
+                list.nElements = 1;                                                            			\
+          } else if (list.nElements > 0) { 									\
+		 if (list.nElements % nodetype##_allocnmemb == 0) {                                             \
+                 resizePtr = realloc(node->sItems, list.currentSize + nodeAllocSize);           		\
+                 if (resizePtr == NULL) {                                                        		\
+                 	yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item")); 			\
+                 } else {                                                                        		\
+                         list.currentSize = list.currentSize + nodeAllocSize;                  			\
+                         node->sItems = resizePtr;                                               		\
+                 }   												\
+	      }                                                                            			\
+          }                                                                                     		\
+          *(node->sItems + list.nElements) = item;                                             			\
+          list.nElements++;                                                                    			\
+}
+ 
 typedef void *yyscan_t;
 
 }
@@ -224,13 +248,13 @@ insert_statement:
 column_list:
 	IDENTIFIER {
 		$$ = MAKENODE(insertColListNode);
-		$$->cItems = malloc ((size_t) sizeof (insertColListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		$$->sItems = malloc ((size_t) sizeof (insertColListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 		$$->nElements = 1;
-		*($$->cItems) = $1;
+		*($$->sItems) = $1;
 	} 
 	|
 	column_list COMMA IDENTIFIER {
-		*($$->cItems + ($$->nElements)) = $3; //remove redundant parentheses
+		*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
 		$$->nElements++;
 	}
 ;	
@@ -240,13 +264,13 @@ column_list:
 insert_value_list:
 	scalar_expr { 
 		$$ = MAKENODE(insertValListNode);
-		$$->vItems = malloc ((size_t) sizeof (insertValListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		$$->sItems = malloc ((size_t) sizeof (insertValListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
 		$$->nElements = 1;
-		*($$->vItems) = $1;
+		*($$->sItems) = $1;
 	}	
 	|		
 	insert_value_list COMMA scalar_expr {	
-		*($$->vItems + ($$->nElements)) = $3; //remove redundant parentheses
+		*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
 		$$->nElements++;
 	}
 ;
@@ -266,18 +290,28 @@ select_list:
 				
 				//Consider hiding this preallocation code in selectListNode's constructor function
 		 		$$ = MAKENODE(selectListNode);
-		 		$$->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this
-
+		 		//$$->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this
+			
+				$$->listInfo.nElements = 0; //temporary until proper constructor code is written		
+	
 			 	debug("First Scalar expr in select list!");
-				$$->nElements = 1;
-				*($$->sItems) = $1;
+				//$$->nElements = 1;
+				//*($$->sItems) = $1;
+				int x;
+				add_list_item(selectListItemNode, $$, $1 );
 				
 			  }
 			  |
 	select_list COMMA select_list_item { 
 				debug("recursive scalar expr!");
-				*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
-				$$->nElements++;
+				//*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
+				//$$->nElements++;
+				add_list_item(selectListItemNode , $$ , $3 );
+
+				//proposed call structure:
+				// add_list_item( <base pointer> , <type> , <item pointer> )
+				//
+				// add_list_item( $$ , selectListItemNode , $3 );
 
 					/*----------------------
 					|  this all kind of sux, of course.
@@ -308,16 +342,13 @@ select_list_item:
 			$$->sExpr = $1;	
 			$$->hasAlias = 0;
 			$$->sAlias = NULL;
-			debug("select_list_item: no ALIAS reduced\n");
-		    }
-		    |
+		    }	 |
 	MUL	    {
 			$$ = MAKENODE(selectListItemNode);
 			$$->isWildcard = 1;
 			$$->hasAlias = 0;
 			$$->sAlias = NULL;
-		    }
-		    |
+		    }	 |
 	scalar_expr AS IDENTIFIER {
 		   	 
 			$$ = MAKENODE(selectListItemNode);
@@ -325,7 +356,6 @@ select_list_item:
 			$$->sExpr = $1;
 			$$->hasAlias = 1;
 			$$->sAlias = $3;
-			debug("ALIAS in select list item: %s ", $3);
 		}
 ;
 

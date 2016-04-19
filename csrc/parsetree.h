@@ -1,6 +1,10 @@
 #ifndef _PARSETREE_H
 #define _PARSETREE_H
 
+/* Default list node allocation chunk sizes */
+#define selectListItemNode_allocnmemb 20
+
+
 /* Helper Enums for parse nodes */
 
 typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
@@ -8,10 +12,18 @@ typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST
 typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
 		_BETWEEN, _NOT_BETWEEN } operVal;
 
+/* list node information block */
+
+struct list_info_block {
+	int nElements;
+	unsigned long currentSize;	
+};
+
 /* operator symbols */
 extern char *operSyms[];
 
 typedef struct s_expr scalarExpr;
+typedef struct list_info_block listInfoBlock;
 
 /*
 	BETWEEN predicate node
@@ -29,6 +41,7 @@ typedef struct {
 
 typedef struct {
   int nElements;
+  listInfoBlock listInfo;
   scalarExpr **sItems;
 } inListNode;
 
@@ -68,6 +81,7 @@ struct s_expr {
   scalarExpr *right;
 };
 
+
 /*
 	Select list item node
 */
@@ -85,6 +99,7 @@ typedef struct {
 
 typedef struct {
   int nElements;
+  listInfoBlock listInfo; 
   selectListItemNode **sItems;
 } selectListNode;
 
@@ -104,6 +119,7 @@ typedef struct {
 
 typedef struct {
   int nElements;
+  listInfoBlock listInfo;
   tableRefNode **tables;
 } tableRefListNode;
 
@@ -189,6 +205,7 @@ typedef struct {
 typedef struct {
 	columnDefNode **colDef;	
 	int nElements;
+  	listInfoBlock listInfo;
 } columnDefListNode;
 
 /* CREATE TABLE node */
@@ -210,12 +227,14 @@ typedef struct {
 
 typedef struct _insertColListNode {
 	int nElements;
-	char **cItems;		
+  	listInfoBlock listInfo;
+	char **sItems;		
 } insertColListNode;
 
 typedef struct _insertValListNode {
 	int nElements;
-	scalarExpr **vItems;	
+	listInfoBlock listInfo;
+	scalarExpr **sItems;	
 } insertValListNode;
 
 typedef struct _insertStmtNode {

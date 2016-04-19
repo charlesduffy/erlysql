@@ -57,6 +57,8 @@ my $Preamble1 = << "PREAMBLE1";
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>    
+#include <stddef.h>
+#include <stdlib.h>
 
 YY_BUFFER_STATE buf1, buf2;
 queryNode *qry1;

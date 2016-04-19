@@ -1,6 +1,8 @@
 --BETWEEN predicates
 select a+1 , b-2 from A , B where a between 1 and 5;
 select a+1 , b-2 from A , B where a between 1-b and b+5-c;
+select a , b , c , d , e, f , g , h , i , j , k , l , m , n , o , p , q , r , s , t  from A , B where a between 1-b and b+5-c;
+select a , b , c , d , e, f , g , h , i , j , k , l , m , n , o , p , q , r , s , t , u, v, w, x, y , z from A , B where a between 1-b and b+5-c;
 select a+1 from A , B where a and -;
 select a+1  from A , B where a in (1,2,3,4);
 --SQL Test source file

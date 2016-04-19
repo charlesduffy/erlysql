@@ -91,7 +91,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   ERL_NIF_TERM nifItem, nifItem1;
   ERL_NIF_TERM nifMap;
 
-  debug("Select list: %d elements\n", sellist->nElements);
+  debug("Select list: %d elements\n", get_num_elements(sellist));
 
   /* 
      Construct select list element of Erlang parse tree
@@ -107,7 +107,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   nifSelectList = enif_make_list(env, (unsigned int) 0);
 
   //Replace all this with proper use of iterator functions
-  for (i = sellist->nElements - 1; i >= 0; i--) {
+  for (i = get_num_elements(sellist) - 1; i >= 0; i--) {
     sItem = *(sellist->sItems + i);
     nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
@@ -119,11 +119,12 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
   nifFromClause = enif_make_list(env, (unsigned int) 0);
 
-  debug("Decoding from clause, nElements: %d", fromclause->refList->nElements);
+//  debug("Decoding from clause, Elements: %d", fromclause->refList->nElements);
 
   tableRefNode *tref;
 
-  for (i = fromclause->refList->nElements - 1; i >= 0; i--) {
+//  for (i = fromclause->refList->nElements - 1; i >= 0; i--) {
+  for (i = get_num_elements(fromclause->refList) - 1; i >= 0; i--) {
 
     tref = *(tableRef + i);
 
