@@ -35,6 +35,7 @@ comma [,]
 lparen [(]
 rparen [)]
 point  [.]
+excl   [!]
 lead_ident [a-zA-Z_]
 
 %%
@@ -87,6 +88,8 @@ lead_ident [a-zA-Z_]
 {eq}			{ return EQ; }
 ({gt}{eq})		{ return GE; }
 ({lt}{eq})		{ return LE; }
+({excl}{eq})		{ return NE; }
+({lt}{gt})		{ return NE; }
 {semicolon}		{ return SEMICOLON; }
 {comma}			{ return COMMA; }
 {lparen}		{ return LPAREN; }

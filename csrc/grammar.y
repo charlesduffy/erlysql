@@ -9,11 +9,11 @@
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
 #define add_list_item(nodetype,node,item) {                                                     		\
-		 printf("adding list item\n");										\
+		 printf("adding list item\n");									\
       listInfoBlock list = (node)->listInfo;                                                      		\
       nodetype **resizePtr;                                                                     		\
         size_t nodeAllocSize = (size_t) sizeof(nodetype *) * nodetype##_allocnmemb;             		\
-		 printf("nElements is %d \n", list.nElements);										\
+		 printf("nElements is %d \n", list.nElements);							\
           if (list.nElements == 0) {                                                           			\
                 node->sItems = malloc(nodeAllocSize);                                           		\
                 if (node->sItems == NULL) yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item"));   \
@@ -83,7 +83,7 @@ typedef void *yyscan_t;
 
 	columnDefNode             *columnDef;
 	columnDefListNode         *columnDefList;
-	ddlTableRefNode        *createTableRef;
+	ddlTableRefNode        	  *createTableRef;
 	createTableStmtNode	  *createTableStmt;
 	dropTableStmtNode	  *dropTableStmt;
 	valueExprType		  dataType;
@@ -127,7 +127,7 @@ typedef void *yyscan_t;
 %right		EQ
 %nonassoc	LT GT
 %nonassoc	LE GE
-%nonassoc 	BETWEEN
+%right 		BETWEEN
 %left           ADD SUB
 %left           MUL DIV MOD
 %left           EXP
