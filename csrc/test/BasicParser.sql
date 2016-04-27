@@ -1,3 +1,6 @@
+---MALFORMED WHERE
+select a, b, c from A,B,C where a + 1 - 1 and - 1 or - and + ;
+select 1 , 2 , 4 and 1 from A; 
 --BETWEEN predicates
 select a+1 , b-2 from A , B where a between 1 and 5;
 select a+1 , b-2 from A , B where a between 1-b and b+5-c;
