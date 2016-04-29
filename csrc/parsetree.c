@@ -86,26 +86,38 @@ selectStmtNode * new_selectStmtNode ( selectStmtNode *node ) {
 
 // Destructor functions
 
-
 // Test functions
 
 bool sexpr_is_boolean( scalarExpr *sExpr) {
 
-if (sExpr->value.type == OPER)
-	if ( sExpr->value.value.oper_val == _AND ||
-	     sExpr->value.value.oper_val == _OR  ||
-	     sExpr->value.value.oper_val == _NOT ||
-	     sExpr->value.value.oper_val == _BETWEEN ||
-	     sExpr->value.value.oper_val == _NOT_BETWEEN ||
-	     sExpr->value.value.oper_val == _IN ||
-	     sExpr->value.value.oper_val == _NOT_IN ||
-	     sExpr->value.value.oper_val == _LT ||
-	     sExpr->value.value.oper_val == _GT ||
-	     sExpr->value.value.oper_val == _EQ ||
-	     sExpr->value.value.oper_val == _NE ||
-	     sExpr->value.value.oper_val == _GTE ||
-	     sExpr->value.value.oper_val == _LTE ) return (true);
-else return false;
+if (sExpr->value.type == OPER) {
+	 switch(sExpr->value.value.oper_val) {
+	     case   _AND:
+	     case   _OR:
+	     case   _NOT:
+	     case   _BETWEEN:
+	     case   _NOT_BETWEEN:
+	     case   _IN:
+	     case   _NOT_IN:
+	     case   _LT:
+	     case   _GT:
+	     case   _EQ:
+	     case   _NE:
+	     case   _GTE:
+	     case   _LTE: 
+		printf("Sexpr is BOOLEAN");
+		return (true);
+		break;
+	     default: 
+	
+		printf("Sexpr is NOT BOOLEAN");
+		return(false);
+	} 
+		printf("Sexpr is NOT BOOLEAN");
+}
+else  {
+	return false;
+}
 
 }
 
