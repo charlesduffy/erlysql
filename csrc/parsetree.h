@@ -4,6 +4,8 @@
 /* Default list node allocation chunk sizes */
 #define selectListItemNode_allocnmemb 20
 
+/* get number of elements in a list node */
+#define get_num_elements(node) node->listInfo.nElements
 
 /* Helper Enums for parse nodes */
 

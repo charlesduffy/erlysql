@@ -12,8 +12,6 @@
 /* get list sizes */
 
 
-/* get number of elements in a list node */
-#define get_num_elements(node) (node->listInfo->nElements)
 
 /* new macro 
 

@@ -605,14 +605,54 @@ scalar_expr:
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _NOT_IN;	
 				}		|	
-	scalar_expr BETWEEN between_predicate
+	scalar_expr BETWEEN scalar_expr AND scalar_expr
 				{
+				/*
+				   This action rewrites the BETWEEN construct as a boolean
+				   expression. 
+
+				   A BETWEEN R1 AND R2 
+
+				   becomes
+
+				   (A >= R1) AND (A <= R2)
+
+				 */
+			
+
+				/* We can also consider replacing this with a construct like:
+			
+				scalar_expr BETWEEN scalar_expr
+
+				checking in the action that the $3 scalar_expr is an operator
+				node with the value AND (in a similar manner to the way the 
+				check for boolean value for the WHERE clause predicate works.)
+
+				This might need some fancy mid rule action or token pushback in the
+				normal AND rule.
+
+				*/
+	
 				  debug("BETWEEN statement found");
 				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
 				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _BETWEEN;	
+				  $$->value.value.oper_val = _AND;	
+
+				  $$->left = MAKENODE(scalarExpr);
+				  $$->left->value.type = OPER;
+				  $$->left->value.value.oper_val = _GTE;
+
+				  $$->left->left = $1;
+				  $$->left->right = $3;
+
+				  $$->right = MAKENODE(scalarExpr);
+				  $$->right->value.type = OPER;
+				  $$->right->value.value.oper_val = _LTE;
+	
+				  $$->right->left = $1; //Are actions repeated when $1 is referred to again?
+				  $$->right->left = $5;  
+				  	
+
 				}		|	
 	scalar_expr NOT BETWEEN between_predicate
 				{
