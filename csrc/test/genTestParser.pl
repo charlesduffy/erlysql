@@ -24,8 +24,10 @@ TESTRUNNER
   my $testDfn = << "TESTDFN";
     TEST(basicParser, $bpTest)
     {
+
         char result;
         char * queryText1 = "$SqlStmt";	
+	printf( "TEST# $bpTest : '$SqlStmt' ");
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
         result = qry1->errFlag;
@@ -59,6 +61,7 @@ my $Preamble1 = << "PREAMBLE1";
 #include <malloc.h>    
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 YY_BUFFER_STATE buf1, buf2;
 queryNode *qry1;
