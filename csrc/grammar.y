@@ -3,24 +3,22 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include "parsetree.h"
 #include "dbglog.h"
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
 #define add_list_item(nodetype,node,item) {                                                     		\
-		 printf("adding list item\n");									\
       listInfoBlock list = (node)->listInfo;                                                      		\
       nodetype **resizePtr;                                                                     		\
         size_t nodeAllocSize = (size_t) sizeof(nodetype *) * nodetype##_allocnmemb;             		\
-		 printf("nElements is %d \n", list.nElements);							\
           if (list.nElements == 0) {                                                           			\
                 node->sItems = malloc(nodeAllocSize);                                           		\
                 if (node->sItems == NULL) yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item"));   \
                 list.nElements = 1;                                                            			\
           } else if (list.nElements > 0) { 									\
 		 if (list.nElements % nodetype##_allocnmemb == 0) {                                             \
-		 printf("REALLOC\n");										\
                  resizePtr = realloc(node->sItems, list.currentSize + nodeAllocSize);           		\
                  if (resizePtr == NULL) {                                                        		\
                  	yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item")); 			\
@@ -127,7 +125,7 @@ typedef void *yyscan_t;
 %right		EQ
 %nonassoc	LT GT
 %nonassoc	LE GE
-%right 		BETWEEN
+%right		BETWEEN
 %left           ADD SUB
 %left           MUL DIV MOD
 %left           EXP
@@ -377,10 +375,11 @@ where_clause:
 			
 			TODO: investigate better ways of enforcing this
 		*/
-				if ( sexpr_is_boolean($2) ) {
+				if ( sexpr_is_boolean($2) == true ) {
 				$$ = MAKENODE(whereClauseNode);
 				$$->expr = $2;
 				} else {
+					printf("Can't supply non-boolean value to WHERE");
 					YYERROR;
 				}
 			}
@@ -457,7 +456,7 @@ scalar_expr:
 		      $$->left = NULL;
 		      $$->right = NULL;
 		    }
-	        	|
+	        |
 	LPAREN scalar_expr RPAREN
 				{ 
 				  $$ = MAKENODE(scalarExpr);
@@ -608,6 +607,7 @@ scalar_expr:
 				}		|	
 	scalar_expr BETWEEN between_predicate
 				{
+				  debug("BETWEEN statement found");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->left = $1;
 				  $$->right = $3;
