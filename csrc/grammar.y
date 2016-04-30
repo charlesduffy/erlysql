@@ -16,7 +16,6 @@
           if (list.nElements == 0) {                                                           			\
                 node->sItems = malloc(nodeAllocSize);                                           		\
                 if (node->sItems == NULL) yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item"));   \
-                list.nElements = 1;                                                            			\
           } else if (list.nElements > 0) { 									\
 		 if (list.nElements % nodetype##_allocnmemb == 0) {                                             \
                  resizePtr = realloc(node->sItems, list.currentSize + nodeAllocSize);           		\
@@ -416,14 +415,16 @@ table_ref:
 table_ref_list:
 	table_ref {
 			$$ = MAKENODE(tableRefListNode);
+			$$->nElements = 1;
+			$$->listInfo.nElements = 1;
 			$$->tables =  malloc ( sizeof(tableRefNode) * 20); //TEMPORARY! FIX ASAP. 
 			*($$->tables) = $1;
-			$$->nElements = 1;
 		  }
 		  |
 	table_ref_list COMMA table_ref {
 			*($$->tables + ($$->nElements)) = $3;			
 			$$->nElements++;
+			$$->listInfo.nElements++;
 	}
 ;
 

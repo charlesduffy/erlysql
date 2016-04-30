@@ -100,14 +100,16 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   int i;
   scalarExpr *sExpr;
   selectListItemNode *sItem;
+int k = sellist->listInfo.nElements;
 
      //Iterate over SELECT list items in QueryNode and push them on to 
      //an Erlang list as S-expressions constructed from Erlang tuples
 
   nifSelectList = enif_make_list(env, (unsigned int) 0);
-
+ 
   //Replace all this with proper use of iterator functions
-  for (i = get_num_elements(sellist) - 1; i >= 0; i--) {
+  //for (i = get_num_elements(sellist) - 1; i >= 0; i--) {
+  for (i = k - 1; i >= 0; i--) {
     sItem = *(sellist->sItems + i);
     nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
