@@ -651,7 +651,7 @@ scalar_expr:
 				  $$->right->value.value.oper_val = _LTE;
 	
 				  $$->right->left = $1; //Are actions repeated when $1 is referred to again?
-				  $$->right->left = $5;  
+				  $$->right->right = $5;  
 				  	
 
 				}		|	
