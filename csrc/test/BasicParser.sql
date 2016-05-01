@@ -50,6 +50,7 @@ select a , b , c  from A,B,C order by a , b , c;
 select a , b , c  from A,B,C order by a asc , b  , c;
 select a , b , c  from A,B,C order by a desc, b asc , c desc;
 --EXPLICIT JOIN
----MALFORMED WHERE
-select a, b, c from A,B,C where a + 1 - 1 and - 1 or - and + ;
 select 1 , 2 , 4 and 1 from A; 
+--TPC-H TEST QUERY
+select a as revenue from A where a = 'Bran' and pbr = 1 or pbr = 2 and ppartkey = lpartkey and pbrand = 'Bran13';
+-- and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l_quantity >= 2 and l_quantity <= 2 + 10 and p_size between 1 and 5 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON' or ( p_partkey = l_partkey and p_brand = 'Brand#53' and p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') and l_quantity >= 11 and l_quantity <= 11 + 10 and p_size between 1 and 10 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON') or ( p_partkey = l_partkey and p_brand = 'Brand#51' and p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') and l_quantity >= 30 and l_quantity <= 30 + 10 and p_size between 1 and 15 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON');
