@@ -9,7 +9,7 @@
 
 /* Helper Enums for parse nodes */
 
-typedef enum { UNDEFINED, COLREF, INT, NUM, TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
+typedef enum { UNDEFINED, COLREF, INT, NUM, _TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
 
 typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
 		_BETWEEN, _NOT_BETWEEN } operVal;

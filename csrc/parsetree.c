@@ -103,15 +103,11 @@ if (sExpr->value.type == OPER) {
 	     case   _NE:
 	     case   _GTE:
 	     case   _LTE: 
-		printf("Sexpr is BOOLEAN");
 		return (true);
 		break;
 	     default: 
-	
-		printf("Sexpr is NOT BOOLEAN");
 		return(false);
 	} 
-		printf("Sexpr is NOT BOOLEAN");
 }
 else  {
 	return false;

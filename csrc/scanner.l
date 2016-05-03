@@ -6,6 +6,10 @@
 		       yylloc->first_column = yylloc->last_column; \
 		       yylloc->last_column++;
 		       
+#define MAX_STRING_BUFFER 1024
+
+char stringBuffer[MAX_STRING_BUFFER];
+char *strBuf;
 
 %}
 
@@ -15,6 +19,8 @@
 %option bison-bridge
 %option bison-locations
 %option yylineno
+
+%x string
 
 space	[\t ]
 newline [\r\n]
@@ -61,23 +67,35 @@ lead_ident [a-zA-Z_]
 (?i:into)		{ return INTO; }
 (?i:as)			{ return AS; }
 (?i:table)		{ return TABLE; }
+(?i:with)		{ return WITH; }
 
-(?i:int)		{ return INTEGER; }
-(?i:integer)		{ return INTEGER; }
-(?i:text)		{ return CHAR; }
+
+(?i:int)		{ return INT4; }
+(?i:integer)		{ return INT4; }
+(?i:bigint)		{ return INT8; }
+(?i:smallint)		{ return INT2; }
+
 (?i:numeric)		{ return NUMERIC; }
+(?i:decimal)		{ return NUMERIC; }
+
+(?i:real)		{ return REAL; }
+(?i:double)		{ return DOUBLE; }
+(?i:precision)		{ return PRECISION; }
+(?i:float)		{ return FLOAT; }
+
+(?i:text)		{ return TEXT; }
+(?i:char)		{ return CHAR; }
+(?i:varchar)		{ return VARCHAR; }
+
+(?i:bit)		{ return BIT; }
+
+(?i:date)		{ return DATE; }
+(?i:time)		{ return TIME; }
+(?i:timestamp)		{ return TIMESTAMP; }
+(?i:zone)		{ return ZONE; }
+(?i:interval)		{ return INTERVAL; }
 
 {space}+ 		{ } 
-
-({lead_ident}{alphanum}*) { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
-({doublequote}{alphanum}+{doublequote})     { yylval->text_val = strdup(yytext); return IDENTIFIER;}  
-
-{quote}  		{ return QUOTE;}
-({quote}{alpha}+{quote}) { return STRING; }
-
-{newline} 		{ return NEWLINE;}
-{digit}+ 		{ yylval->integer_val = atoi(yytext); return INT_LIT; } 
-({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUM_LIT; }		
 
 {add}			{ return ADD; } /* operators */
 {sub}			{ return SUB; }
@@ -96,4 +114,38 @@ lead_ident [a-zA-Z_]
 {rparen}		{ return RPAREN; }
 {point}			{ return POINT; }
 
+({lead_ident}{alphanum}*) { yylval->text_val = strdup(yytext); return IDENTIFIER;}  /* Identifiers must start with a letter, improve defn. Refactor memory handling */
+({doublequote}{alphanum}+{doublequote})     { yylval->text_val = strdup(yytext); return IDENTIFIER;}  
+
+{quote}			{
+				/* 
+					Entering string state from INITIAL 
+					
+					For the time being, we have only very basic string literal 
+					handling. This needs to be extended to include embedded escapes
+					and concatenated quoted strings per the SQL standard (and many 
+					other things.)
+				*/
+					strBuf = stringBuffer;
+					BEGIN(string);
+				
+			}
+
+<string>{quote}		{	/* end of string */
+				BEGIN(INITIAL);
+				*strBuf = '\0';
+				yylval->text_val = stringBuffer;
+				return STRING;
+			}	
+		
+
+<string>[\n^*]*		{
+					char *text = yytext;
+                 			while ( *text ) *strBuf++ = *text++;	
+			}
+
+
+{newline} 		{ return NEWLINE;}
+{digit}+ 		{ yylval->integer_val = atoi(yytext); return INT_LIT; } 
+({digit}+\.{digit}+)  	{ yylval->float_val = atof(yytext); return NUM_LIT; }		
 %%

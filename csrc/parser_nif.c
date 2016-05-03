@@ -309,7 +309,7 @@ ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv * env, valueExprNode value)
       nodeVal = enif_make_double(env, v.numeric_val);
       nodeType = enif_make_atom(env, "int");
       break;
-    case TEXT:
+    case _TEXT:
       debug("add text to tuple...");
       nodeVal = enif_make_string(env, v.text_val, ERL_NIF_LATIN1);
       nodeType = enif_make_atom(env, "text");

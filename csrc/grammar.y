@@ -98,11 +98,13 @@ typedef void *yyscan_t;
 }
 
 /* SQL keywords */
-%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM COUNT SET INTO TABLE
+%token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM 
+%token <keyword> COUNT SET INTO TABLE WITH
 
 /* SQL Datatypes */
 
-%token <keyword> INTEGER BIGINT SMALLINT NUMERIC CHAR
+%token <keyword> INTEGER BIGINT SMALLINT INT2 INT4 INT8 NUMERIC REAL DOUBLE 
+%token <keyword> BIT DATE TIME TIMESTAMP ZONE INTERVAL PRECISION FLOAT TEXT CHAR VARCHAR
 
 /* Literal values */
 %token <integer_val> INT_LIT
@@ -682,7 +684,7 @@ value_expr:
 		}
 		|	
 	STRING  {
-		  $$.type = TEXT;
+		  $$.type = _TEXT;
 		  $$.value.text_val = $1;
 		}
 ;
@@ -790,7 +792,7 @@ data_type:
 		}
 		|
 	CHAR	{
-			$$ = TEXT;	
+			$$ = _TEXT;	
 		}
 ;
 
