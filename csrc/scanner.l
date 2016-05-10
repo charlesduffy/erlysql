@@ -127,6 +127,7 @@ lead_ident [a-zA-Z_]
 					other things.)
 				*/
 					strBuf = stringBuffer;
+					printf("Entering STRING state\n");
 					BEGIN(string);
 				
 			}
@@ -135,12 +136,14 @@ lead_ident [a-zA-Z_]
 				BEGIN(INITIAL);
 				*strBuf = '\0';
 				yylval->text_val = stringBuffer;
+				printf("Leaving STRING state: >%s<\n", stringBuffer);
 				return STRING;
 			}	
 		
 
-<string>[\n^*]*		{
+<string>{alphanum}*		{
 					char *text = yytext;
+					printf("Adding STRING data\n");
                  			while ( *text ) *strBuf++ = *text++;	
 			}
 
