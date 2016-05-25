@@ -65,6 +65,15 @@ tableRefNode ** get_table_list1 (selectStmtNode *selectStmt) {
 
 // Constructor functions
 
+multiQueryNode * new_multiQueryNode ( multiQueryNode *mnode) {
+//initialise multi query Node
+	
+	mnode->errFlag = 0;
+	mnode->nElements = 0;
+	return(mnode);
+	
+}
+
 queryNode * new_queryNode ( queryNode *node) {
 //initialise query Node
 	
@@ -132,20 +141,16 @@ might strip whitespace, find basic problems (corruption, too long, too short etc
 
 // parser entry point
 
-queryNode *parseQuery(char *queryText)
+multiQueryNode * parseQuery(char * queryText)
 {
   YY_BUFFER_STATE buf;
-//  queryNode *qry = malloc(sizeof(queryNode));
-  queryNode *qry = new(queryNode);
-
+  multiQueryNode *mqry = new(multiQueryNode);
   yyscan_t scanner;
-
   yylex_init(&scanner);
   buf = yy_scan_string(queryText, scanner);
-  yyparse(scanner, qry);
+  yyparse(scanner, mqry);
   yy_delete_buffer(buf, scanner);
   yylex_destroy(scanner);
-//    prettyPrintParseTree(qry);
-  return (qry);
+  return (mqry);
 }
 

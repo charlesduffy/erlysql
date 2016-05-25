@@ -1,17 +1,12 @@
-1. Parse tree heuristics
+steps in planning
 
+* get base relations
+ 	- identify filters for pushdown to planner scan nodes (get_subtrees)
+	- identify projections for each scan node
 
-* Obtain range table (list of relations to scan)
+* identify joins
 
-* For initial no-op planner: find feasible plan
+* identify output transforms
 
-====
-
-data structures
-
-plan node:
-	type: 	J join
-		F filter
-		T transform
 
 

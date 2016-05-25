@@ -9,6 +9,8 @@
 
 #define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
 
+#define new(nodetype) new_##nodetype ( ( nodetype * ) malloc ((size_t) sizeof(nodetype)))
+
 #define add_list_item(nodetype,node,item) {                                                     		\
       listInfoBlock list = (node)->listInfo;                                                      		\
       nodetype **resizePtr;                                                                     		\
@@ -40,7 +42,7 @@ typedef void *yyscan_t;
 
 %define api.pure full
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {queryNode * ptree}
+%parse-param {yyscan_t scanner} {multiQueryNode * ptree}
 
 %locations
 /* semantic value */
@@ -53,7 +55,9 @@ typedef void *yyscan_t;
 	char			*keyword;
 	char    		*identifier_val;
 
-	/* Query Node */
+
+	/* Query Nodes */
+	multiQueryNode		*mquery;
 	queryNode 		*query;
 
 	/* DML Nodes - SELECT */
@@ -89,9 +93,8 @@ typedef void *yyscan_t;
 
 %code{
 
-  void yyerror (YYLTYPE *l, yyscan_t scanner, queryNode *qry, char const *s) {
-       qry->selnode = NULL;
-       qry->errFlag = 1;
+  void yyerror (YYLTYPE *l, yyscan_t scanner, multiQueryNode *mqry, char const *s) {
+       mqry->errFlag = 1;
        fprintf (stderr, "ERROR: %s -- %d %d %d %d \n", s, l->first_line, l->first_column, l->last_line, l->last_column);  
   }
 
@@ -138,6 +141,7 @@ typedef void *yyscan_t;
 %left           POINT
 %left 		AS
 
+%type	<mquery>		sql
 %type	<query>			query_statement
 %type 	<selectStmt> 		select_statement
 %type 	<selectList> 		select_list
@@ -171,8 +175,14 @@ typedef void *yyscan_t;
 /* this node is a multi-statement submission delimited by semicolon */
 
 sql:
-	query_statement	SEMICOLON |
-	query_statement SEMICOLON query_statement
+	query_statement	SEMICOLON 
+				{
+				  $$ = ptree;
+				  $$->nElements = 1;
+				  add_list_item(queryNode, $$, $1 );
+				}
+	|
+	sql SEMICOLON query_statement SEMICOLON
 
 ;
 
@@ -181,28 +191,28 @@ sql:
 query_statement:
 	select_statement	
 			{ 
-			  $$ = ptree;
+			  $$ = MAKENODE(queryNode);
 			  $$->statType = SELECT_STMT;
 			  $$->selnode = $1;
 			} 
 			|
 	insert_statement	
 			{ 
-			  $$ = ptree;
+			  $$ = MAKENODE(queryNode);
 			  $$->statType = INSERT_STMT;
 			  $$->insnode = $1;
 			} 
 			|
 	create_table_stmt
 			{
-			  $$ = ptree;
+			  $$ = MAKENODE(queryNode);
 			  $$->statType = CREATE_TABLE_STMT;
 			  $$->crTabNode = $1;
 			}
 			|
 	drop_table_stmt
 			{
-			  $$ = ptree;
+			  $$ = MAKENODE(queryNode);
 			  $$->statType = DROP_TABLE_STMT;
 			  $$->drTabNode = $1;
 			}

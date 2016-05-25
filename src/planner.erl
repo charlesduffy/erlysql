@@ -204,31 +204,6 @@ plan_query(ParseTree) ->
 %% Target ID: target node for this node. 
 
 
-%% comments below deprecated
-
-%%       #{ id => int , module => atom (name of executor module) , target => id of node to deliver tuples to , 
-%%	    sourcelist => list (nodes delivering to this node. Review need for this). , 
-%%	    instruction => map (execution node instruction list)}
-%%	    
-%%	types of node instruction and structure
-
-%%	scan
-
-%%	#{ relname => text , projection => list (list of column names) , selection => sexpr ( predicate tree structure ) }
-
-%% 	sort
-
-%%	#{ key => list (list of projections to sort by) , collation => list (list of collations, one per projection) , algo => atom (algorithm)}
-
-%%	join
-
-%%	#{ key => list (list of projections to join on) , type => atom (join type) }
-
-%% 	aggregation
-
-%%	transform
-
-
 %%	Basic dumb planner algorithm for SELECT
 
 %%	Iterate through FROM clause list. 

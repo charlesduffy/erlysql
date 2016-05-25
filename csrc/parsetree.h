@@ -3,6 +3,7 @@
 
 /* Default list node allocation chunk sizes */
 #define selectListItemNode_allocnmemb 20
+#define queryNode_allocnmemb 5
 
 /* get number of elements in a list node */
 #define get_num_elements(node) node->listInfo.nElements
@@ -305,6 +306,19 @@ struct _queryNode {
     createTableStmtNode *crTabNode;
     dropTableStmtNode *drTabNode;
   };
+};
+
+/* Handle multiple-statement containing query string 
+	top level parser element
+*/
+
+typedef struct _multiQueryNode multiQueryNode;
+
+struct _multiQueryNode {
+	char errFlag;
+	listInfoBlock listInfo;
+	int nElements;
+	queryNode **sItems;	
 };
 
 #endif
