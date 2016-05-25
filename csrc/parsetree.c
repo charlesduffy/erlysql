@@ -9,38 +9,6 @@
 
 #define MAXBUFLEN 1024 //TODO get rid of this sort of thing
 
-/* get list sizes */
-
-
-
-/* new macro 
-
-* if 'hasconstr' is defined for the type, call the appropriate constructor fn
-* else, just call malloc() 
-
-* or, we use some sort of preprocessing macro system to scan the source file,
-  determine if constructors are defined for a given node type, 
-  and define the appropriate macro
-
-
-Can't put #ifdef inside a function-like macro, so thinking about this
-
-*/
-
-#define new(nodetype) new_##nodetype ( ( nodetype * ) malloc ((size_t) sizeof(nodetype)))
-
-
-/* constructor function declarations */
-
-queryNode * new_queryNode ( queryNode *); 
-		      
-/* TODO put these in a header file */
-
-selectListNode * get_select_list1 (selectStmtNode *);
-selectListNode * get_select_list0 (queryNode *);
-tableRefNode ** get_table_list1 (selectStmtNode *); 
-tableRefNode ** get_table_list0 (queryNode *); 
-
 // Accessor functions
 
 // TODO: consider dropping the below funcs / function-ptr concept
@@ -74,7 +42,7 @@ multiQueryNode * new_multiQueryNode ( multiQueryNode *mnode) {
 	
 }
 
-queryNode * new_queryNode ( queryNode *node) {
+queryNode * new_queryNode ( queryNode *node ) {
 //initialise query Node
 	
 	//initialse pointer-to-function
@@ -83,7 +51,6 @@ queryNode * new_queryNode ( queryNode *node) {
 	node->errNode = NULL;
 	node->errFlag = 0;
 	return(node);
-	
 }
 
 selectStmtNode * new_selectStmtNode ( selectStmtNode *node ) {

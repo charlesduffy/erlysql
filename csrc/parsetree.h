@@ -321,4 +321,16 @@ struct _multiQueryNode {
 	queryNode **sItems;	
 };
 
+/* Node constructor function prototypes */
+
+queryNode * new_queryNode ( queryNode * );
+multiQueryNode * new_multiQueryNode ( multiQueryNode *);
+
+/* Accessor function prototypes */
+
+selectListNode * get_select_list1 (selectStmtNode *);
+selectListNode * get_select_list0 (queryNode *);
+tableRefNode ** get_table_list1 (selectStmtNode *); 
+tableRefNode ** get_table_list0 (queryNode *); 
+
 #endif

@@ -7,9 +7,9 @@
 #include "parsetree.h"
 #include "dbglog.h"
 
-#define MAKENODE(nodetype) malloc ((size_t) sizeof( nodetype ))
+#define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
 
-#define new(nodetype) new_##nodetype ( ( nodetype * ) malloc ((size_t) sizeof(nodetype)))
+#define new(nodetype) new_##nodetype(malloc((size_t) sizeof( nodetype )))
 
 #define add_list_item(nodetype,node,item) {                                                     		\
       listInfoBlock list = (node)->listInfo;                                                      		\
@@ -198,21 +198,21 @@ query_statement:
 			|
 	insert_statement	
 			{ 
-			  $$ = MAKENODE(queryNode);
+			  $$ = new(queryNode);
 			  $$->statType = INSERT_STMT;
 			  $$->insnode = $1;
 			} 
 			|
 	create_table_stmt
 			{
-			  $$ = MAKENODE(queryNode);
+			  $$ = new(queryNode);
 			  $$->statType = CREATE_TABLE_STMT;
 			  $$->crTabNode = $1;
 			}
 			|
 	drop_table_stmt
 			{
-			  $$ = MAKENODE(queryNode);
+			  $$ = new(queryNode);
 			  $$->statType = DROP_TABLE_STMT;
 			  $$->drTabNode = $1;
 			}
