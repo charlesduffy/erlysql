@@ -7,12 +7,14 @@
 #include "parsetree.h"
 #include "dbglog.h"
 
+
+
 #define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
 
 #define new(nodetype) new_##nodetype(malloc((size_t) sizeof( nodetype )))
 
 #define add_list_item(nodetype,node,item) {                                                     		\
-      listInfoBlock list = (node)->listInfo;                                                      		\
+      listInfoBlock list = (node)->list;                                                      		\
       nodetype **resizePtr;                                                                     		\
         size_t nodeAllocSize = (size_t) sizeof(nodetype *) * nodetype##_allocnmemb;             		\
           if (list.nElements == 0) {                                                           			\
@@ -30,7 +32,7 @@
 	      }                                                                            			\
           }                                                                                     		\
           *(node->sItems + list.nElements) = item;                                             			\
-          (node)->listInfo.nElements++;       									\
+          (node)->list.nElements++;       									\
 }
  
 typedef void *yyscan_t;
@@ -297,14 +299,9 @@ SELECT STATEMENT
 
 select_list:
 	select_list_item {
-				//dangerous assumption here, that we can allocate the value of the select_list
-				//at the first instance of scalar_expr.
-				
-				//Consider hiding this preallocation code in selectListNode's constructor function
 		 		$$ = MAKENODE(selectListNode);
-		 		//$$->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); //TEMP fixed size of 20 here, to debug issues with this
 			
-				$$->listInfo.nElements = 0; //temporary until proper constructor code is written		
+				$$->list.nElements = 0; //temporary until proper constructor code is written		
 	
 			 	debug("First Scalar expr in select list!");
 				//$$->nElements = 1;
@@ -428,7 +425,7 @@ table_ref_list:
 	table_ref {
 			$$ = MAKENODE(tableRefListNode);
 			$$->nElements = 1;
-			$$->listInfo.nElements = 1;
+			$$->list.nElements = 1;
 			$$->tables =  malloc ( sizeof(tableRefNode) * 20); //TEMPORARY! FIX ASAP. 
 			*($$->tables) = $1;
 		  }
@@ -436,7 +433,7 @@ table_ref_list:
 	table_ref_list COMMA table_ref {
 			*($$->tables + ($$->nElements)) = $3;			
 			$$->nElements++;
-			$$->listInfo.nElements++;
+			$$->list.nElements++;
 	}
 ;
 

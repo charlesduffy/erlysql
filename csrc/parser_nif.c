@@ -10,7 +10,8 @@
 
 /* Node to Erlang NIF term converters */
 
-static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv *, queryNode *);
+static ERL_NIF_TERM mParseTreeToNifTerm(ErlNifEnv * , multiQueryNode * ); 
+static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv *, queryNode *);
 static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *, int);
 static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode);
 
@@ -21,7 +22,7 @@ char *operSyms[] = { "/", "*", "+", "-", "%", ">", "<", ">=", "<=", "OR", "AND",
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv *, int, const ERL_NIF_TERM[]);
 
-queryNode *parseQuery(char *queryText);
+multiQueryNode *parseQuery(char *queryText);
 
 static ErlNifFunc nif_funcs[] = {
   {"parseQuery", 1, parseQuery_nif}
@@ -33,7 +34,7 @@ ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
                                    const ERL_NIF_TERM argv[])
 {
-  queryNode *qryTree;
+  multiQueryNode *mParseTree;
   char queryText[MAXBUFLEN];
   ERL_NIF_TERM erlParseTree;
 
@@ -47,19 +48,19 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
     return enif_make_badarg(env);
   }
 
-  qryTree = parseQuery(queryText);
+  mParseTree = parseQuery(queryText);
 
   debug("returned from parseQuery");
 
 
   /* check for error cond */
 
-  if (qryTree->errFlag == 1) {
+  if (mParseTree->errFlag == 1) {
 	debug("parser returned error");
 	return(enif_make_atom(env, (const char *) "error"));
   }
 
-  erlParseTree = nodeToNifTerm(env, qryTree);
+  erlParseTree = mParseTreeToNifTerm(env, mParseTree);
 
   return (erlParseTree);
 }
@@ -71,7 +72,26 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 	TODO - document erlang term structure here
 */
 
-static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
+static ERL_NIF_TERM mParseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * mParseTree) 
+{
+
+  ERL_NIF_TERM nifItem, nifQueryList;
+  queryNode * query;
+
+  nifQueryList = enif_make_list(env, (unsigned int) 0);
+  
+  while ((query = mParseTree->list.next(mParseTree)) != NULL) {
+    nifItem = enif_make_tuple2 ( 
+				 env,
+				 enif_make_atom(env, (const char *) "query"), 
+				 queryNodeToNifTerm(env, query)
+				);
+    nifQueryList = enif_make_list_cell(env, nifItem, nifQueryList);
+  }
+  return(nifQueryList);
+}
+
+static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 {
 
  /* Declare pointers to QueryNode data structure elements */
@@ -100,7 +120,7 @@ static ERL_NIF_TERM nodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   int i;
   scalarExpr *sExpr;
   selectListItemNode *sItem;
-int k = sellist->listInfo.nElements;
+  int k = sellist->list.nElements;
 
      //Iterate over SELECT list items in QueryNode and push them on to 
      //an Erlang list as S-expressions constructed from Erlang tuples

@@ -64,14 +64,14 @@ my $Preamble1 = << "PREAMBLE1";
 #include <stdbool.h>
 
 YY_BUFFER_STATE buf1, buf2;
-queryNode *qry1;
+multiQueryNode *qry1;
 yyscan_t scanner1;
 
 TEST_GROUP(basicParser);
 
 TEST_SETUP(basicParser) {
 
-    qry1 = malloc(sizeof(queryNode));
+    qry1 = malloc(sizeof(multiQueryNode));
     qry1->errFlag = 0;
     yylex_init(&scanner1);
 }

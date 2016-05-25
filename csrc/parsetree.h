@@ -6,7 +6,7 @@
 #define queryNode_allocnmemb 5
 
 /* get number of elements in a list node */
-#define get_num_elements(node) node->listInfo.nElements
+#define get_num_elements(node) node->list.nElements
 
 /* Helper Enums for parse nodes */
 
@@ -17,16 +17,19 @@ typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _N
 
 /* list node information block */
 
+typedef struct list_info_block listInfoBlock;
+
 struct list_info_block {
 	int nElements;
-	unsigned long currentSize;	
+	unsigned long currentSize;
+	int index;
+	listInfoBlock *next;	
 };
 
 /* operator symbols */
 extern char *operSyms[];
 
 typedef struct s_expr scalarExpr;
-typedef struct list_info_block listInfoBlock;
 
 /*
 	BETWEEN predicate node
@@ -44,7 +47,7 @@ typedef struct {
 
 typedef struct {
   int nElements;
-  listInfoBlock listInfo;
+  listInfoBlock list;
   scalarExpr **sItems;
 } inListNode;
 
@@ -96,13 +99,18 @@ typedef struct {
   char *sAlias;
 } selectListItemNode;
 
+
+/*
+	Generic list node
+*/
+
 /*
 	Select list node
 */
 
 typedef struct {
   int nElements;
-  listInfoBlock listInfo; 
+  listInfoBlock list; 
   selectListItemNode **sItems;
 } selectListNode;
 
@@ -122,7 +130,7 @@ typedef struct {
 
 typedef struct {
   int nElements;
-  listInfoBlock listInfo;
+  listInfoBlock list;
   tableRefNode **tables;
 } tableRefListNode;
 
@@ -208,7 +216,7 @@ typedef struct {
 typedef struct {
 	columnDefNode **colDef;	
 	int nElements;
-  	listInfoBlock listInfo;
+  	listInfoBlock list;
 } columnDefListNode;
 
 /* CREATE TABLE node */
@@ -230,13 +238,13 @@ typedef struct {
 
 typedef struct _insertColListNode {
 	int nElements;
-  	listInfoBlock listInfo;
+  	listInfoBlock list;
 	char **sItems;		
 } insertColListNode;
 
 typedef struct _insertValListNode {
 	int nElements;
-	listInfoBlock listInfo;
+	listInfoBlock list;
 	scalarExpr **sItems;	
 } insertValListNode;
 
@@ -315,10 +323,11 @@ struct _queryNode {
 typedef struct _multiQueryNode multiQueryNode;
 
 struct _multiQueryNode {
+	listInfoBlock list;
 	char errFlag;
-	listInfoBlock listInfo;
 	int nElements;
 	queryNode **sItems;	
+	queryNode *sItem;
 };
 
 /* Node constructor function prototypes */
@@ -332,5 +341,17 @@ selectListNode * get_select_list1 (selectStmtNode *);
 selectListNode * get_select_list0 (queryNode *);
 tableRefNode ** get_table_list1 (selectStmtNode *); 
 tableRefNode ** get_table_list0 (queryNode *); 
+
+/* Iterator function prototypes */
+
+void * iter_next(void *);	
+void * iter_prev(void *);	
+void * iter_first(void *);	
+void * iter_last(void *);	
+void * iter_current(void *);	
+void * iter_inext(void *);	
+void * iter_iprev(void *);	
+void * iter_ifirst(void *);	
+void * iter_ilast(void *);	
 
 #endif

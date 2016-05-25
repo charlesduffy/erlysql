@@ -58,6 +58,14 @@ selectStmtNode * new_selectStmtNode ( selectStmtNode *node ) {
 	return(node);
 }
 
+listInfoBlock * new_listInfoBlock ( listInfoBlock *node ) {
+
+//initialise index
+	node->index = 0;
+	node->nElements = 0;
+	return(node);
+}
+
 // Destructor functions
 
 // Test functions
