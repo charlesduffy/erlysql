@@ -342,16 +342,4 @@ selectListNode * get_select_list0 (queryNode *);
 tableRefNode ** get_table_list1 (selectStmtNode *); 
 tableRefNode ** get_table_list0 (queryNode *); 
 
-/* Iterator function prototypes */
-
-void * iter_next(void *);	
-void * iter_prev(void *);	
-void * iter_first(void *);	
-void * iter_last(void *);	
-void * iter_current(void *);	
-void * iter_inext(void *);	
-void * iter_iprev(void *);	
-void * iter_ifirst(void *);	
-void * iter_ilast(void *);	
-
 #endif
