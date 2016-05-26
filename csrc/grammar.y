@@ -306,7 +306,7 @@ select_list:
 			 	debug("First Scalar expr in select list!");
 				//$$->nElements = 1;
 				//*($$->sItems) = $1;
-				int x;
+				
 				add_list_item(selectListItemNode, $$, $1 );
 				
 			  }
@@ -316,27 +316,8 @@ select_list:
 				//*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
 				//$$->nElements++;
 				add_list_item(selectListItemNode , $$ , $3 );
-
-				//proposed call structure:
-				// add_list_item( <base pointer> , <type> , <item pointer> )
-				//
-				// add_list_item( $$ , selectListItemNode , $3 );
-
-					/*----------------------
-					|  this all kind of sux, of course.
-					|  suggestions for replacement:
-					|  ^ use a linked list instead of **sExpr
-					|  ^ preallocate a large number of select list items, and realloc in the event the number exceeds. Suggest say 2000 items. 
-					|    -- problem with that is that the sExprs can be arbitrarily complex...how deep to pre-allocate them?
-					|----------------------*/
-			
-					/* idea
-						use the makenode() functions as constructors, 	
-						replace explicit calls to malloc() here with something like "addnode()" 
-						which handles all the allocation, does pre-allocation for performance, etc
-					*/
 		  
-					} 
+		     	} 
 ;
 
 
