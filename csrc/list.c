@@ -1,33 +1,36 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 #include <malloc.h>
 
 typedef struct _list dlist;
-typdef struct _list_info listInfo;
+typedef struct _list_info dlistInfo;
 
 struct _list {
-        listInfo *next;
+        dlist *next;
+	dlistInfo *info;
         unsigned int index;
 };
 
 struct _list_info {
 	unsigned int size;
+	unsigned int allocnmemb;
 	dlist *last;
 };
 
 typedef struct {
 
         dlist *list;
-        char data;
+        int data;
 
 } node1;
 
 
-
+#define LIST_TYPE_NAME dlist
+#define LIST_MEMB_NAME list
 #define ALIST_MEMB_OFFSET(T) (unsigned long)(&((T *)0)->LIST_MEMB_NAME)
 #define LIST_MEMB_OFFSET(T) offsetof(T,LIST_MEMB_NAME)
-#define get_dlist_cell(T, d, p) ((T *)((LIST_TYPE_NAME *) p - LIST_MEMB_OFFSET(T)))
-#define get_dlist_foreach(T, d, p) for(d=get_dlist_cell(T,d,p);p->next!=NULL;p=p->next,d=get_dlist_cell(T,d,p))
+#define get_dlist_cell(T, p) ((T *)((LIST_TYPE_NAME *) p - LIST_MEMB_OFFSET(T)))
+#define get_dlist_foreach(T, d, p) for(d=get_dlist_cell(T,p);p->next!=NULL;p=p->next,d=get_dlist_cell(T,p))
 
 #define new_full_dlist( T, L, d, p ) {                          \
 			int i;                                          \
@@ -59,6 +62,7 @@ typedef struct {
                  li = malloc((size_t) sizeof(dlistInfo));        \
                  li->allocnmemb = L;                             \
                  li->size = 0;                                   \
+		 li->last = p;					 \
                   for (i=0; i<L; i++) {                          \
                          P=(p+i);                                \
                          P->next = (i+1<=L ? (P+1) : NULL);      \
@@ -98,17 +102,14 @@ typedef struct {
          for ( x = 0; x<20; x++) {
                  node1 *tmp;
                  dlist *p;
-                 int size = get_list_size(mylist);
                  mynode2 = malloc((size_t) sizeof(node1));
                  mynode2->data = x;
-                 p = mylist->last;
+                 mynode2->list = get_list_last(mylist);
  //              append_list_cell( mylist , mynode2 );
-                 mynode2->list = p;
+                 
+                 tmp = get_dlist_cell(node1,mylist);
                  inc_list_size(mylist);
-
-
-                 tmp = get_dlist_cell(node1,tmp,p);
-                 printf("x is: %d list size is: %d node data via list is: %d \n", x, get_list_size(mylist),tmp->data);
+                 printf("x is:  list size is:  node data via list is: %d \n", tmp->data);
          }
 
  /*
