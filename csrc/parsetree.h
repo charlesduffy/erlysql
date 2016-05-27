@@ -1,6 +1,8 @@
 #ifndef _PARSETREE_H
 #define _PARSETREE_H
 
+#include "collections.h"
+
 /* Default list node allocation chunk sizes */
 #define selectListItemNode_allocnmemb 20
 #define queryNode_allocnmemb 5

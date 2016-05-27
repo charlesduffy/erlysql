@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "collections.h"
 #include "parsetree.h"
 #include "dbglog.h"
 
