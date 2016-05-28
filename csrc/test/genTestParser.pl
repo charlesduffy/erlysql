@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 my $SqlInputPath = "/home/ccd/xndb-micro/csrc/test/";
-my $SqlInputFileName = "$SqlInputPath/LimitedParser.sql";
+my $SqlInputFileName = "$SqlInputPath/BasicParser.sql";
 
 open (my $fileHandle, '<' ,  $SqlInputFileName ) or die "Can't open SQL datafile $SqlInputFileName \n";
 

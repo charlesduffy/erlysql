@@ -1,5 +1,6 @@
 select a, b, c from A;
 select a, b, c from A where a < 1;
+select a, b, c from A where a < 1 and b in (1,2,3,4,5);
 select a from A,B,C;
 select a+1 from A,B,C;
 select a+1, b from A,B,C;

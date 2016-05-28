@@ -109,8 +109,50 @@ static ERL_NIF_TERM parseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * parseTr
   return(nifQueryList);
 }
 
+//--fn(selectStmtNode)-> [ select stmt ]
+static ERL_NIF_TERM selectStmtNodeToNIFTerm(ErlNifEnv * env, selectStmtNode * node) {
+
+}
+
+//--fn(selectList) -> [ select list ]
+
+static ERL_NIF_TERM selectListNodeToNIFTerm(ErlNifEnv * env, selectListNode * node) {
+
+}
+
+//--fn(selectListItem) -> [ select list item ]
+static ERL_NIF_TERM selectListItemToNifTerm(ErlNifEnv * env, selectListItem * node) {
+
+}
+
+
+//--fn(fromClause) -> [ from clause list ]
+static ERL_NIF_TERM fromClauseNodeToNIFTerm(ErlNifEnv * env, fromClauseNode * node) {
+
+}
+
+//--fn(tableRefNode) -> [ table expr ]
+static ERL_NIF_TERM tableRefNodeToNIFTerm(ErlNifEnv * env, tableRefNode * node) {
+
+}
+
+
+//--fn(whereClauseNode) -> [ sexpr ]
+static ERL_NIF_TERM whereClauseNodeToNIFTerm(ErlNifEnv * env, whereClauseNode * node) {
+
+}
+
 static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 {
+
+    /*
+
+    - determine query type
+    - call appropriate statment type conv func
+
+
+    */
+
 
  /* Declare pointers to QueryNode data structure elements */
 
@@ -138,24 +180,6 @@ static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   int i;
   scalarExpr *sExpr;
   selectListItemNode *sItem;
-  //int k = selectList->list.nElements;
-
-     //Iterate over SELECT list items in QueryNode and push them on to 
-     //an Erlang list as S-expressions constructed from Erlang tuples
-
- 
-  //Replace all this with proper use of iterator functions
-  //for (i = get_num_elements(selectList) - 1; i >= 0; i--) {
-
-  /*
-
-  for (i = k - 1; i >= 0; i--) {
-    sItem = *(selectList->sItems + i);
-    nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
-    nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
-  }
-
-  */
 
   nifSelectList = enif_make_list(env, (unsigned int) 0);
   

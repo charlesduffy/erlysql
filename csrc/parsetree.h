@@ -124,18 +124,6 @@ typedef struct {
 } tableRefNode;
 
 /*
-	Table reference list node	
-*/
-
-/*
-typedef struct {
-  int nElements;
-  listInfoBlock list;
-  tableRefNode **tables;
-} tableRefListNode;
-//getting rid of , replace with llist
-*/
-/*
 	FROM clause node
 */
 
