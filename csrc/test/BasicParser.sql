@@ -1,3 +1,4 @@
+select a+1, b+1, c+1 from A;
 ---MALFORMED WHERE
 select a, b, c from A,B,C where a + 1;
 --BETWEEN predicates

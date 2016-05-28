@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 my $SqlInputPath = "/home/ccd/xndb-micro/csrc/test/";
-my $SqlInputFileName = "$SqlInputPath/BasicParser.sql";
+my $SqlInputFileName = "$SqlInputPath/LimitedParser.sql";
 
 open (my $fileHandle, '<' ,  $SqlInputFileName ) or die "Can't open SQL datafile $SqlInputFileName \n";
 
@@ -71,7 +71,7 @@ TEST_GROUP(basicParser);
 
 TEST_SETUP(basicParser) {
 
-    qry1 = malloc(sizeof(multiQueryNode));
+    qry1 = malloc(sizeof(queryNode));
     qry1->errFlag = 0;
     yylex_init(&scanner1);
 }

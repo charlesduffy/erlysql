@@ -1,5 +1,4 @@
 %{
-
 #include <string.h>
 #include "grammar.tab.h"
 #define YY_USER_ACTION yylloc->first_line = yylloc->last_line; \

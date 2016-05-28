@@ -13,6 +13,7 @@
 
 // TODO: consider dropping the below funcs / function-ptr concept
 
+/*
 selectListNode * get_select_list1 (selectStmtNode *selectStmt) {
 	return(selectStmt->selectList);
 }
@@ -20,6 +21,7 @@ selectListNode * get_select_list1 (selectStmtNode *selectStmt) {
 selectListNode * get_select_list0 (queryNode *query) {
 	return(get_select_list1(query->selnode));
 }
+*/
 
 tableRefNode ** get_table_list0 (queryNode *query) {
 	return(get_table_list1 (query->selnode));
@@ -32,24 +34,16 @@ tableRefNode ** get_table_list1 (selectStmtNode *selectStmt) {
 
 
 // Constructor functions
-
-multiQueryNode * new_multiQueryNode ( multiQueryNode *mnode) {
-//initialise multi query Node
-	
-	mnode->errFlag = 0;
-	mnode->nElements = 0;
-	return(mnode);
-	
+multiQueryNode * new_multiQueryNode ( multiQueryNode *node ) {
+//initialise query Node
+	return(node);
 }
 
 queryNode * new_queryNode ( queryNode *node ) {
 //initialise query Node
-	
-	//initialse pointer-to-function
-	node->get_select_list = get_select_list0;
-	//
 	node->errNode = NULL;
 	node->errFlag = 0;
+	node->list.next = NULL;
 	return(node);
 }
 

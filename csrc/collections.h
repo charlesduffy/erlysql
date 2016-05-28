@@ -7,7 +7,7 @@
 #define container_of(ptr, type, member) ((type *) ((char *)(ptr) - offsetof(type, member)))
 
 #define list_append(p,n) { 						\
-				LIST_TYPNAM *l = &p->LIST_MEMB_NAME; 		\
+				LIST_TYPNAM *l = &p->LIST_MEMB_NAME; 	\
 				while (l->next !=NULL) l=l->next; 	\
 				l->next = &n->LIST_MEMB_NAME; 		\
 				l->next->next = NULL;			\

@@ -1,7 +1,9 @@
 #ifndef _PARSETREE_H
 #define _PARSETREE_H
 
+#include <stdbool.h>
 #include "collections.h"
+
 
 /* Default list node allocation chunk sizes */
 #define selectListItemNode_allocnmemb 20
@@ -9,6 +11,11 @@
 
 /* get number of elements in a list node */
 #define get_num_elements(node) node->list.nElements
+
+/* parse tree access macros */
+
+#define get_select_list(node)  node->selnode->selectList
+#define get_from_clause(node)  node->selnode->tableExpr->fromClause
 
 /* Helper Enums for parse nodes */
 
@@ -99,22 +106,13 @@ typedef struct {
   char isWildcard;
   scalarExpr *sExpr;
   char *sAlias;
+  llist list;
 } selectListItemNode;
 
 
 /*
 	Generic list node
 */
-
-/*
-	Select list node
-*/
-
-typedef struct {
-  int nElements;
-  listInfoBlock list; 
-  selectListItemNode **sItems;
-} selectListNode;
 
 
 /*	
@@ -194,10 +192,10 @@ struct select_statement {
 
 /* function pointers */
 
-  selectListNode * (*get_select_list1)(selectStmtNode *);
-  tableRefNode ** (*get_table_expr_node1)(selectStmtNode *);
+  //selectListNode * (*get_select_list1)(selectStmtNode *);
+  //tableRefNode ** (*get_table_expr_node1)(selectStmtNode *);
 
-  selectListNode *selectList;
+  selectListItemNode *selectList;
   tableExprNode *tableExpr;
 };
 
@@ -301,9 +299,9 @@ struct _queryNode {
 
   char errFlag;
 
-  selectListNode * (*get_select_list)(queryNode *); //= get_select_list0;
-  fromClauseNode * (*get_from_clause)(queryNode *);
-  whereClauseNode * (*get_where_clause)(queryNode *);  
+  //selectListNode * (*get_select_list)(queryNode *); //= get_select_list0;
+  //fromClauseNode * (*get_from_clause)(queryNode *);
+  //whereClauseNode * (*get_where_clause)(queryNode *);  
 
   statementType statType;
 
@@ -316,31 +314,30 @@ struct _queryNode {
     createTableStmtNode *crTabNode;
     dropTableStmtNode *drTabNode;
   };
-};
 
-/* Handle multiple-statement containing query string 
-	top level parser element
-*/
+  llist list;
+
+};
 
 typedef struct _multiQueryNode multiQueryNode;
 
 struct _multiQueryNode {
-	listInfoBlock list;
 	char errFlag;
-	int nElements;
-	queryNode **sItems;	
-	queryNode *sItem;
+	queryNode *query;
 };
+
+/* function prototypes */
+
+bool sexpr_is_boolean( scalarExpr * );
 
 /* Node constructor function prototypes */
 
 queryNode * new_queryNode ( queryNode * );
-multiQueryNode * new_multiQueryNode ( multiQueryNode *);
 
 /* Accessor function prototypes */
 
-selectListNode * get_select_list1 (selectStmtNode *);
-selectListNode * get_select_list0 (queryNode *);
+//selectListNode * get_select_list1 (selectStmtNode *);
+//selectListNode * get_select_list0 (queryNode *);
 tableRefNode ** get_table_list1 (selectStmtNode *); 
 tableRefNode ** get_table_list0 (queryNode *); 
 

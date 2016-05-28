@@ -60,13 +60,13 @@ typedef void *yyscan_t;
 
 
 	/* Query Nodes */
-	multiQueryNode		*mquery;
+	multiQueryNode		*multiQuery;
 	queryNode 		*query;
 
 	/* DML Nodes - SELECT */
 
 	selectStmtNode 		*selectStmt;
-	selectListNode 		*selectList;
+	//selectListNode 		*selectListItem;
 	selectListItemNode 	*selectListItem;
 	fromClauseNode 		*fromClause;
 	tableRefNode   		*tableRef;
@@ -144,10 +144,11 @@ typedef void *yyscan_t;
 %left           POINT
 %left 		AS
 
-%type	<mquery>		sql
+%type	<multiQuery>			sql
 %type	<query>			query_statement
 %type 	<selectStmt> 		select_statement
-%type 	<selectList> 		select_list
+//%type 	<selectList> 		select_list
+%type 	<selectListItem> 	select_list
 %type 	<selectListItem>	select_list_item
 %type 	<fromClause> 		from_clause
 %type 	<tableRef> 		table_ref
@@ -178,50 +179,47 @@ typedef void *yyscan_t;
 /* this node is a multi-statement submission delimited by semicolon */
 
 sql:
-	query_statement	SEMICOLON 
-				{
-				  $$ = ptree;
-				  $$->nElements = 1;
-				  add_list_item(queryNode, $$, $1 );
-				}
-	|
-	sql SEMICOLON query_statement SEMICOLON
-
+    query_statement SEMICOLON
+    {
+	$$ = ptree;
+	$$->query = $1;					
+    }
+    |
+    sql query_statement SEMICOLON
+    {
+	list_append($$->query, $3);
+    }
 ;
 
 /* this node is a single query statement */
 
 query_statement:
-	select_statement	
-			{ 
-			  $$ = MAKENODE(queryNode);
-			  $$->statType = SELECT_STMT;
-			  $$->selnode = $1;
-			} 
-			|
-	insert_statement	
-			{ 
-			  $$ = new(queryNode);
-			  $$->statType = INSERT_STMT;
-			  $$->insnode = $1;
-			} 
-			|
-	create_table_stmt
-			{
-			  $$ = new(queryNode);
-			  $$->statType = CREATE_TABLE_STMT;
-			  $$->crTabNode = $1;
-			}
-			|
-	drop_table_stmt
-			{
-			  $$ = new(queryNode);
-			  $$->statType = DROP_TABLE_STMT;
-			  $$->drTabNode = $1;
-			}
-
+    select_statement 
+    { 
+	$$ = new(queryNode); 	
+	$$->statType = SELECT_STMT;
+	printf("SELECT STATEMENT");
+	$$->selnode = $1;
+    } 
+    |
+    insert_statement	
+    { 
+	$$->statType = INSERT_STMT;
+	$$->insnode = $1;
+    } 
+    |
+    create_table_stmt
+    {
+	$$->statType = CREATE_TABLE_STMT;
+	$$->crTabNode = $1;
+    }
+    |
+    drop_table_stmt
+    {
+	$$->statType = DROP_TABLE_STMT;
+	$$->drTabNode = $1;
+    }
 //TODO consider using a more generic "DDL stmt" rather than explicitly identifying every kind of DDL operation
-		
 ;
 
 /* 
@@ -300,23 +298,27 @@ SELECT STATEMENT
 
 select_list:
 	select_list_item {
-		 		$$ = MAKENODE(selectListNode);
-			
-				$$->list.nElements = 0; //temporary until proper constructor code is written		
-	
+		 		selectListItemNode *sel1;
+				//$$ = MAKENODE(selectListItemNode);
+				//debugging
+				sel1 = $1;	
+				printf("select list item");
 			 	debug("First Scalar expr in select list!");
-				//$$->nElements = 1;
-				//*($$->sItems) = $1;
-				
-				add_list_item(selectListItemNode, $$, $1 );
+				$$ = $1;
+				$$->list.next = NULL; //put this in constructor	
+				//add_list_item(selectListItemNode, $$, $1 );
+				//list_append($$,$1);
 				
 			  }
 			  |
 	select_list COMMA select_list_item { 
 				debug("recursive scalar expr!");
+			        printf("more select list item");	
 				//*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
 				//$$->nElements++;
-				add_list_item(selectListItemNode , $$ , $3 );
+				//add_list_item(selectListItemNode , $$ , $3 );
+				printf("<<$$-alias>> %s <<$3-alias>> %s\n", $$->sAlias, $3->sAlias);
+				list_append($$,$3);
 		  
 		     	} 
 ;

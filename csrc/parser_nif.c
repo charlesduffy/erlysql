@@ -1,16 +1,17 @@
+#include <string.h>
+#include <malloc.h>
+#include <stdbool.h>
 #include "erl_nif.h"
 #include "grammar.tab.h"
 #include "scanner.h"
 #include "dbglog.h"
-#include <string.h>
-#include <malloc.h>
-#include <stdbool.h>
+#include "collections.h"
 
 #define MAXBUFLEN 1024
 
 /* Node to Erlang NIF term converters */
 
-static ERL_NIF_TERM mParseTreeToNifTerm(ErlNifEnv * , multiQueryNode * ); 
+static ERL_NIF_TERM parseTreeToNifTerm(ErlNifEnv * , multiQueryNode * ); 
 static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv *, queryNode *);
 static ERL_NIF_TERM sExprToNifTerm(ErlNifEnv *, scalarExpr *, int);
 static ERL_NIF_TERM valueExprToNifTerm(ErlNifEnv *, valueExprNode);
@@ -22,7 +23,7 @@ char *operSyms[] = { "/", "*", "+", "-", "%", ">", "<", ">=", "<=", "OR", "AND",
 
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv *, int, const ERL_NIF_TERM[]);
 
-multiQueryNode *parseQuery(char *queryText);
+multiQueryNode * parseQuery(char *queryText);
 
 static ErlNifFunc nif_funcs[] = {
   {"parseQuery", 1, parseQuery_nif}
@@ -34,7 +35,7 @@ ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
                                    const ERL_NIF_TERM argv[])
 {
-  multiQueryNode *mParseTree;
+  multiQueryNode *parseTree;
   char queryText[MAXBUFLEN];
   ERL_NIF_TERM erlParseTree;
 
@@ -48,19 +49,19 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
     return enif_make_badarg(env);
   }
 
-  mParseTree = parseQuery(queryText);
+  parseTree = parseQuery(queryText);
 
   debug("returned from parseQuery");
 
 
   /* check for error cond */
 
-  if (mParseTree->errFlag == 1) {
+  if (parseTree->errFlag == 1) {
 	debug("parser returned error");
 	return(enif_make_atom(env, (const char *) "error"));
   }
 
-  erlParseTree = mParseTreeToNifTerm(env, mParseTree);
+  erlParseTree = parseTreeToNifTerm(env, parseTree);
 
   return (erlParseTree);
 }
@@ -72,22 +73,25 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 	TODO - document erlang term structure here
 */
 
-static ERL_NIF_TERM mParseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * mParseTree) 
+static ERL_NIF_TERM parseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * parseTree) 
 {
 
   ERL_NIF_TERM nifItem, nifQueryList;
   queryNode * query;
 
   nifQueryList = enif_make_list(env, (unsigned int) 0);
-  
-  while ((query = mParseTree->list.next(mParseTree)) != NULL) {
+
+  list_foreach(parseTree->query, queryNode, query) {
+
     nifItem = enif_make_tuple2 ( 
 				 env,
 				 enif_make_atom(env, (const char *) "query"), 
 				 queryNodeToNifTerm(env, query)
 				);
+
     nifQueryList = enif_make_list_cell(env, nifItem, nifQueryList);
   }
+  
   return(nifQueryList);
 }
 
@@ -96,9 +100,9 @@ static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
 
  /* Declare pointers to QueryNode data structure elements */
 
-  selectListNode *sellist = qry->get_select_list(qry);
+  selectListItemNode *selectList = get_select_list(qry);
 
-  fromClauseNode *fromclause = qry->selnode->tableExpr->fromClause;
+  fromClauseNode *fromclause = get_from_clause(qry);
 
   tableRefNode **tableRef =
     qry->selnode->tableExpr->fromClause->refList->tables;
@@ -111,7 +115,7 @@ static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   ERL_NIF_TERM nifItem, nifItem1;
   ERL_NIF_TERM nifMap;
 
-  debug("Select list: %d elements\n", get_num_elements(sellist));
+  debug("Select list: %d elements\n", get_num_elements(selectList));
 
   /* 
      Construct select list element of Erlang parse tree
@@ -120,20 +124,32 @@ static ERL_NIF_TERM queryNodeToNifTerm(ErlNifEnv * env, queryNode * qry)
   int i;
   scalarExpr *sExpr;
   selectListItemNode *sItem;
-  int k = sellist->list.nElements;
+  //int k = selectList->list.nElements;
 
      //Iterate over SELECT list items in QueryNode and push them on to 
      //an Erlang list as S-expressions constructed from Erlang tuples
 
-  nifSelectList = enif_make_list(env, (unsigned int) 0);
  
   //Replace all this with proper use of iterator functions
-  //for (i = get_num_elements(sellist) - 1; i >= 0; i--) {
+  //for (i = get_num_elements(selectList) - 1; i >= 0; i--) {
+
+  /*
+
   for (i = k - 1; i >= 0; i--) {
-    sItem = *(sellist->sItems + i);
+    sItem = *(selectList->sItems + i);
     nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
     nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
   }
+
+  */
+
+  nifSelectList = enif_make_list(env, (unsigned int) 0);
+  
+  list_foreach(selectList, selectListItemNode, sItem) {
+    nifItem = sExprToNifTerm(env, sItem->sExpr, 0);   //consider replacement with function like get_sexpr
+    nifSelectList = enif_make_list_cell(env, nifItem, nifSelectList);
+  }
+
 
   /* 
      Construct list of table references from the FROM clause 
