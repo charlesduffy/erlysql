@@ -55,9 +55,8 @@ typedef struct {
 */
 
 typedef struct {
-  int nElements;
-  listInfoBlock list;
-  scalarExpr **sItems;
+  scalarExpr *inListValue;
+  llist list;
 } inListNode;
 
 /* column reference */
@@ -75,8 +74,8 @@ typedef union {
   char *text_val;
   double numeric_val;
   operVal oper_val;
-  inListNode *in_list_val;
-  betweenPredNode *between_pred_val;
+  inListNode *inList;
+  betweenPredNode *between_pred_val; //get rid of
 } valueExpr;
 
 /* Parse Nodes */
@@ -120,27 +119,30 @@ typedef struct {
 */
 
 typedef struct {
-  char *tableName;
+  char *tableName; //this needs to become a proper table expr!
   char *tableAlias;
+  llist list;
 } tableRefNode;
 
 /*
 	Table reference list node	
 */
 
+/*
 typedef struct {
   int nElements;
   listInfoBlock list;
   tableRefNode **tables;
 } tableRefListNode;
-
+//getting rid of , replace with llist
+*/
 /*
 	FROM clause node
 */
 
 typedef struct {
   int type;
-  tableRefListNode *refList;
+  tableRefNode *refList; //rename!
 } fromClauseNode;
 
 /*

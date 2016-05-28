@@ -70,7 +70,7 @@ typedef void *yyscan_t;
 	selectListItemNode 	*selectListItem;
 	fromClauseNode 		*fromClause;
 	tableRefNode   		*tableRef;
-	tableRefListNode 	*tableRefList;
+	//tableRefListNode 	*tableRefList;
 	tableExprNode  		*tableExpr;
 	valueExprNode  		valueExpr;
 	scalarExpr	 	*sExpr;
@@ -168,13 +168,10 @@ typedef void *yyscan_t;
 %type 	<createTableStmt>	create_table_stmt
 %type 	<dropTableStmt>		drop_table_stmt
 %type	<sExpr>			in_predicate
-%type	<sExpr>			between_predicate
 
 %token  <identifier_val>  IDENTIFIER
 
-
 %%
-
 
 /* this node is a multi-statement submission delimited by semicolon */
 
@@ -199,24 +196,26 @@ query_statement:
     { 
 	$$ = MAKENODE(queryNode); 	
 	$$->statType = SELECT_STMT;
-	printf("SELECT STATEMENT");
 	$$->selnode = $1;
     } 
     |
     insert_statement	
     { 
+	$$ = MAKENODE(queryNode); 	
 	$$->statType = INSERT_STMT;
 	$$->insnode = $1;
     } 
     |
     create_table_stmt
     {
+	$$ = MAKENODE(queryNode); 	
 	$$->statType = CREATE_TABLE_STMT;
 	$$->crTabNode = $1;
     }
     |
     drop_table_stmt
     {
+	$$ = MAKENODE(queryNode); 	
 	$$->statType = DROP_TABLE_STMT;
 	$$->drTabNode = $1;
     }
@@ -233,52 +232,54 @@ INSERT STATEMENT
 
 
 insert_statement:
-
-	INSERT INTO ddl_table_ref LPAREN column_list RPAREN VALUES LPAREN insert_value_list RPAREN { 
-		$$ = MAKENODE(insertStmtNode);
-		$$->table = $3;
-		$$->collist = $5;
-		$$->vallist = $9;	
-		$$->selnode = NULL;
-	}
-	|
-	INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN {  //todo - seperate out the 'values' table
-		$$ = MAKENODE(insertStmtNode);
-		$$->table = $3;
-		$$->collist = NULL;
-		$$->vallist = $6;	
-		$$->selnode = NULL;
-	}
-	|
-	INSERT INTO ddl_table_ref select_statement {
-		$$ = MAKENODE(insertStmtNode);
-		$$->table = $3;
-		$$->collist = NULL;
-		$$->vallist = NULL;	
-		$$->selnode = $4;
-	}
+    INSERT INTO ddl_table_ref LPAREN column_list RPAREN VALUES LPAREN insert_value_list RPAREN 
+    { 
+	$$ = MAKENODE(insertStmtNode);
+	$$->table = $3;
+	$$->collist = $5;
+	$$->vallist = $9;	
+	$$->selnode = NULL;
+    }
+    |
+    INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN 
+    {
+	$$ = MAKENODE(insertStmtNode);
+	$$->table = $3;
+	$$->collist = NULL;
+	$$->vallist = $6;	
+	$$->selnode = NULL;
+    }
+    |
+    INSERT INTO ddl_table_ref select_statement 
+    {
+	$$ = MAKENODE(insertStmtNode);
+	$$->table = $3;
+	$$->collist = NULL;
+	$$->vallist = NULL;	
+	$$->selnode = $4;
+    }
 ;
 
 column_list:
-	IDENTIFIER {
-		$$ = MAKENODE(insertColListNode);
-		$$->sItems = malloc ((size_t) sizeof (insertColListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
-		$$->nElements = 1;
-		*($$->sItems) = $1;
-	} 
-	|
-	column_list COMMA IDENTIFIER {
-		*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
-		$$->nElements++;
-	}
+    IDENTIFIER
+    {
+	$$ = MAKENODE(insertColListNode);
+	$$->sItems = malloc ((size_t) sizeof (insertColListNode*) * 20);
+	$$->nElements = 1;
+	*($$->sItems) = $1;
+    } 
+    |
+    column_list COMMA IDENTIFIER
+    {
+	*($$->sItems + ($$->nElements)) = $3;
+	$$->nElements++;
+    }
 ;	
-
-//should take generic table expression for INSERT source
 
 insert_value_list:
 	scalar_expr { 
 		$$ = MAKENODE(insertValListNode);
-		$$->sItems = malloc ((size_t) sizeof (insertValListNode*) * 20); //TEMP fixed size of 20 here, to debug issues with this
+		$$->sItems = malloc ((size_t) sizeof (insertValListNode*) * 20);
 		$$->nElements = 1;
 		*($$->sItems) = $1;
 	}	
@@ -298,30 +299,16 @@ SELECT STATEMENT
 */
 
 select_list:
-	select_list_item {
-		 		selectListItemNode *sel1;
-				//$$ = MAKENODE(selectListItemNode);
-				//debugging
-				sel1 = $1;	
-				printf("select list item");
-			 	debug("First Scalar expr in select list!");
-				$$ = $1;
-				$$->list.next = NULL; //put this in constructor	
-				//add_list_item(selectListItemNode, $$, $1 );
-				//list_append($$,$1);
-				
-			  }
-			  |
-	select_list COMMA select_list_item { 
-				debug("recursive scalar expr!");
-			        printf("more select list item");	
-				//*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
-				//$$->nElements++;
-				//add_list_item(selectListItemNode , $$ , $3 );
-				printf("<<$$-alias>> %s <<$3-alias>> %s\n", $$->sAlias, $3->sAlias);
-				list_append($$,$3);
-		  
-		     	} 
+    select_list_item
+    {
+	$$ = $1;
+	$$->list.next = NULL;
+    }
+    |
+    select_list COMMA select_list_item
+    { 
+	list_append($$,$3);
+    } 
 ;
 
 
@@ -386,54 +373,55 @@ from_clause:
 ;
 
 table_ref:
-	IDENTIFIER {
-		$$ = MAKENODE(tableRefNode);
-		$$->tableName = $1;
-		$$->tableAlias = NULL;
-	}
-	|
-	IDENTIFIER IDENTIFIER {
-		$$ = MAKENODE(tableRefNode);
-		$$->tableName = $1;
-		$$->tableAlias = $2;
-	}
-	|
-	IDENTIFIER AS IDENTIFIER {
-		$$ = MAKENODE(tableRefNode);
-		$$->tableName = $1;
-		$$->tableAlias = $3;
-
-	}
+    IDENTIFIER
+    {
+	$$ = MAKENODE(tableRefNode);
+	$$->tableName = $1;
+	$$->tableAlias = NULL;
+    }
+    |
+    IDENTIFIER IDENTIFIER
+    {
+	$$ = MAKENODE(tableRefNode);
+	$$->tableName = $1;
+	$$->tableAlias = $2;
+    }
+    |
+    IDENTIFIER AS IDENTIFIER
+    {
+	$$ = MAKENODE(tableRefNode);
+	$$->tableName = $1;
+	$$->tableAlias = $3;
+    }
 ;
 
 table_ref_list:
-	table_ref {
-			$$ = MAKENODE(tableRefListNode);
-			$$->nElements = 1;
-			$$->list.nElements = 1;
-			$$->tables =  malloc ( sizeof(tableRefNode) * 20); //TEMPORARY! FIX ASAP. 
-			*($$->tables) = $1;
-		  }
-		  |
-	table_ref_list COMMA table_ref {
-			*($$->tables + ($$->nElements)) = $3;			
-			$$->nElements++;
-			$$->list.nElements++;
-	}
+    table_ref
+    {
+	$$ = $1;
+	$$->list.next = NULL;
+    }
+    |
+    table_ref_list COMMA table_ref
+    {
+	list_append($$,$3);	
+    }
 ;
 
 table_expr:
-	from_clause {
-		$$ = MAKENODE(tableExprNode);
-		$$->fromClause = $1;	
-		$$->whereClause = NULL;
-	}
-	|
-	from_clause where_clause {
-		$$ = MAKENODE(tableExprNode);
-		$$->fromClause = $1;
-		$$->whereClause = $2;
-	}
+    from_clause
+    {
+	$$ = MAKENODE(tableExprNode);
+	$$->fromClause = $1;	
+	$$->whereClause = NULL;
+    }
+    |
+    from_clause where_clause
+    {
+	$$ = MAKENODE(tableExprNode);
+	$$->fromClause = $1;
+	$$->whereClause = $2;
+    }
 ;
 
 
@@ -628,7 +616,6 @@ scalar_expr:
 
 				*/
 	
-				  debug("BETWEEN statement found");
 				  $$ = MAKENODE(scalarExpr);
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _AND;	
@@ -644,19 +631,10 @@ scalar_expr:
 				  $$->right->value.type = OPER;
 				  $$->right->value.value.oper_val = _LTE;
 	
-				  $$->right->left = $1; //Are actions repeated when $1 is referred to again?
+				  $$->right->left = $1; 
 				  $$->right->right = $5;  
-				  	
 
 				}		|	
-	scalar_expr NOT BETWEEN between_predicate
-				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $4;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _NOT_BETWEEN;	
-				}		
 ;
 
 value_expr:
@@ -712,35 +690,16 @@ in_predicate:
 				  $$->right = NULL;
 				  $$->value.type = IN_LIST;
 				  $$->value.value.in_list_val = MAKENODE(inListNode);
-				  $$->value.value.in_list_val->sItems = malloc ((size_t) sizeof (selectListItemNode *) * 20); 
-					//TEMP fixed size of 20 here, to debug issues with this;
+				  $$->value.value.in_list_val->inListValue = $1;
+				  $$->value.value.in_list_val->list.next = NULL;
 
-				/* all the below messing around with long struct references are silly,
-				   should all be replaced with some getter/setter function
-				   or encapsulated "nodeadd()"  */
-			
-			 	debug("First Scalar expr in IN list!");
-				$$->value.value.in_list_val->nElements = 1; 
-				*($$->value.value.in_list_val->sItems) = $1;
 				
 		} |
 	in_predicate COMMA scalar_expr {
-				debug("IN list recursive scalar expr!");
-				*($$->value.value.in_list_val->sItems + ($$->value.value.in_list_val->nElements)) = $3; //remove redundant parentheses
-				$$->value.value.in_list_val->nElements++;
+				  list_append($$->value.value.in_list_val->inListValue, $3);
 	}
 ;
 
-between_predicate:
-	scalar_expr AND scalar_expr {
-				$$ = MAKENODE(scalarExpr);
-				$$->left = NULL;
-				$$->right = NULL;	
-				$$->value.type = BETWEEN_PREDICATE;
-				$$->value.value.between_pred_val = MAKENODE(betweenPredNode);
-				$$->value.value.between_pred_val->rangeStart = $1;
-				$$->value.value.between_pred_val->rangeEnd = $3;
-};
 
 /* Data definition language commands */
 
