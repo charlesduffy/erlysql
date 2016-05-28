@@ -435,10 +435,11 @@ EXPRESSIONS
 
 scalar_expr:
 	value_expr  { 
-		      $$ = MAKENODE(scalarExpr);
+		      $$ = MAKENODE(s_expr);
 		      $$->value = $1;
 		      $$->left = NULL;
 		      $$->right = NULL;
+		      $$->list = NULL;
 		    }
 	        |
 	LPAREN scalar_expr RPAREN
@@ -640,30 +641,48 @@ scalar_expr:
 
 value_expr:
 	colref  { 
-		  $$.type = COLREF;
-		  $$.value.column_val = $1;
+
+		//here we need 2 macros
+		// 1)   mk_tuplist_lit(sqltype, value)
+		// 2)   mk_tuplist_ident(nametype, value)
+
+//macros:
+
+//new_tuple(tag, type, value)
+//append_tuple(list, tuple)
+//append_tuple2(list, tag, type, value)
+
+		  $$=MAKENODE(tuple);
+		  $$.tag = "colref";
+		  $$.v_text = $1;
 		}
 		|
 	INT_LIT {
-		  $$.type = INT;
-		  $$.value.integer_val = $1;
+		  //what's emitted here is a tuple (actually, a list-of-tuples)
+		  //for the time being, a single tuple
+		  $$=MAKENODE(tuple);
+		  $$.tag = "int";
+		  $$.v_int = $1;
 		}
 		|	
 	NUM_LIT {
 		  $$.type = NUM;
-		  $$.value.numeric_val = $1;
+		  $$=MAKENODE(tuple);
+		  $$.tag = "num";
+		  $$.v_float = $1;
 		}
 		|	
 	STRING  {
-		  $$.type = _TEXT;
-		  $$.value.text_val = $1;
+		  $$=MAKENODE(tuple);
+		  $$.tag = "text";
+		  $$.v_int = $1;
 		}
 ;
 
 colref:
 	IDENTIFIER 
 	{ 
-		$$=MAKENODE(colRef);
+		$$=MAKENODE(tuple);
 		$$->colName = $1;
 		$$->colReference = NULL; 
 	}
