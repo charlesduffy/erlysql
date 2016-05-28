@@ -152,7 +152,8 @@ typedef void *yyscan_t;
 %type 	<selectListItem>	select_list_item
 %type 	<fromClause> 		from_clause
 %type 	<tableRef> 		table_ref
-%type 	<tableRefList> 		table_ref_list
+//%type 	<tableRefList> 		table_ref_list
+%type 	<tableRef> 		table_ref_list
 %type 	<valueExpr> 		value_expr
 %type 	<sExpr> 		scalar_expr
 %type   <columnRef> 		colref
@@ -634,7 +635,7 @@ scalar_expr:
 				  $$->right->left = $1; 
 				  $$->right->right = $5;  
 
-				}		|	
+				}	
 ;
 
 value_expr:
@@ -696,7 +697,9 @@ in_predicate:
 				
 		} |
 	in_predicate COMMA scalar_expr {
-				  list_append($$->value.value.in_list_val->inListValue, $3);
+				  inListNode *inListVal = MAKENODE(inListNode);
+				  inListVal->inListValue = $1;
+				  list_append($$->value.value.in_list_val, inListVal);
 	}
 ;
 

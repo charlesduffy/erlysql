@@ -74,8 +74,7 @@ typedef union {
   char *text_val;
   double numeric_val;
   operVal oper_val;
-  inListNode *inList;
-  betweenPredNode *between_pred_val; //get rid of
+  inListNode *in_list_val;
 } valueExpr;
 
 /* Parse Nodes */

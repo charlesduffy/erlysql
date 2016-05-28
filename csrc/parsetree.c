@@ -23,16 +23,6 @@ selectListNode * get_select_list0 (queryNode *query) {
 }
 */
 
-tableRefNode ** get_table_list0 (queryNode *query) {
-	return(get_table_list1 (query->selnode));
-}
-
-tableRefNode ** get_table_list1 (selectStmtNode *selectStmt) {
-	return(selectStmt->tableExpr->fromClause->refList->tables);
-} 
-
-
-
 // Constructor functions
 multiQueryNode * new_multiQueryNode ( multiQueryNode *node ) {
 //initialise query Node
