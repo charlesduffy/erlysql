@@ -76,6 +76,8 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 static ERL_NIF_TERM parseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * parseTree) 
 {
 
+
+
   ERL_NIF_TERM nifItem, nifQueryList;
   queryNode * query;
 
@@ -83,11 +85,23 @@ static ERL_NIF_TERM parseTreeToNifTerm(ErlNifEnv * env, multiQueryNode * parseTr
 
   list_foreach(parseTree->query, queryNode, query) {
 
-    nifItem = enif_make_tuple2 ( 
+    nifItem = enif_make_tuple2 (
 				 env,
 				 enif_make_atom(env, (const char *) "query"), 
 				 queryNodeToNifTerm(env, query)
 				);
+
+/*
+
+    for (llist *l = &parseTree->query->list; l !=NULL; l=l->next) {
+	query = container_of(l, queryNode, list);	
+        nifItem = enif_make_tuple2 (
+				 env,
+				 enif_make_atom(env, (const char *) "query"), 
+				 queryNodeToNifTerm(env, query)
+				);
+    }
+*/
 
     nifQueryList = enif_make_list_cell(env, nifItem, nifQueryList);
   }

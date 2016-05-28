@@ -182,12 +182,13 @@ sql:
     query_statement SEMICOLON
     {
 	$$ = ptree;
-	$$->query = $1;					
+	$$->query = $1;
+	$$->query->list.next = NULL;					
     }
     |
     sql query_statement SEMICOLON
     {
-	list_append($$->query, $3);
+	list_append($$->query, $2);
     }
 ;
 
@@ -196,7 +197,7 @@ sql:
 query_statement:
     select_statement 
     { 
-	$$ = new(queryNode); 	
+	$$ = MAKENODE(queryNode); 	
 	$$->statType = SELECT_STMT;
 	printf("SELECT STATEMENT");
 	$$->selnode = $1;
