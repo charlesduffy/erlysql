@@ -5,38 +5,19 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "collections.h"
+#include "structures.h"
 #include "parsetree.h"
 #include "dbglog.h"
-
-
 
 #define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
 
 #define new(nodetype) new_##nodetype(malloc((size_t) sizeof( nodetype )))
-
-#define mk_s_expr_val(p, v) { p=MAKENODE(s_expr);	\
-			      p->value = v;		\
-			      p->left = NULL;		\
-			      p->right = NULL;		\
-			      p->list = NULL;		\
-			}
-
-#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
-			      mk_tuplist_oper(p->value, v);	\
-			      p->left = l;			\
-			      p->right = r;			\
-			      p->list = NULL;			\
-			}
 
 //new_tuple(tuple *, tag, type, value)
 #define new_tuple(p , t, T, v) { p=MAKENODE(tuple);	\
 				 p->tag=t;		\
 				 p->T=v;		\
 			       }			\
-
-		//here we need 2 macros
-		// 1)   mk_tuplist_lit(sqltype, value)
-		// 2)   mk_tuplist_ident(nametype, value)
 
 #define mk_tuplist_lit(p, t, T, v) { x * tuple;				    \
 				     y * tuple;				    \
@@ -82,6 +63,25 @@
 				     list_append(p,x);				\	 
 				    }						
 
+#define mk_s_expr_val(p, v) { p=MAKENODE(s_expr);	\
+			      p->value = v;		\
+			      p->left = NULL;		\
+			      p->right = NULL;		\
+			      p->list = NULL;		\
+			}
+
+#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
+			      mk_tuplist_oper(p->value, v);	\
+			      p->left = l;			\
+			      p->right = r;			\
+			      p->list = NULL;			\
+			}
+
+#define tuple_append(p, t, T, v) {  tuple *n;			\
+				    new_tuple(n, t, T, v);	\
+				    list_append(p, n);		\
+				    }
+
 #define add_list_item(nodetype,node,item) {                                                     		\
       listInfoBlock list = (node)->list;                                                      		\
       nodetype **resizePtr;                                                                     		\
@@ -109,7 +109,6 @@ typedef void *yyscan_t;
 }
 
 /* parser options */
-
 
 %define api.pure full
 %lex-param {yyscan_t scanner}
@@ -247,14 +246,13 @@ typedef void *yyscan_t;
 sql:
     query_statement SEMICOLON
     {
-	$$ = ptree;
-	$$->query = $1;
-	$$->query->list.next = NULL;					
+	new_tuple($$, v_tuple, "query", $1);
+	ptree = $$;
     }
     |
     sql query_statement SEMICOLON
     {
-	list_append($$->query, $2);
+	tuple_append($$, v_tuple, "query", $3);
     }
 ;
 
@@ -263,30 +261,26 @@ sql:
 query_statement:
     select_statement 
     { 
-	$$ = MAKENODE(queryNode); 	
-	$$->statType = SELECT_STMT;
-	$$->selnode = $1;
+	new_tuple($$, v_text, "statement_type", "select_statement");
+	tuple_append($$, v_tuple, "select_statement", $1);
     } 
     |
     insert_statement	
     { 
-	$$ = MAKENODE(queryNode); 	
-	$$->statType = INSERT_STMT;
-	$$->insnode = $1;
+	new_tuple($$, v_text, "statement_type", "insert_statement");
+	tuple_append($$, v_tuple, "insert_statement", $1);
     } 
     |
     create_table_stmt
     {
-	$$ = MAKENODE(queryNode); 	
-	$$->statType = CREATE_TABLE_STMT;
-	$$->crTabNode = $1;
+	new_tuple($$, v_text, "statement_type", "create_table_statement");
+	tuple_append($$, v_tuple, "create_table_statement", $1);
     }
     |
     drop_table_stmt
     {
-	$$ = MAKENODE(queryNode); 	
-	$$->statType = DROP_TABLE_STMT;
-	$$->drTabNode = $1;
+	new_tuple($$, v_text, "statement_type", "drop_table_statement");
+	tuple_append($$, v_tuple, "drop_table_statement", $1);
     }
 //TODO consider using a more generic "DDL stmt" rather than explicitly identifying every kind of DDL operation
 ;
@@ -370,8 +364,7 @@ SELECT STATEMENT
 select_list:
     select_list_item
     {
-	$$ = $1;
-	$$->list.next = NULL;
+	new_tuple($$, v_tuple, "select_list_item", $1);
     }
     |
     select_list COMMA select_list_item
@@ -380,50 +373,42 @@ select_list:
     } 
 ;
 
-
-
-
-
 select_list_item:
-	scalar_expr {
-
-			$$ = MAKENODE(selectListItemNode);
-			$$->isWildcard = 0;
-			$$->sExpr = $1;	
-			$$->hasAlias = 0;
-			$$->sAlias = NULL;
-		    }	 |
-	MUL	    {
-			$$ = MAKENODE(selectListItemNode);
-			$$->isWildcard = 1;
-			$$->hasAlias = 0;
-			$$->sAlias = NULL;
-		    }	 |
-	scalar_expr AS IDENTIFIER {
-		   	 
-			$$ = MAKENODE(selectListItemNode);
-			$$->isWildcard = 0;
-			$$->sExpr = $1;
-			$$->hasAlias = 1;
-			$$->sAlias = $3;
-		}
+    scalar_expr
+    {
+	new_tuple($$, v_sexpr, "value", $1);	
+    }
+    |
+    MUL
+    {
+	new_tuple($$, v_text, "value", "wildcard");
+    }	 
+    |
+    scalar_expr AS IDENTIFIER
+    {
+	new_tuple($$, v_sexpr, "value", $1);	
+	tuple_append($$, v_text, "alias", $3); 
+    }
 ;
 
 select_statement:
-	SELECT select_list table_expr {
-		$$ = MAKENODE(selectStmtNode);
-		$$->selectList = $2;
-		$$->tableExpr = $3;
-	};
+    SELECT select_list table_expr
+    {
+	new_tuple($$, v_tuple, "select_list", $2);
+	tuple_append($$, v_tuple, "table_expr", $3);
+    }
+;
 
 where_clause:
-	WHERE scalar_expr 
-			{
+    WHERE scalar_expr 
+    {
 		/* 	This test enforces the root node of the 
 			s-expression supplied to WHERE to be one with a boolean value output.
 			
 			TODO: investigate better ways of enforcing this
 		*/
+
+/*
 				if ( sexpr_is_boolean($2) == true ) {
 				$$ = MAKENODE(whereClauseNode);
 				$$->expr = $2;
@@ -431,44 +416,41 @@ where_clause:
 					printf("Can't supply non-boolean value to WHERE");
 					YYERROR;
 				}
-			}
+*/
+   
+    new_tuple($$, v_sexpr, "where_clause", $2); 
+    }
 ;
 
 from_clause:
 	FROM table_ref_list { 
-				$$ = MAKENODE(fromClauseNode); 
-				$$->refList = $2;
+				$$ = $1;
 			    }
 ;
 
 table_ref:
     IDENTIFIER
     {
-	$$ = MAKENODE(tableRefNode);
-	$$->tableName = $1;
-	$$->tableAlias = NULL;
+	new_tuple($$, v_text, "name", $1);
     }
     |
     IDENTIFIER IDENTIFIER
     {
-	$$ = MAKENODE(tableRefNode);
-	$$->tableName = $1;
-	$$->tableAlias = $2;
+	new_tuple($$, v_text, "name", $1);
+	tuple_append($$, v_text, "alias", $2);
     }
     |
     IDENTIFIER AS IDENTIFIER
     {
-	$$ = MAKENODE(tableRefNode);
-	$$->tableName = $1;
-	$$->tableAlias = $3;
+	new_tuple($$, v_text, "name", $1);
+	tuple_append($$, v_text, "alias", $3);
     }
 ;
 
 table_ref_list:
     table_ref
     {
-	$$ = $1;
-	$$->list.next = NULL;
+	new_tuple($$, v_tuple, "table", $1);
     }
     |
     table_ref_list COMMA table_ref
@@ -480,16 +462,14 @@ table_ref_list:
 table_expr:
     from_clause
     {
-	$$ = MAKENODE(tableExprNode);
-	$$->fromClause = $1;	
-	$$->whereClause = NULL;
+	//possib from lower element
+	new_tuple($$, v_tuple, "from_clause", $1);
     }
     |
     from_clause where_clause
     {
-	$$ = MAKENODE(tableExprNode);
-	$$->fromClause = $1;
-	$$->whereClause = $2;
+	new_tuple($$, v_tuple, "from_clause", $1);
+	tuple_append($$, v_tuple, "where_clause", $2); 
     }
 ;
 
@@ -525,25 +505,21 @@ scalar_expr:
 				
 	scalar_expr MUL scalar_expr 		
 				{
-				  $$ = MAKENODE(s_expr);
 				 mk_s_expr_oper($$, "MUL", $1, $3);
 				}		|
 	
 	scalar_expr DIV scalar_expr 		
 				{
-				  $$ = MAKENODE(s_expr);
 				 mk_s_expr_oper($$, "DIV", $1, $3);
 				}		|
 
 	scalar_expr MOD scalar_expr 		
 				{
-				  $$ = MAKENODE(s_expr);
 				 mk_s_expr_oper($$, "MOD", $1, $3);
 				}		|
 
 	scalar_expr AND scalar_expr 		
 				{
-				  $$ = MAKENODE(s_expr);
 				 mk_s_expr_oper($$, "AND", $1, $3);
 				}		|
 

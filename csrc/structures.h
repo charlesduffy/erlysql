@@ -33,6 +33,8 @@ struct ord_pair {
 	int v_int;
 	float v_float;
 	char * v_text;
+	tuple * v_tuple;
+	s_expr * v_sexpr;
     };
     llist list;
 };
