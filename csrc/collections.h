@@ -14,11 +14,11 @@
 			 }
 
 #define list_foreach(p,T,d) for (LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->next )
-
+/*
 typedef struct _list llist;
 
 struct _list {
         llist *next;
 };
-
+*/
 #endif
