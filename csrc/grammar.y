@@ -226,22 +226,7 @@ select_statement:
 where_clause:
     WHERE scalar_expr 
     {
-		/* 	This test enforces the root node of the 
-			s-expression supplied to WHERE to be one with a boolean value output.
-			
-			TODO: investigate better ways of enforcing this
-		*/
-
-/*
-				if ( sexpr_is_boolean($2) == true ) {
-				$$ = MAKENODE(whereClauseNode);
-				$$->expr = $2;
-				} else {
-					printf("Can't supply non-boolean value to WHERE");
-					YYERROR;
-				}
-*/
-   
+    //TODO replace check for boolean expression 
     new_tuple($$, v_sexpr, "where_clause", $2); 
     }
 ;

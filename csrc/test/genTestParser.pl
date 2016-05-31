@@ -30,7 +30,7 @@ TESTRUNNER
 	printf( "TEST# $bpTest : '$SqlStmt' ");
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
-        result = qry1->errFlag;
+        //result = qry1->errFlag;
 	//printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
         TEST_ASSERT_EQUAL_MESSAGE(0,result, queryText1);
     }
@@ -51,7 +51,7 @@ $testDefnText = join ("\n", @testDefns);
 
 my $Preamble1 = << "PREAMBLE1";
 
-#include "parsetree.h"
+#include "structures.h"
 #include "unity.h"
 #include "unity_fixture.h"
 #include "grammar.tab.h"
@@ -64,15 +64,13 @@ my $Preamble1 = << "PREAMBLE1";
 #include <stdbool.h>
 
 YY_BUFFER_STATE buf1, buf2;
-multiQueryNode *qry1;
+tuple *qry1;
 yyscan_t scanner1;
 
 TEST_GROUP(basicParser);
 
 TEST_SETUP(basicParser) {
 
-    qry1 = malloc(sizeof(queryNode));
-    qry1->errFlag = 0;
     yylex_init(&scanner1);
 }
 
