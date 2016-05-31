@@ -14,6 +14,74 @@
 
 #define new(nodetype) new_##nodetype(malloc((size_t) sizeof( nodetype )))
 
+#define mk_s_expr_val(p, v) { p=MAKENODE(s_expr);	\
+			      p->value = v;		\
+			      p->left = NULL;		\
+			      p->right = NULL;		\
+			      p->list = NULL;		\
+			}
+
+#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
+			      mk_tuplist_oper(p->value, v);	\
+			      p->left = l;			\
+			      p->right = r;			\
+			      p->list = NULL;			\
+			}
+
+//new_tuple(tuple *, tag, type, value)
+#define new_tuple(p , t, T, v) { p=MAKENODE(tuple);	\
+				 p->tag=t;		\
+				 p->T=v;		\
+			       }			\
+
+		//here we need 2 macros
+		// 1)   mk_tuplist_lit(sqltype, value)
+		// 2)   mk_tuplist_ident(nametype, value)
+
+#define mk_tuplist_lit(p, t, T, v) { x * tuple;				    \
+				     y * tuple;				    \
+				     new_tuple(p,t,"value",v);		    \
+				     new_tuple(x,v_char,"class","literal"); \
+				     new_tuple(y,v_char,"sqltype",T);	    \
+				     list_append(p,x);			    \ 
+				     list_append(x,y);			    \ 
+				    }					    
+/*
+    mk_tuplist_ident (<pointer>, <alias>, <value>)
+
+    make a tuplist describing a column reference
+
+    <pointer>	    pointer to a struct tuple.
+    <alias>	    column table reference or NULL if not present
+    <value>	    name of the column, char *
+
+*/
+
+#define mk_tuplist_ident(p, A, v) {  x * tuple;					\
+				     y * tuple;					\
+				     new_tuple(p,v_char,"value",v);		\
+				     new_tuple(x,v_char,"class","identifier");	\
+				     new_tuple(y,v_char,"reference",A);		\
+				     list_append(p,x);				\	 
+				     list_append(x,y);				\ 
+				    }						
+				    
+/*
+    mk_tuplist_oper (<pointer>, <alias>, <value>)
+
+    make a tuplist describing an operator 
+
+    <pointer>	    pointer to a struct tuple.
+    <value>	    name of the operator
+
+*/
+
+#define mk_tuplist_oper(p, v)	    {   x * tuple;				\
+				     new_tuple(p,v_char,"value",v);		\
+				     new_tuple(x,v_char,"class","operator");	\
+				     list_append(p,x);				\	 
+				    }						
+
 #define add_list_item(nodetype,node,item) {                                                     		\
       listInfoBlock list = (node)->list;                                                      		\
       nodetype **resizePtr;                                                                     		\
@@ -444,139 +512,83 @@ scalar_expr:
 	        |
 	LPAREN scalar_expr RPAREN
 				{ 
-				  $$ = MAKENODE(scalarExpr);
+				  $$ = MAKENODE(s_expr);
 				  $$->left = $2;
-				  $$->right = NULL;			  
+				  $$->right = NULL;	 //huh?? re-think the logic of this rule		  
 				}		|
 	scalar_expr ADD scalar_expr 
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _ADD;	
+				 //#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
+				 // $$ = MAKENODE(s_expr);
+				 mk_s_expr_oper($$, "ADD", $1, $3);
 				}		|
 				
 	scalar_expr MUL scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _MUL;	
-			
+				  $$ = MAKENODE(s_expr);
+				 mk_s_expr_oper($$, "MUL", $1, $3);
 				}		|
 	
 	scalar_expr DIV scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _DIV;	
-			
+				  $$ = MAKENODE(s_expr);
+				 mk_s_expr_oper($$, "DIV", $1, $3);
 				}		|
 
 	scalar_expr MOD scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _MOD;	
-			
+				  $$ = MAKENODE(s_expr);
+				 mk_s_expr_oper($$, "MOD", $1, $3);
 				}		|
 
 	scalar_expr AND scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _AND;	
-			
+				  $$ = MAKENODE(s_expr);
+				 mk_s_expr_oper($$, "AND", $1, $3);
 				}		|
 
 	scalar_expr OR scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _OR;	
-			
+				 mk_s_expr_oper($$, "OR", $1, $3);
 				}		|
 
 	scalar_expr EQ scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _EQ ;	
-			
+				 mk_s_expr_oper($$, "EQ", $1, $3);
+
 				}		|
 
 	scalar_expr NE scalar_expr 		 
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _NE;	
-			
+				 mk_s_expr_oper($$, "NE", $1, $3);
 				}		|
 
 	scalar_expr GT scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _GT;	
-			
+				 mk_s_expr_oper($$, "GT", $1, $3);
 				}		|
 
 	scalar_expr LT scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _LT;	
-			
+				 mk_s_expr_oper($$, "LT", $1, $3);
 				}		|
 
 	scalar_expr GE scalar_expr 		
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _GTE;	
-			
+				 mk_s_expr_oper($$, "GE", $1, $3);
 				}		|
 	scalar_expr LE scalar_expr 	
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _LTE;	
-			
+				 mk_s_expr_oper($$, "LE", $1, $3);
 				}		|
 
 	scalar_expr SUB scalar_expr 	
 				{
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = $1;
-				  $$->right = $3;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _SUB;	
+				 mk_s_expr_oper($$, "SUB", $1, $3);
 				}		|
 	scalar_expr IN LPAREN in_predicate RPAREN
 				{
-				  $$ = MAKENODE(scalarExpr);
+				  $$ = MAKENODE(s_expr);
 				  $$->left = $1;
 				  $$->right = $4;
 				  $$->value.type = OPER;
@@ -584,7 +596,7 @@ scalar_expr:
 				}		|	
 	scalar_expr NOT IN LPAREN in_predicate RPAREN
 				{
-				  $$ = MAKENODE(scalarExpr);
+				  $$ = MAKENODE(s_expr);
 				  $$->left = $1;
 				  $$->right = $5;
 				  $$->value.type = OPER;
@@ -618,18 +630,18 @@ scalar_expr:
 
 				*/
 	
-				  $$ = MAKENODE(scalarExpr);
+				  $$ = MAKENODE(s_expr);
 				  $$->value.type = OPER;
 				  $$->value.value.oper_val = _AND;	
 
-				  $$->left = MAKENODE(scalarExpr);
+				  $$->left = MAKENODE(s_expr);
 				  $$->left->value.type = OPER;
 				  $$->left->value.value.oper_val = _GTE;
 
 				  $$->left->left = $1;
 				  $$->left->right = $3;
 
-				  $$->right = MAKENODE(scalarExpr);
+				  $$->right = MAKENODE(s_expr);
 				  $$->right->value.type = OPER;
 				  $$->right->value.value.oper_val = _LTE;
 	
@@ -648,50 +660,37 @@ value_expr:
 
 //macros:
 
-//new_tuple(tag, type, value)
+//new_tuple(tuple *, tag, type, value)
 //append_tuple(list, tuple)
 //append_tuple2(list, tag, type, value)
 
-		  $$=MAKENODE(tuple);
-		  $$.tag = "colref";
-		  $$.v_text = $1;
+		$$ = $1;
 		}
 		|
 	INT_LIT {
 		  //what's emitted here is a tuple (actually, a list-of-tuples)
 		  //for the time being, a single tuple
-		  $$=MAKENODE(tuple);
-		  $$.tag = "int";
-		  $$.v_int = $1;
+		    mk_tuplist_lit($$, v_int, "INT", $1);
 		}
 		|	
 	NUM_LIT {
-		  $$.type = NUM;
-		  $$=MAKENODE(tuple);
-		  $$.tag = "num";
-		  $$.v_float = $1;
+		    mk_tuplist_lit($$, v_float, "NUM", $1);
 		}
 		|	
 	STRING  {
-		  $$=MAKENODE(tuple);
-		  $$.tag = "text";
-		  $$.v_int = $1;
+		    mk_tuplist_lit($$, v_text, "INT", $1);
 		}
 ;
 
 colref:
 	IDENTIFIER 
 	{ 
-		$$=MAKENODE(tuple);
-		$$->colName = $1;
-		$$->colReference = NULL; 
+	        mk_tuplist_ident($$, NULL, $1);
 	}
 	|
 	IDENTIFIER POINT IDENTIFIER  
 	{
-		$$=MAKENODE(colRef);
-		$$->colName = $3;
-		$$->colReference = $1; 
+		mk_tuplist_ident($$, $1, $3);
 	}
 ;
 
