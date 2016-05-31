@@ -2,33 +2,28 @@
 #define _STRUCTURES_H
 
 #include <stdbool.h>
-#include "collections.h"
 
-
-/* Helper Enums for parse nodes */
-typedef enum { } tag;
-
-typedef enum { UNDEFINED, COLREF, INT, NUM, _TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
-
-typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
-		_BETWEEN, _NOT_BETWEEN } operVal;
-
-/* operator symbols */
 extern char *operSyms[];
 
-typedef struct s_expression s_expr;
-typedef struct linked_list llist;
 typedef struct ord_pair tuple;
+typedef struct linked_list llist;
+typedef struct s_expression s_expr;
 
 struct linked_list {
     llist *next;
     llist *prev;
-    llist list;
+};
+
+struct s_expression {
+  tuple *value;
+  llist list;
+  s_expr *left;
+  s_expr *right;
 };
 
 struct ord_pair {
     char *tag;
-    typedef union {
+    union {
 	unsigned int v_long;
 	int v_int;
 	float v_float;
@@ -39,16 +34,101 @@ struct ord_pair {
     llist list;
 };
 
-/* s-expression */
 
-typedef struct s_expr scalarExpr;
+#define LIST_TYPNAM llist
+#define LIST_MEMB_NAME list
 
-struct s_expr {
-  tuple *value;
-  llist list;
-  scalarExpr *left;
-  scalarExpr *right;
-};
+#define container_of(ptr, type, member) ((type *) ((char *)(ptr) - offsetof(type, member)))
+
+#define list_append(p,n) {                                              \
+                                LIST_TYPNAM *l = &p->LIST_MEMB_NAME;    \
+                                while (l->next !=NULL) l=l->next;       \
+                                l->next = &n->LIST_MEMB_NAME;           \
+                                l->next->next = NULL;                   \
+                         }
+
+#define list_foreach(p,T,d) for (LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->next )
+
+#define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
+
+#define new_tuple(p, t, T, v) { p=MAKENODE(tuple);	\
+				 p->tag=T;		\
+				 p->t=v;		\
+			       }			\
+
+#define mk_tuplist_lit(p, t, T, v) { tuple *x;				    \
+				     tuple *y;				    \
+				     new_tuple(p,t,"value",v);		    \
+				     new_tuple(x,v_text,"class","literal"); \
+				     new_tuple(y,v_text,"sqltype",T);	    \
+				     list_append(p,x);			    \
+				     list_append(x,y);			    \
+				    }
+/*
+    mk_tuplist_ident (<pointer>, <alias>, <value>)
+
+    make a tuplist describing a column reference
+
+    <pointer>	    pointer to a struct tuple.
+    <alias>	    column table reference or NULL if not present
+    <value>	    name of the column, char *
+
+*/
+
+#define mk_tuplist_ident(p, A, v) {  tuple *x ;					\
+				     tuple *y ;					\
+				     new_tuple(p,v_text,"value",v);		\
+				     new_tuple(x,v_text,"class","identifier");	\
+				     new_tuple(y,v_text,"reference",A);		\
+				     list_append(p,x);				\
+				     list_append(x,y);				\
+				    }
+				    
+/*
+    mk_tuplist_oper (<pointer>, <alias>, <value>)
+
+    make a tuplist describing an operator 
+
+    <pointer>	    pointer to a struct tuple.
+    <value>	    name of the operator
+
+*/
+
+#define mk_tuplist_oper(p, v)	    {tuple *x ;	 			\
+				     new_tuple(p,v_text,"value",v);		\
+				     new_tuple(x,v_text,"class","operator");	\
+				     list_append(p,x);				\
+				    }	
+
+#define mk_s_expr_val(p, v) { p=MAKENODE(s_expr);	\
+			      p->value = v;		\
+			      p->left = NULL;		\
+			      p->right = NULL;		\
+			      p->list.next = NULL;	\
+			}
+
+#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
+			      mk_tuplist_oper(p->value, v);	\
+			      p->left = l;			\
+			      p->right = r;			\
+			      p->list.next = NULL;		\
+			}
+
+#define tuple_append(p, t, T, v) {  tuple *n;			\
+				    new_tuple(n, t, T, v);	\
+				    list_append(p, n);		\
+				    }
 
 
+/* Helper Enums for parse nodes */
+//typedef enum { } tag;
+
+/*
+typedef enum { UNDEFINED, COLREF, INT, NUM, _TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
+
+typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
+		_BETWEEN, _NOT_BETWEEN } operVal;
+*/
+
+/* operator symbols */
 #endif

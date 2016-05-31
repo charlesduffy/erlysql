@@ -4,105 +4,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "collections.h"
 #include "structures.h"
-#include "parsetree.h"
 #include "dbglog.h"
-
-#define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
-
-#define new(nodetype) new_##nodetype(malloc((size_t) sizeof( nodetype )))
-
-//new_tuple(tuple *, tag, type, value)
-#define new_tuple(p , t, T, v) { p=MAKENODE(tuple);	\
-				 p->tag=t;		\
-				 p->T=v;		\
-			       }			\
-
-#define mk_tuplist_lit(p, t, T, v) { x * tuple;				    \
-				     y * tuple;				    \
-				     new_tuple(p,t,"value",v);		    \
-				     new_tuple(x,v_char,"class","literal"); \
-				     new_tuple(y,v_char,"sqltype",T);	    \
-				     list_append(p,x);			    \ 
-				     list_append(x,y);			    \ 
-				    }					    
-/*
-    mk_tuplist_ident (<pointer>, <alias>, <value>)
-
-    make a tuplist describing a column reference
-
-    <pointer>	    pointer to a struct tuple.
-    <alias>	    column table reference or NULL if not present
-    <value>	    name of the column, char *
-
-*/
-
-#define mk_tuplist_ident(p, A, v) {  x * tuple;					\
-				     y * tuple;					\
-				     new_tuple(p,v_char,"value",v);		\
-				     new_tuple(x,v_char,"class","identifier");	\
-				     new_tuple(y,v_char,"reference",A);		\
-				     list_append(p,x);				\	 
-				     list_append(x,y);				\ 
-				    }						
-				    
-/*
-    mk_tuplist_oper (<pointer>, <alias>, <value>)
-
-    make a tuplist describing an operator 
-
-    <pointer>	    pointer to a struct tuple.
-    <value>	    name of the operator
-
-*/
-
-#define mk_tuplist_oper(p, v)	    {   x * tuple;				\
-				     new_tuple(p,v_char,"value",v);		\
-				     new_tuple(x,v_char,"class","operator");	\
-				     list_append(p,x);				\	 
-				    }						
-
-#define mk_s_expr_val(p, v) { p=MAKENODE(s_expr);	\
-			      p->value = v;		\
-			      p->left = NULL;		\
-			      p->right = NULL;		\
-			      p->list = NULL;		\
-			}
-
-#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
-			      mk_tuplist_oper(p->value, v);	\
-			      p->left = l;			\
-			      p->right = r;			\
-			      p->list = NULL;			\
-			}
-
-#define tuple_append(p, t, T, v) {  tuple *n;			\
-				    new_tuple(n, t, T, v);	\
-				    list_append(p, n);		\
-				    }
-
-#define add_list_item(nodetype,node,item) {                                                     		\
-      listInfoBlock list = (node)->list;                                                      		\
-      nodetype **resizePtr;                                                                     		\
-        size_t nodeAllocSize = (size_t) sizeof(nodetype *) * nodetype##_allocnmemb;             		\
-          if (list.nElements == 0) {                                                           			\
-                node->sItems = malloc(nodeAllocSize);                                           		\
-                if (node->sItems == NULL) yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item"));   \
-          } else if (list.nElements > 0) { 									\
-		 if (list.nElements % nodetype##_allocnmemb == 0) {                                             \
-                 resizePtr = realloc(node->sItems, list.currentSize + nodeAllocSize);           		\
-                 if (resizePtr == NULL) {                                                        		\
-                 	yyerror (&yylloc, scanner, ptree, YY_("can't allocate list item")); 			\
-                 } else {                                                                        		\
-                         list.currentSize = list.currentSize + nodeAllocSize;                  			\
-                         node->sItems = resizePtr;                                               		\
-                 }   												\
-	      }                                                                            			\
-          }                                                                                     		\
-          *(node->sItems + list.nElements) = item;                                             			\
-          (node)->list.nElements++;       									\
-}
  
 typedef void *yyscan_t;
 
@@ -112,59 +15,26 @@ typedef void *yyscan_t;
 
 %define api.pure full
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {multiQueryNode * ptree}
+%parse-param {yyscan_t scanner} {tuple * ptree}
 
 %locations
-/* semantic value */
 
 %union 
-	{
+{
 	int			integer_val;
 	char 			*text_val;
 	float  			float_val;
 	char			*keyword;
 	char    		*identifier_val;
 
-
-	/* Query Nodes */
-	multiQueryNode		*multiQuery;
-	queryNode 		*query;
-
-	/* DML Nodes - SELECT */
-
-	selectStmtNode 		*selectStmt;
-	//selectListNode 		*selectListItem;
-	selectListItemNode 	*selectListItem;
-	fromClauseNode 		*fromClause;
-	tableRefNode   		*tableRef;
-	//tableRefListNode 	*tableRefList;
-	tableExprNode  		*tableExpr;
-	valueExprNode  		valueExpr;
-	scalarExpr	 	*sExpr;
-	whereClauseNode 	*whereClause;
-	colRef			*columnRef;
-
-	/* DML Nodes - INSERT */
-
-	insertStmtNode		*insertStmt;
-	insertColListNode	*insertColList;
-	insertValListNode	*insertValList;
-
-	/* DDL Nodes - CREATE TABLE */
-
-	columnDefNode             *columnDef;
-	columnDefListNode         *columnDefList;
-	ddlTableRefNode        	  *createTableRef;
-	createTableStmtNode	  *createTableStmt;
-	dropTableStmtNode	  *dropTableStmt;
-	valueExprType		  dataType;
-	
+	s_expr			*sExpr;	
+	tuple			*Tuple;
 }	
 
 %code{
 
-  void yyerror (YYLTYPE *l, yyscan_t scanner, multiQueryNode *mqry, char const *s) {
-       mqry->errFlag = 1;
+  void yyerror (YYLTYPE *l, yyscan_t scanner, tuple *mqry, char const *s) {
+       //mqry->errFlag = 1;
        fprintf (stderr, "ERROR: %s -- %d %d %d %d \n", s, l->first_line, l->first_column, l->last_line, l->last_column);  
   }
 
@@ -211,31 +81,12 @@ typedef void *yyscan_t;
 %left           POINT
 %left 		AS
 
-%type	<multiQuery>			sql
-%type	<query>			query_statement
-%type 	<selectStmt> 		select_statement
-//%type 	<selectList> 		select_list
-%type 	<selectListItem> 	select_list
-%type 	<selectListItem>	select_list_item
-%type 	<fromClause> 		from_clause
-%type 	<tableRef> 		table_ref
-//%type 	<tableRefList> 		table_ref_list
-%type 	<tableRef> 		table_ref_list
-%type 	<valueExpr> 		value_expr
-%type 	<sExpr> 		scalar_expr
-%type   <columnRef> 		colref
-%type   <whereClause> 		where_clause
-%type 	<tableExpr> 		table_expr
-%type   <columnDef>   		column_definition
-%type   <columnDefList>		column_definition_list
-%type   <dataType>		data_type
-%type   <insertStmt>		insert_statement
-%type   <insertValList>		insert_value_list
-%type   <insertColList>		column_list
-%type   <createTableRef>	ddl_table_ref
-%type 	<createTableStmt>	create_table_stmt
-%type 	<dropTableStmt>		drop_table_stmt
-%type	<sExpr>			in_predicate
+%type <Tuple>	sql query_statement select_statement select_list select_list_item from_clause table_ref
+		table_ref_list value_expr colref where_clause table_expr
+		column_definition column_definition_list data_type insert_statement insert_value_list column_list
+		ddl_table_ref create_table_stmt drop_table_stmt in_predicate
+
+%type <sExpr>	scalar_expr 	
 
 %token  <identifier_val>  IDENTIFIER
 
@@ -252,7 +103,7 @@ sql:
     |
     sql query_statement SEMICOLON
     {
-	tuple_append($$, v_tuple, "query", $3);
+	tuple_append($$, v_tuple, "query", $2);
     }
 ;
 
@@ -297,59 +148,32 @@ INSERT STATEMENT
 insert_statement:
     INSERT INTO ddl_table_ref LPAREN column_list RPAREN VALUES LPAREN insert_value_list RPAREN 
     { 
-	$$ = MAKENODE(insertStmtNode);
-	$$->table = $3;
-	$$->collist = $5;
-	$$->vallist = $9;	
-	$$->selnode = NULL;
     }
     |
     INSERT INTO ddl_table_ref VALUES LPAREN insert_value_list RPAREN 
     {
-	$$ = MAKENODE(insertStmtNode);
-	$$->table = $3;
-	$$->collist = NULL;
-	$$->vallist = $6;	
-	$$->selnode = NULL;
     }
     |
     INSERT INTO ddl_table_ref select_statement 
     {
-	$$ = MAKENODE(insertStmtNode);
-	$$->table = $3;
-	$$->collist = NULL;
-	$$->vallist = NULL;	
-	$$->selnode = $4;
     }
 ;
 
 column_list:
     IDENTIFIER
     {
-	$$ = MAKENODE(insertColListNode);
-	$$->sItems = malloc ((size_t) sizeof (insertColListNode*) * 20);
-	$$->nElements = 1;
-	*($$->sItems) = $1;
     } 
     |
     column_list COMMA IDENTIFIER
     {
-	*($$->sItems + ($$->nElements)) = $3;
-	$$->nElements++;
     }
 ;	
 
 insert_value_list:
 	scalar_expr { 
-		$$ = MAKENODE(insertValListNode);
-		$$->sItems = malloc ((size_t) sizeof (insertValListNode*) * 20);
-		$$->nElements = 1;
-		*($$->sItems) = $1;
 	}	
 	|		
 	insert_value_list COMMA scalar_expr {	
-		*($$->sItems + ($$->nElements)) = $3; //remove redundant parentheses
-		$$->nElements++;
 	}
 ;
 
@@ -424,7 +248,7 @@ where_clause:
 
 from_clause:
 	FROM table_ref_list { 
-				$$ = $1;
+				new_tuple($$, v_tuple, "from_clause", $2);
 			    }
 ;
 
@@ -482,104 +306,97 @@ EXPRESSIONS
 
 
 scalar_expr:
-	value_expr  { 
-		      $$ = MAKENODE(s_expr);
-		      $$->value = $1;
-		      $$->left = NULL;
-		      $$->right = NULL;
-		      $$->list = NULL;
-		    }
-	        |
-	LPAREN scalar_expr RPAREN
-				{ 
-				  $$ = MAKENODE(s_expr);
-				  $$->left = $2;
-				  $$->right = NULL;	 //huh?? re-think the logic of this rule		  
-				}		|
-	scalar_expr ADD scalar_expr 
-				{
-				 //#define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
-				 // $$ = MAKENODE(s_expr);
-				 mk_s_expr_oper($$, "ADD", $1, $3);
-				}		|
-				
-	scalar_expr MUL scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "MUL", $1, $3);
-				}		|
-	
-	scalar_expr DIV scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "DIV", $1, $3);
-				}		|
-
-	scalar_expr MOD scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "MOD", $1, $3);
-				}		|
-
-	scalar_expr AND scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "AND", $1, $3);
-				}		|
-
-	scalar_expr OR scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "OR", $1, $3);
-				}		|
-
-	scalar_expr EQ scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "EQ", $1, $3);
-
-				}		|
-
-	scalar_expr NE scalar_expr 		 
-				{
-				 mk_s_expr_oper($$, "NE", $1, $3);
-				}		|
-
-	scalar_expr GT scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "GT", $1, $3);
-				}		|
-
-	scalar_expr LT scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "LT", $1, $3);
-				}		|
-
-	scalar_expr GE scalar_expr 		
-				{
-				 mk_s_expr_oper($$, "GE", $1, $3);
-				}		|
-	scalar_expr LE scalar_expr 	
-				{
-				 mk_s_expr_oper($$, "LE", $1, $3);
-				}		|
-
-	scalar_expr SUB scalar_expr 	
-				{
-				 mk_s_expr_oper($$, "SUB", $1, $3);
-				}		|
-	scalar_expr IN LPAREN in_predicate RPAREN
-				{
-				  $$ = MAKENODE(s_expr);
-				  $$->left = $1;
-				  $$->right = $4;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _IN;	
-				}		|	
-	scalar_expr NOT IN LPAREN in_predicate RPAREN
-				{
-				  $$ = MAKENODE(s_expr);
-				  $$->left = $1;
-				  $$->right = $5;
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _NOT_IN;	
-				}		|	
-	scalar_expr BETWEEN scalar_expr AND scalar_expr
-				{
+    value_expr
+    { 
+	$$ = MAKENODE(s_expr);
+	$$->value = $1;
+	$$->left = NULL;
+	$$->right = NULL;
+	$$->list.next = NULL;
+    }
+    |
+    LPAREN scalar_expr RPAREN
+    { 
+	$$ = MAKENODE(s_expr);
+	$$->left = $2;
+	$$->right = NULL;	 //huh?? re-think the logic of this rule		  
+    }
+    |
+    scalar_expr ADD scalar_expr 
+    {
+	mk_s_expr_oper($$, "ADD", $1, $3);
+    }
+    |
+    scalar_expr MUL scalar_expr 		
+    {
+	mk_s_expr_oper($$, "MUL", $1, $3);
+    }
+    |
+    scalar_expr DIV scalar_expr 		
+    {
+	mk_s_expr_oper($$, "DIV", $1, $3);
+    }
+    |
+    scalar_expr MOD scalar_expr 		
+    {
+	mk_s_expr_oper($$, "MOD", $1, $3);
+    }
+    |
+    scalar_expr AND scalar_expr 		
+    {
+	mk_s_expr_oper($$, "AND", $1, $3);
+    }
+    |
+    scalar_expr OR scalar_expr 		
+    {
+	mk_s_expr_oper($$, "OR", $1, $3);
+    }
+    |
+    scalar_expr EQ scalar_expr 		
+    {
+	mk_s_expr_oper($$, "EQ", $1, $3);
+    }
+    |
+    scalar_expr NE scalar_expr 		 
+    {
+	mk_s_expr_oper($$, "NE", $1, $3);
+    }
+    |
+    scalar_expr GT scalar_expr 		
+    {
+	mk_s_expr_oper($$, "GT", $1, $3);
+    }
+    |
+    scalar_expr LT scalar_expr 		
+    {
+	mk_s_expr_oper($$, "LT", $1, $3);
+    }
+    |
+    scalar_expr GE scalar_expr 		
+    {
+	mk_s_expr_oper($$, "GE", $1, $3);
+    }
+    |
+    scalar_expr LE scalar_expr 	
+    {
+	mk_s_expr_oper($$, "LE", $1, $3);
+    }
+    |
+    scalar_expr SUB scalar_expr 	
+    {
+	mk_s_expr_oper($$, "SUB", $1, $3);
+    }
+    |
+    scalar_expr IN LPAREN in_predicate RPAREN
+    {
+    }
+    |	
+    scalar_expr NOT IN LPAREN in_predicate RPAREN
+    {
+    }
+    |	
+scalar_expr BETWEEN scalar_expr AND scalar_expr
+{
 				/*
 				   This action rewrites the BETWEEN construct as a boolean
 				   expression. 
@@ -604,7 +421,6 @@ scalar_expr:
 				This might need some fancy mid rule action or token pushback in the
 				normal AND rule.
 
-				*/
 	
 				  $$ = MAKENODE(s_expr);
 				  $$->value.type = OPER;
@@ -623,29 +439,17 @@ scalar_expr:
 	
 				  $$->right->left = $1; 
 				  $$->right->right = $5;  
+				*/
 
 				}	
 ;
 
 value_expr:
 	colref  { 
-
-		//here we need 2 macros
-		// 1)   mk_tuplist_lit(sqltype, value)
-		// 2)   mk_tuplist_ident(nametype, value)
-
-//macros:
-
-//new_tuple(tuple *, tag, type, value)
-//append_tuple(list, tuple)
-//append_tuple2(list, tag, type, value)
-
-		$$ = $1;
+		    $$ = $1;
 		}
 		|
 	INT_LIT {
-		  //what's emitted here is a tuple (actually, a list-of-tuples)
-		  //for the time being, a single tuple
 		    mk_tuplist_lit($$, v_int, "INT", $1);
 		}
 		|	
@@ -680,20 +484,8 @@ colref:
 
 in_predicate:
 	scalar_expr {
-				  $$ = MAKENODE(scalarExpr);
-				  $$->left = NULL;
-				  $$->right = NULL;
-				  $$->value.type = IN_LIST;
-				  $$->value.value.in_list_val = MAKENODE(inListNode);
-				  $$->value.value.in_list_val->inListValue = $1;
-				  $$->value.value.in_list_val->list.next = NULL;
-
-				
 		} |
 	in_predicate COMMA scalar_expr {
-				  inListNode *inListVal = MAKENODE(inListNode);
-				  inListVal->inListValue = $1;
-				  list_append($$->value.value.in_list_val, inListVal);
 	}
 ;
 
@@ -705,8 +497,6 @@ in_predicate:
 drop_table_stmt:
 	DROP TABLE ddl_table_ref
 	{
-		$$=MAKENODE(dropTableStmtNode);
-		$$->dropTable = $3;
 	}
 ;
 
@@ -715,69 +505,45 @@ drop_table_stmt:
 ddl_table_ref:
 	IDENTIFIER 
 	{
-		$$=MAKENODE(ddlTableRefNode);
-		$$->tableName = $1;
-		$$->tableSchema = NULL; 
 	}
 	|
 	IDENTIFIER POINT IDENTIFIER  
 	{
-		$$=MAKENODE(ddlTableRefNode);
-		$$->tableName = $1;
-		$$->tableSchema = $3; 
 	}
 ;
 
 data_type:
 	INTEGER	
 		{
-			$$ = INT;	
 		}
 		|
 	NUMERIC 
 		{
-			$$ = NUM;
 		}
 		|
 	CHAR	{
-			$$ = _TEXT;	
 		}
 ;
 
 create_table_stmt:
 	CREATE TABLE ddl_table_ref LPAREN column_definition_list RPAREN
 	{
-		debug ("create table statement");
-		$$=MAKENODE(createTableStmtNode);
-		$$->createTable = $3;
-		$$->colDefList = $5;
-		
 	}
 ;
 
 column_definition_list:
 	column_definition
 	{
-			$$ = MAKENODE(columnDefListNode);
-			//Again we hardcode and preallocate a limited number of column definition nodes
-			$$->colDef = malloc ( (size_t)sizeof(columnDefNode) * 20); //TEMPORARY! FIX ASAP. 
-			*($$->colDef) = $1;
-			$$->nElements = 1;
 	} 
 	|
 	column_definition_list COMMA column_definition
 	{
-			*($$->colDef + ($$->nElements)) = $3;			
-			$$->nElements++;
 	}
 ;
 
 column_definition: 
 	IDENTIFIER data_type
 	{
-		$$ = MAKENODE(columnDefNode);
-		$$->colName = $1;
-		$$->colType = $2;	
 	}
 
 ;

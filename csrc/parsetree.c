@@ -1,60 +1,14 @@
 #include "grammar.tab.h"
 #include "scanner.h"
 #include "dbglog.h"
-#include "parsetree.h"
+#include "structures.h"
 #include <string.h>
 #include <malloc.h>
 #include <stddef.h>
 #include <stdbool.h>
 
-#define MAXBUFLEN 1024 //TODO get rid of this sort of thing
-
-// Accessor functions
-
-// TODO: consider dropping the below funcs / function-ptr concept
-
 /*
-selectListNode * get_select_list1 (selectStmtNode *selectStmt) {
-	return(selectStmt->selectList);
-}
-
-selectListNode * get_select_list0 (queryNode *query) {
-	return(get_select_list1(query->selnode));
-}
-*/
-
-// Constructor functions
-multiQueryNode * new_multiQueryNode ( multiQueryNode *node ) {
-//initialise query Node
-	return(node);
-}
-
-queryNode * new_queryNode ( queryNode *node ) {
-//initialise query Node
-	node->errNode = NULL;
-	node->errFlag = 0;
-	node->list.next = NULL;
-	return(node);
-}
-
-selectStmtNode * new_selectStmtNode ( selectStmtNode *node ) {
-//initialise selectStmtNode 
-	return(node);
-}
-
-listInfoBlock * new_listInfoBlock ( listInfoBlock *node ) {
-
-//initialise index
-	node->index = 0;
-	node->nElements = 0;
-	return(node);
-}
-
-// Destructor functions
-
-// Test functions
-
-bool sexpr_is_boolean( scalarExpr *sExpr) {
+bool sexpr_is_boolean( s_expr * sExpr) {
 
 if (sExpr->value.type == OPER) {
 	 switch(sExpr->value.value.oper_val) {
@@ -83,6 +37,7 @@ else  {
 
 }
 
+*/
 
 // miscellaneous functions
 
@@ -100,10 +55,10 @@ might strip whitespace, find basic problems (corruption, too long, too short etc
 
 // parser entry point
 
-multiQueryNode * parseQuery(char * queryText)
+tuple * parseQuery(char * queryText)
 {
   YY_BUFFER_STATE buf;
-  multiQueryNode *mqry = new(multiQueryNode);
+  tuple *mqry;
   yyscan_t scanner;
   yylex_init(&scanner);
   buf = yy_scan_string(queryText, scanner);

@@ -5,7 +5,7 @@
 #include "grammar.tab.h"
 #include "scanner.h"
 #include "dbglog.h"
-#include "collections.h"
+#include "structures.h"
 
 #define MAXBUFLEN 1024
 
