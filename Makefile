@@ -25,7 +25,7 @@ vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
 NIFSO=parser_nif.so
-OBJECTS=parser_nif.o scanner.o grammar.tab.o parsetree.o
+OBJECTS=parser_nif.o scanner.o grammar.tab.o structures.o parsetree.o
 
 ##################
 #test harness
@@ -83,7 +83,7 @@ $(SRCDIR)/test/testParser.c: $(SRCDIR)/test/genTestParser.pl
 	$(PERL) $(SRCDIR)/test/genTestParser.pl > $(SRCDIR)/test/testParser.c
 
 test:	CFLAGS = $(TESTCFLAGS)
-test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o $(SRCDIR)/test/testParser.c
+test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o structures.o $(SRCDIR)/test/testParser.c
 	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o parsetree.o) -lfl -o $(TESTTARGET)
 	./$(TESTTARGET) -v	
 

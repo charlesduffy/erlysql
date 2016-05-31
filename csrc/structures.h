@@ -5,6 +5,8 @@
 
 extern char *operSyms[];
 
+typedef enum { v_text , v_int , v_float , v_tuple , v_sexpr } ttype;
+
 typedef struct ord_pair tuple;
 typedef struct linked_list llist;
 typedef struct s_expression s_expr;
@@ -23,6 +25,7 @@ struct s_expression {
 
 struct ord_pair {
     char *tag;
+    ttype type;
     union {
 	unsigned int v_long;
 	int v_int;
@@ -33,7 +36,6 @@ struct ord_pair {
     };
     llist list;
 };
-
 
 #define LIST_TYPNAM llist
 #define LIST_MEMB_NAME list
@@ -49,11 +51,16 @@ struct ord_pair {
 
 #define list_foreach(p,T,d) for (LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->next )
 
+#define tuplist_next(p) container_of(ll->next,tuple *,LIST_MEMB_NAME)
+
 #define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
 
 #define new_tuple(p, t, T, v) { p=MAKENODE(tuple);	\
 				 p->tag=T;		\
+				 p->type = t;		\
 				 p->t=v;		\
+				 p->list.next = NULL;	\
+				 p->list.prev = NULL;	\
 			       }			\
 
 #define mk_tuplist_lit(p, t, T, v) { tuple *x;				    \
@@ -119,16 +126,4 @@ struct ord_pair {
 				    list_append(p, n);		\
 				    }
 
-
-/* Helper Enums for parse nodes */
-//typedef enum { } tag;
-
-/*
-typedef enum { UNDEFINED, COLREF, INT, NUM, _TEXT, OPER, SEXPR, WILDCARD, IN_LIST, BETWEEN_PREDICATE } valueExprType;
-
-typedef enum { _DIV, _MUL, _ADD, _SUB, _MOD, _GT, _LT, _GTE, _LTE, _OR, _AND, _NOT, _EQ, _NE, _IN, _NOT_IN,
-		_BETWEEN, _NOT_BETWEEN } operVal;
-*/
-
-/* operator symbols */
 #endif
