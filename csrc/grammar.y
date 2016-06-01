@@ -97,13 +97,18 @@ typedef void *yyscan_t;
 sql:
     query_statement SEMICOLON
     {
-	new_tuple($$, v_tuple, "query", $1);
-	ptree = $$;
+	printf("hello!\n");
+	$$ = ptree;
+	$$->type = v_tuple;
+	$$->v_tuple = $1;
+	$$->tag = "query";
+	$$->list.next = NULL;	
     }
     |
     sql query_statement SEMICOLON
     {
-	tuple_append($$, v_tuple, "query", $2);
+	printf("hellohello!\n");
+	tuple_append(ptree , v_tuple, "query", $2);
     }
 ;
 

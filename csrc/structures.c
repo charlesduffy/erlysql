@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "structures.h"
 //--process_tuplist(p, fn)
@@ -14,19 +15,38 @@
 
 void * process_tuplist (tuple *,void * (*)(tuple *));
 void * process_sexpr   (s_expr *, void * (*)(s_expr *));
+void * print_tupval(tuple *);
+
+tuple * tup_container(p) {
+    return(container_of(p, tuple, list));
+}
 
 //v1 just prints.
 void * process_tuplist(tuple *t, void * (*fn)(tuple *)) {
-   
+
+    switch(t->type) {
+	case v_int: printf("v_int:     {%s:%d}\n", t->tag, t->v_int);break;
+	case v_text: printf("v_text:   {%s:%s}\n", t->tag, t->v_text);break; 
+	case v_float:printf("v_float:  {%s:%f}\n", t->tag, t->v_float);break; 
+	case v_tuple: printf("v_tuple:  {%s:tuple}\n", t->tag);break; 
+	case v_sexpr: printf("v_sexpr: {%s:sexpr}\n", t->tag);break; 
+   }
+    
+    //process depth-first (enter each nested list first)
+    if (t->type == v_tuple) {
+	process_tuplist(t->v_tuple, fn(t->v_tuple));
+    }    
+
+
     if (t->list.next != NULL) {
-	process_tuplist(tuplist_next(t), fn(t));
+	process_tuplist(tuplist_next(t), fn(tuplist_next(t)));
     }
 
     //if value is a sexpr, process that
     if (t->type == v_sexpr) {	
 	process_sexpr(t->v_sexpr, fn(t->v_sexpr));
     } else {
-	fn(t);
+//	fn(t);
     }
     //aggregate r+fn(t)
 }
@@ -41,15 +61,15 @@ void * process_sexpr (s_expr *s, void * (*fn)(s_expr *)) {
 	process_sexpr(s->right, fn(s->right));
     }
 
-    fn(s->value);
+ //   fn(s->value);
 }
 
 void * print_tupval(tuple *t) {
-    printf("{%s:", t->tag);
+//    printf("{%s:", t->tag);
     switch(t->type) {
-	case v_int: printf("%d\n", t->v_int);break;
-	case v_text: printf("%s", t->v_text);break;
-	case v_float: printf("%f", t->v_float);break;
+//	case v_int: printf("%d}\n", t->v_int);break;
+//	case v_text: printf("%s}\n", t->v_text);break;
+//	case v_float: printf("%f}\n", t->v_float);break;
    }
 }
 

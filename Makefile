@@ -16,7 +16,7 @@ PERL=/usr/bin/perl
 ##################
 
 
-CFLAGS=-std=gnu99 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ -g
+CFLAGS=-std=gnu99 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ --gdwarf-2 -g3
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 

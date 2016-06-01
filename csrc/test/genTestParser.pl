@@ -30,7 +30,7 @@ TESTRUNNER
 	printf( "TEST# $bpTest : '$SqlStmt' ");
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
-	process_tuplist(qry1);
+	process_tuplist(qry1, print_tupval);
         //result = qry1->errFlag;
 	//printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
         TEST_ASSERT_EQUAL_MESSAGE(0,result, queryText1);
@@ -65,8 +65,11 @@ my $Preamble1 = << "PREAMBLE1";
 #include <stdbool.h>
 
 YY_BUFFER_STATE buf1, buf2;
-tuple *qry1;
+tuple qry2;
+tuple *qry1 = &qry2;
 yyscan_t scanner1;
+
+void * print_tupval(tuple *);
 
 TEST_GROUP(basicParser);
 
@@ -83,7 +86,6 @@ TEST_GROUP_RUNNER (basicParser) {
 
 TEST_TEAR_DOWN(basicParser) {
 
-   free(qry1);    
    yy_delete_buffer(buf1, scanner1);
    yylex_destroy(scanner1);
 }
