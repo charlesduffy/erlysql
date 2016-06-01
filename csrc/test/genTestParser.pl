@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 my $SqlInputPath = "/home/ccd/xndb-micro/csrc/test/";
-my $SqlInputFileName = "$SqlInputPath/BasicParser.sql";
+my $SqlInputFileName = "$SqlInputPath/LimitedParser.sql";
 
 open (my $fileHandle, '<' ,  $SqlInputFileName ) or die "Can't open SQL datafile $SqlInputFileName \n";
 
@@ -30,6 +30,7 @@ TESTRUNNER
 	printf( "TEST# $bpTest : '$SqlStmt' ");
         buf1 = yy_scan_string(queryText1, scanner1);
         yyparse(scanner1, qry1);
+	process_tuplist(qry1);
         //result = qry1->errFlag;
 	//printf("result: %c \t %s\\n", qry1->errFlag, queryText1);
         TEST_ASSERT_EQUAL_MESSAGE(0,result, queryText1);

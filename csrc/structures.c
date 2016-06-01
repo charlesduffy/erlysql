@@ -12,18 +12,19 @@
 //--process_sexpr(p, fn)
 //- for an s_expr, recursively process the tree, applying fn to each element
 
-void * process_tuplist(tuple *,(void *) (*)(tuple *));
+void * process_tuplist (tuple *,void * (*)(tuple *));
+void * process_sexpr   (s_expr *, void * (*)(s_expr *));
 
 //v1 just prints.
 void * process_tuplist(tuple *t, void * (*fn)(tuple *)) {
    
     if (t->list.next != NULL) {
-	process_tuplist(tuplist_next(t), fn);
+	process_tuplist(tuplist_next(t), fn(t));
     }
 
     //if value is a sexpr, process that
     if (t->type == v_sexpr) {	
-	process_sexpr(t->value, fn);
+	process_sexpr(t->v_sexpr, fn(t->v_sexpr));
     } else {
 	fn(t);
     }
@@ -33,22 +34,22 @@ void * process_tuplist(tuple *t, void * (*fn)(tuple *)) {
 void * process_sexpr (s_expr *s, void * (*fn)(s_expr *)) {
 
     if (s->left != NULL) {
-	process_sexpr(s->left);
+	process_sexpr(s->left, fn(s->left));
     } 
 
     if (s->right != NULL) {
-	process_sexpr(s->right);
+	process_sexpr(s->right, fn(s->right));
     }
-    fn(s);
+
+    fn(s->value);
 }
 
-void print_tupval(tuple *t) {
+void * print_tupval(tuple *t) {
     printf("{%s:", t->tag);
     switch(t->type) {
-	case v_int: printf("%d}\n", t->v_int);break;
-	case v_text: printf("%s}", t->v_text);break;
-	case v_float: printf("%f}", t->v_float);break;
-//	case v_sexpr: print_sexpr(t);
+	case v_int: printf("%d\n", t->v_int);break;
+	case v_text: printf("%s", t->v_text);break;
+	case v_float: printf("%f", t->v_float);break;
    }
 }
 

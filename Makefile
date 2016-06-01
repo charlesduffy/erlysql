@@ -84,7 +84,7 @@ $(SRCDIR)/test/testParser.c: $(SRCDIR)/test/genTestParser.pl
 
 test:	CFLAGS = $(TESTCFLAGS)
 test:	grammar.tab.c scanner.c scanner.o grammar.tab.o parsetree.o structures.o $(SRCDIR)/test/testParser.c
-	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o parsetree.o) -lfl -o $(TESTTARGET)
+	$(CC) -DUNITY_FIXTURES $(CFLAGS) $(TESTINC) $(TESTSRC) $(SRCDIR)/test/testParser.c $(patsubst %.o, $(SRCDIR)/%.o, scanner.o grammar.tab.o parsetree.o structures.o) -lfl -o $(TESTTARGET)
 	./$(TESTTARGET) -v	
 
 testdebug: 	TESTCFLAGS += -DXDEBUG
