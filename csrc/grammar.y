@@ -198,7 +198,7 @@ select_list:
     |
     select_list COMMA select_list_item
     { 
-	list_append($$,$3);
+	tuple_append($$,v_tuple, "select_list_item", $3);
     } 
 ;
 
@@ -228,20 +228,6 @@ select_statement:
     }
 ;
 
-where_clause:
-    WHERE scalar_expr 
-    {
-    //TODO replace check for boolean expression 
-    new_tuple($$, v_sexpr, "where_clause", $2); 
-    }
-;
-
-from_clause:
-	FROM table_ref_list { 
-				new_tuple($$, v_tuple, "from_clause", $2);
-			    }
-;
-
 table_ref:
     IDENTIFIER
     {
@@ -269,21 +255,21 @@ table_ref_list:
     |
     table_ref_list COMMA table_ref
     {
-	list_append($$,$3);	
+	tuple_append($$,v_tuple, "table", $3);	
     }
 ;
 
 table_expr:
-    from_clause
+    FROM table_ref_list
     {
 	//possib from lower element
-	new_tuple($$, v_tuple, "from_clause", $1);
+	new_tuple($$, v_tuple, "from_clause", $2);
     }
     |
-    from_clause where_clause
+    FROM table_ref_list WHERE scalar_expr
     {
-	new_tuple($$, v_tuple, "from_clause", $1);
-	tuple_append($$, v_tuple, "where_clause", $2); 
+	new_tuple($$, v_tuple, "from_clause", $2);
+	tuple_append($$, v_sexpr, "where_clause", $4); 
     }
 ;
 

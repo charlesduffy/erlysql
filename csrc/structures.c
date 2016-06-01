@@ -28,14 +28,22 @@ void * process_tuplist(tuple *t, void * (*fn)(tuple *)) {
 	case v_int: printf("v_int:     {%s:%d}\n", t->tag, t->v_int);break;
 	case v_text: printf("v_text:   {%s:%s}\n", t->tag, t->v_text);break; 
 	case v_float:printf("v_float:  {%s:%f}\n", t->tag, t->v_float);break; 
-	case v_tuple: printf("v_tuple:  {%s:tuple}\n", t->tag);break; 
+	case v_tuple:	printf("v_tuple:  {%s:tuple}\n\t\t", t->tag);
+			//process_tuplist(t->v_tuple, fn(t->v_tuple));
+			break; 
 	case v_sexpr: printf("v_sexpr: {%s:sexpr}\n", t->tag);break; 
    }
-    
-    //process depth-first (enter each nested list first)
     if (t->type == v_tuple) {
 	process_tuplist(t->v_tuple, fn(t->v_tuple));
     }    
+
+    if (t->list.next != NULL) {
+	process_tuplist(tuplist_next(t), fn(tuplist_next(t)));
+	//t = tuplist_next(t);
+    }
+
+   /* 
+    //process depth-first (enter each nested list first)
 
 
     if (t->list.next != NULL) {
@@ -49,6 +57,7 @@ void * process_tuplist(tuple *t, void * (*fn)(tuple *)) {
 //	fn(t);
     }
     //aggregate r+fn(t)
+*/
 }
 
 void * process_sexpr (s_expr *s, void * (*fn)(s_expr *)) {
