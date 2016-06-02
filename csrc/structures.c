@@ -24,7 +24,11 @@ tuple * tup_container(p) {
 //v1 just prints.
 void * process_tuplist(tuple *t, void * (*fn)(tuple *), int d) {
 
-
+    if (t->list.prev == NULL ) { 
+	    printf("\n"); 
+	    for (int i=0;i<d;i++) printf(" ");
+	    printf("[");
+    }
     switch(t->type) {
 	case v_int: printf("v_int:{%s:%d} ", t->tag, t->v_int);break;
 	case v_text: printf("v_text:{%s:%s} ", t->tag, t->v_text);break; 
@@ -34,14 +38,17 @@ void * process_tuplist(tuple *t, void * (*fn)(tuple *), int d) {
    }
     if (t->type == v_tuple) {
 	//pass "start list flag"
-	printf ("\n-=[");
+	//printf ("[");
 	process_tuplist(t->v_tuple, fn(t->v_tuple), d+1);
-	printf ("]=-\n");
+	//printf ("]\n");
 	//end list
     }    
 
     if (t->list.next != NULL) {
-	process_tuplist(tuplist_next(t), fn(tuplist_next(t)), d+1);
+	process_tuplist(tuplist_next(t), fn(tuplist_next(t)), d);
+    } else {
+	for (int i=0;i<d;i++) printf(" ");
+	printf("]\n");
     }
 
 }

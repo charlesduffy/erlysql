@@ -47,6 +47,7 @@ struct ord_pair {
                                 while (l->next !=NULL) l=l->next;       \
                                 l->next = &n->LIST_MEMB_NAME;           \
                                 l->next->next = NULL;                   \
+                                l->next->prev = l;                      \
                          }
 
 #define list_foreach(p,T,d) for (LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->next )

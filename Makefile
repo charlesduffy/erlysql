@@ -16,7 +16,7 @@ PERL=/usr/bin/perl
 ##################
 
 
-CFLAGS=-std=gnu99 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ --gdwarf-2 -g3
+CFLAGS=-std=gnu99 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ -gdwarf-2 -g3
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 
@@ -37,7 +37,7 @@ TESTSRC=$(UNITYROOT)/src/unity.c \
   	$(UNITYROOT)/extras/fixture/src/unity_fixture.c 
 	
 TESTTARGET=all_tests
-TESTCFLAGS=-Icsrc/ -g
+TESTCFLAGS=-Icsrc/ -std=gnu99 -gdwarf-2 -g3 
 
 ##################
 
