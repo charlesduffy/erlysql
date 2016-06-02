@@ -103,6 +103,7 @@ sql:
 	$$->v_tuple = $1;
 	$$->tag = "query";
 	$$->list.next = NULL;	
+	$$->list.prev = NULL;	
     }
     |
     sql query_statement SEMICOLON

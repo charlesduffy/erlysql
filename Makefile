@@ -16,7 +16,7 @@ PERL=/usr/bin/perl
 ##################
 
 
-CFLAGS=-std=gnu99 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/ -gdwarf-2 -g3
+CFLAGS=-g -std=gnu11 -fpic -I/usr/lib/erlang/usr/include/ -Icsrc/
 EFLAGS= -pa $(EBIN) -smp
 YFLAGS=-d 
 
@@ -24,8 +24,8 @@ vpath %.l $(SRCDIR)
 vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
-NIFSO=parser_nif.so
-OBJECTS=parser_nif.o scanner.o grammar.tab.o structures.o parsetree.o
+NIFSO=nif_convert.so
+OBJECTS=nif_convert.o scanner.o grammar.tab.o structures.o parsetree.o
 
 ##################
 #test harness
@@ -37,7 +37,7 @@ TESTSRC=$(UNITYROOT)/src/unity.c \
   	$(UNITYROOT)/extras/fixture/src/unity_fixture.c 
 	
 TESTTARGET=all_tests
-TESTCFLAGS=-Icsrc/ -std=gnu99 -gdwarf-2 -g3 
+TESTCFLAGS=-Icsrc/ -std=gnu99 -g
 
 ##################
 

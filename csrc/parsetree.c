@@ -40,25 +40,13 @@ else  {
 */
 
 // miscellaneous functions
-
-char *preprocQuery(char *queryText)
-{
-/* placeholder for proposed query string preprocessor
-
-might strip whitespace, find basic problems (corruption, too long, too short etc).
-
- */
-
-  return (queryText);
-}
-
-
 // parser entry point
 
-tuple * parseQuery(char * queryText)
+tuple * goparse(char * queryText)
 {
   YY_BUFFER_STATE buf;
-  tuple *mqry;
+  tuple qry;
+  tuple *mqry=&qry;
   yyscan_t scanner;
   yylex_init(&scanner);
   buf = yy_scan_string(queryText, scanner);

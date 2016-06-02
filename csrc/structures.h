@@ -113,6 +113,7 @@ struct ord_pair {
 			      p->left = NULL;		\
 			      p->right = NULL;		\
 			      p->list.next = NULL;	\
+			      p->list.prev = NULL;	\
 			}
 
 #define mk_s_expr_oper(p, v, l, r) { p=MAKENODE(s_expr);	\
@@ -120,6 +121,7 @@ struct ord_pair {
 			      p->left = l;			\
 			      p->right = r;			\
 			      p->list.next = NULL;		\
+			      p->list.prev = NULL;		\
 			}
 
 #define tuple_append(p, t, T, v) {  tuple *n;			\

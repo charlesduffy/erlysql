@@ -33,7 +33,7 @@
 -on_load(init/0).
 
 init() ->
-    ok = erlang:load_nif("./priv/parser_nif", 0).
+    ok = erlang:load_nif("./priv/nif_convert", 0).
 
 foo(_X) ->
     exit(nif_library_not_loaded).
