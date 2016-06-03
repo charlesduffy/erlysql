@@ -25,8 +25,8 @@ tuple * tup_container(p) {
 void * process_tuplist(tuple *t, void * (*fn)(tuple *), int d) {
 
     if (t->list.prev == NULL ) { 
-	    printf("\n"); 
-	    for (int i=0;i<d;i++) printf(" ");
+//	    printf("\n"); 
+//	    for (int i=0;i<d;i++) printf(" ");
 	    printf("[");
     }
     switch(t->type) {
@@ -47,7 +47,7 @@ void * process_tuplist(tuple *t, void * (*fn)(tuple *), int d) {
     if (t->list.next != NULL) {
 	process_tuplist(tuplist_next(t), fn(tuplist_next(t)), d);
     } else {
-	for (int i=0;i<d;i++) printf(" ");
+//	for (int i=0;i<d;i++) printf(" ");
 	printf("]\n");
     }
 

@@ -45,14 +45,13 @@ else  {
 tuple * goparse(char * queryText)
 {
   YY_BUFFER_STATE buf;
-  tuple qry;
-  tuple *mqry=&qry;
+  tuple *mqry=malloc((size_t)sizeof(tuple));
   yyscan_t scanner;
   yylex_init(&scanner);
   buf = yy_scan_string(queryText, scanner);
   yyparse(scanner, mqry);
-  yy_delete_buffer(buf, scanner);
-  yylex_destroy(scanner);
+  //yy_delete_buffer(buf, scanner);
+  //yylex_destroy(scanner);
   return (mqry);
 }
 
