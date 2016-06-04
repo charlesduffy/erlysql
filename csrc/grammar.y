@@ -442,7 +442,8 @@ value_expr:
 colref:
 	IDENTIFIER 
 	{ 
-	        mk_tuplist_ident($$, NULL, $1);
+                new_tuple($$,v_text,"class","identifier");  
+		tuple_append($$, v_text, "value", $1);
 	}
 	|
 	IDENTIFIER POINT IDENTIFIER  

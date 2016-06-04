@@ -10,7 +10,8 @@
 #define MAXBUFLEN 1024
 
 //static ERL_NIF_TERM process_tuplist2(tuple *t, ErlNifEnv *env, const ERL_NIF_TERM n);
-static ERL_NIF_TERM process_tuplist2(tuple *t, ErlNifEnv *env);
+static ERL_NIF_TERM process_tuplist2(tuple *, ErlNifEnv *);
+static ERL_NIF_TERM process_s_expr(s_expr *, ErlNifEnv *);
 /* Node to Erlang NIF term converters */
 
 /* NIF functions callable from erlang */
@@ -64,15 +65,6 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 //--process_tuplist(p, fn)
 //- for a list of tuples, recursively process each element. Apply fn to each element
 
-//--process_sexpr(p, fn)
-//- for an s_expr, recursively process the tree, applying fn to each element
-
-
-/*
-     x = enif_make_list(env, (unsigned int) 0);
-	x = process_tuplist2(tuplist_next(t), env, n);
-	n = enif_make_list_cell(env, x, n);
-*/
 static ERL_NIF_TERM process_tuplist2(tuple *t, ErlNifEnv *env) {
     tuple *d;
     ERL_NIF_TERM z,x;
@@ -82,52 +74,46 @@ static ERL_NIF_TERM process_tuplist2(tuple *t, ErlNifEnv *env) {
     list_ff(t);
     
     list_foreach_r (t, tuple, d) {
-
-    //printf("list item!\n");
-
-    switch(d->type) {
-	case v_int: 
-			//printf("v_int:{%s:%d} ", d->tag, d->v_int);	
-			z = enif_make_tuple2(env, 
-					    enif_make_atom(env, d->tag),
-					    enif_make_int(env, d->v_int)
-					);
-			break;
-	case v_text:	
-			//printf("v_text:{%s:%s} ", d->tag, d->v_text);
-			z = enif_make_tuple2(env, 
-					    enif_make_atom(env, d->tag),
-					    enif_make_string(env, d->v_text, ERL_NIF_LATIN1)
-					);
-			 break; 
-	case v_float:
-			//printf("v_float:{%s:%f} ", d->tag, d->v_float);
-			z = enif_make_tuple2(env, 
-					    enif_make_atom(env, d->tag),
-					    enif_make_double(env, d->v_float )
-					);
-			break; 
-	case v_tuple:
-			//printf("v_tuple:{%s:tuple} ", d->tag);
-			//z = process_tuplist2(d->v_tuple, env);
-			z = enif_make_tuple2(env, 
-					    enif_make_atom(env, d->tag),
-					    process_tuplist2(d->v_tuple, env)
-					);
-			break; 
-	case v_sexpr:   
-			//printf("v_sexpr:{%s:sexpr} ", d->tag);
-			z = enif_make_tuple2(env, 
-					    enif_make_atom(env, d->tag),
-					    enif_make_atom(env, "s-expression")
-					);
-			break; 
-   }
-    
-    x = enif_make_list_cell(env, z, x);
-}
+	tuple_to_nif (z , d);
+	x = enif_make_list_cell(env, z, x);
+    }
 
     return(x);
-
 }
 
+//--process_sexpr(p, fn)
+//- for an s_expr, recursively process the tree, applying fn to each element
+
+static ERL_NIF_TERM process_s_expr(s_expr *s, ErlNifEnv *env) {
+  /* traverse the scalarExpr and produce nested Erlang tuple 
+     representation of it 
+     ( 1 + ( foo * 4))
+     { + , 1, { * , foo , 4 }}
+     is oper?
+     yes:is left null?
+     yes:is right null?
+     yes:return value
+     no:recurse right
+     no:recurse left
+     no:return tuple of value
+   */
+
+  ERL_NIF_TERM left, right, value;
+  
+  if (s->left != NULL) 
+    left = process_s_expr(s->left, env);
+   else 
+    left = enif_make_atom(env, "null");
+  
+
+  if (s->right != NULL) 
+    right = process_s_expr(s->right, env);
+   else 
+    right = enif_make_atom(env, "null");
+
+  //tuple_to_nif(value,s->value);
+  value = process_tuplist2(s->value,env);
+
+  return(enif_make_tuple3(env, value, left, right)); 
+
+}

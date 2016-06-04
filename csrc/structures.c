@@ -18,7 +18,7 @@ void * process_sexpr   (s_expr *, void * (*)(s_expr *));
 
 
 tuple * tup_container(p) {
-    return(container_of(p, tuple, list));
+    return((tuple *)container_of(p, tuple, list));
 }
 
 //v1 just prints.

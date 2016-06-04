@@ -132,5 +132,16 @@ struct ord_pair {
 				    new_tuple(n, t, T, v);	\
 				    list_append(p, n);		\
 				    }
+/* Erlang NIF related macros */
+
+#define tuple_to_nif(z,d)														    \
+	switch(d->type) {														    \
+	case v_int: z = enif_make_tuple2(env, enif_make_atom(env, d->tag), enif_make_int(env, d->v_int)); break;			    \
+	case v_text:	z = enif_make_tuple2(env, enif_make_atom(env, d->tag), enif_make_string(env, d->v_text, ERL_NIF_LATIN1)); break;    \
+	case v_float: z = enif_make_tuple2(env, enif_make_atom(env, d->tag), enif_make_double(env, d->v_float )); break;		    \
+	case v_tuple: z = enif_make_tuple2(env, enif_make_atom(env, d->tag), process_tuplist2(d->v_tuple, env)); break;			    \
+	case v_sexpr:   z = enif_make_tuple2(env, enif_make_atom(env, d->tag), process_s_expr(d->v_sexpr, env)); break;		    \
+   }
+
 
 #endif
