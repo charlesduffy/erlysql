@@ -74,34 +74,60 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 	n = enif_make_list_cell(env, x, n);
 */
 static ERL_NIF_TERM process_tuplist2(tuple *t, ErlNifEnv *env) {
+    tuple *d;
+    ERL_NIF_TERM z,x;
 
-    if (t->list.prev == NULL ) { 
-//	    printf("\n"); 
-//	    for (int i=0;i<d;i++) printf(" ");
-	    printf("[");
-    }
-    switch(t->type) {
-	case v_int: printf("v_int:{%s:%d} ", t->tag, t->v_int);break;
-	case v_text: printf("v_text:{%s:%s} ", t->tag, t->v_text);break; 
-	case v_float:printf("v_float:{%s:%f} ", t->tag, t->v_float);break; 
-	case v_tuple:printf("v_tuple:{%s:tuple} ", t->tag);break; 
-	case v_sexpr: printf("v_sexpr:{%s:sexpr} ", t->tag);break; 
+    x = enif_make_list(env, (unsigned int) 0);
+
+    list_ff(t);
+    
+    list_foreach_r (t, tuple, d) {
+
+    //printf("list item!\n");
+
+    switch(d->type) {
+	case v_int: 
+			//printf("v_int:{%s:%d} ", d->tag, d->v_int);	
+			z = enif_make_tuple2(env, 
+					    enif_make_atom(env, d->tag),
+					    enif_make_int(env, d->v_int)
+					);
+			break;
+	case v_text:	
+			//printf("v_text:{%s:%s} ", d->tag, d->v_text);
+			z = enif_make_tuple2(env, 
+					    enif_make_atom(env, d->tag),
+					    enif_make_string(env, d->v_text, ERL_NIF_LATIN1)
+					);
+			 break; 
+	case v_float:
+			//printf("v_float:{%s:%f} ", d->tag, d->v_float);
+			z = enif_make_tuple2(env, 
+					    enif_make_atom(env, d->tag),
+					    enif_make_double(env, d->v_float )
+					);
+			break; 
+	case v_tuple:
+			//printf("v_tuple:{%s:tuple} ", d->tag);
+			//z = process_tuplist2(d->v_tuple, env);
+			z = enif_make_tuple2(env, 
+					    enif_make_atom(env, d->tag),
+					    process_tuplist2(d->v_tuple, env)
+					);
+			break; 
+	case v_sexpr:   
+			//printf("v_sexpr:{%s:sexpr} ", d->tag);
+			z = enif_make_tuple2(env, 
+					    enif_make_atom(env, d->tag),
+					    enif_make_atom(env, "s-expression")
+					);
+			break; 
    }
-    if (t->type == v_tuple) {
-	//pass "start list flag"
-	//printf ("[");
-	process_tuplist2(t->v_tuple, env);
-	//printf ("]\n");
-	//end list
-    }    
+    
+    x = enif_make_list_cell(env, z, x);
+}
 
-    if (t->list.next != NULL) {
-	process_tuplist2(tuplist_next(t), env);
-    } else {
-//	for (int i=0;i<d;i++) printf(" ");
-	printf("]\n");
-    }
-    return(enif_make_atom(env, "ok"));
+    return(x);
 
 }
 

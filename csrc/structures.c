@@ -15,7 +15,7 @@
 
 void * process_tuplist (tuple *,void * (*)(tuple *), int);
 void * process_sexpr   (s_expr *, void * (*)(s_expr *));
-void * print_tupval(tuple *);
+
 
 tuple * tup_container(p) {
     return(container_of(p, tuple, list));
@@ -65,13 +65,3 @@ void * process_sexpr (s_expr *s, void * (*fn)(s_expr *)) {
 
  //   fn(s->value);
 }
-
-void * print_tupval(tuple *t) {
-//    printf("{%s:", t->tag);
-    switch(t->type) {
-//	case v_int: printf("%d}\n", t->v_int);break;
-//	case v_text: printf("%s}\n", t->v_text);break;
-//	case v_float: printf("%f}\n", t->v_float);break;
-   }
-}
-

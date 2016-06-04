@@ -52,6 +52,10 @@ struct ord_pair {
 
 #define list_foreach(p,T,d) for (LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->next )
 
+#define list_ff(p)  { LIST_TYPNAM *ll = &p->LIST_MEMB_NAME; while ( ll->next != NULL) ll=ll->next; p = container_of(ll, tuple, LIST_MEMB_NAME); }
+
+#define list_foreach_r(p,T,d) for ( LIST_TYPNAM *ll = &p->LIST_MEMB_NAME ; d = container_of(ll,T,LIST_MEMB_NAME), ll != NULL ; ll=ll->prev)
+
 #define tuplist_next(p) container_of(p->list.next,tuple,LIST_MEMB_NAME)
 
 #define MAKENODE(nodetype) malloc((size_t) sizeof( nodetype ))
