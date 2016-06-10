@@ -17,7 +17,7 @@ void * process_tuplist (tuple *,void * (*)(tuple *), int);
 void * process_sexpr   (s_expr *, void * (*)(s_expr *));
 
 
-tuple * tup_container(p) {
+tuple * tup_container(llist *p) {
     return((tuple *)container_of(p, tuple, list));
 }
 

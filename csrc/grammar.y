@@ -290,13 +290,15 @@ scalar_expr:
 	$$->left = NULL;
 	$$->right = NULL;
 	$$->list.next = NULL;
+	$$->list.prev = NULL;
     }
     |
     LPAREN scalar_expr RPAREN
     { 
-	$$ = MAKENODE(s_expr);
-	$$->left = $2;
-	$$->right = NULL;	 //huh?? re-think the logic of this rule		  
+	$$ = $2;
+//precedence inline here ?	
+	
+	
     }
     |
     scalar_expr ADD scalar_expr 

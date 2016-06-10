@@ -25,7 +25,7 @@ vpath %.c $(SRCDIR)
 vpath %.y $(SRCDIR)
 
 NIFSO=nif_convert.so
-OBJECTS=nif_convert.o scanner.o grammar.tab.o structures.o parsetree.o
+OBJECTS=nif_convert.o scanner.o grammar.tab.o structures.o 
 
 ##################
 #test harness
