@@ -42,7 +42,8 @@ typedef void *yyscan_t;
 
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM 
-%token <keyword> COUNT SET INTO TABLE WITH 
+%token <keyword> COUNT SET INTO TABLE WITH ORDER BY HAVING GROUP CASE WHEN THEN END
+%token <keyword> ELSE
 
 /* SQL Datatypes */
 
@@ -81,6 +82,8 @@ typedef void *yyscan_t;
 
 %type <Tuple>	sql query_statement select_statement select_list u_select_list_item select_list_item table_ref
 		table_ref_list value_expr colref table_expr
+		function case_expr case_expr_when_list case_expr_when
+		group_by_clause having_clause from_clause where_clause order_by_clause
 		column_definition column_definition_list data_type insert_statement insert_value_list column_list
 		ddl_table_ref create_table_stmt drop_table_stmt in_predicate
 
@@ -95,7 +98,6 @@ typedef void *yyscan_t;
 sql:
     query_statement SEMICOLON
     {
-//	printf("hello!\n");
 	$$ = ptree;
 	$$->type = v_tuple;
 	$$->v_tuple = $1;
@@ -106,7 +108,6 @@ sql:
     |
     sql query_statement SEMICOLON
     {
-//	printf("hellohello!\n");
 	tuple_append(ptree , v_tuple, "query", $2);
     }
 ;
@@ -270,17 +271,69 @@ table_ref_list:
     }
 ;
 
-table_expr:
+from_clause:
     FROM table_ref_list
     {
-	//possib from lower element
 	new_tuple($$, v_tuple, "from_clause", $2);
     }
+;
+
+where_clause:
+    %empty
+    {
+	$$=NULL;
+    }
     |
-    FROM table_ref_list WHERE scalar_expr
+    WHERE scalar_expr
+    {
+	tuple_append($$, v_sexpr, "where_clause", $2); 
+    }
+;
+
+having_clause:
+    %empty
+    {
+	$$=NULL;
+    }
+    |
+    HAVING scalar_expr
+    {
+	tuple_append($$, v_sexpr, "having_clause", $2); 
+    }
+;
+
+order_by_clause:
+    %empty
+    {
+	$$=NULL;
+    }
+    |
+    ORDER BY scalar_expr
+    {
+	tuple_append($$, v_sexpr, "order_by_clause", $3); 
+    }
+;
+
+group_by_clause:
+    %empty
+    {
+	$$=NULL;
+    }
+    |
+    GROUP BY scalar_expr
+    {
+	tuple_append($$, v_sexpr, "group_by_clause", $3); 
+    }
+;
+
+table_expr:
+    from_clause where_clause group_by_clause having_clause order_by_clause
     {
 	new_tuple($$, v_tuple, "from_clause", $2);
-	tuple_append($$, v_sexpr, "where_clause", $4); 
+	if ($2 != NULL) tuple_append($$, v_sexpr, "where_clause", $2); 
+	if ($3 != NULL) tuple_append($$, v_sexpr, "group_by_clause", $3); 
+	if ($4 != NULL) tuple_append($$, v_sexpr, "having_clause", $4); 
+	if ($5 != NULL) tuple_append($$, v_sexpr, "order_by_clause", $5); 
     }
 ;
 
@@ -390,24 +443,80 @@ scalar_expr:
     }
 ;
 
-
 value_expr:
-	colref  { 
-		    $$ = $1;
-		}
-		|
-	INT_LIT {
-		    mk_tuplist_lit($$, v_int, "INT", $1);
-		}
-		|	
-	NUM_LIT {
-		    mk_tuplist_lit($$, v_float, "NUM", $1);
-		}
-		|	
-	STRING  {
-		    mk_tuplist_lit($$, v_text, "INT", $1);
-		}
+	colref
+	{ 
+	    $$=$1;
+	}
+	|
+	INT_LIT
+	{
+	    mk_tuplist_lit($$, v_int, "INT", $1);
+	}
+	|	
+	NUM_LIT 
+	{
+	    mk_tuplist_lit($$, v_float, "NUM", $1);
+	}
+	|	
+	STRING
+	{
+	    mk_tuplist_lit($$, v_text, "TEXT", $1);
+	}
+	|
+	function
+	{
+	    $$=$1;
+	}
 ;
+
+function:
+    case_expr 	
+    {
+	$$=$1;
+    };
+//    |
+//    builtin_func
+//    {
+//    }
+
+
+case_expr:
+    CASE case_expr_when_list ELSE scalar_expr END 
+    {
+	new_tuple($$, v_tuple, "when_list", $2);
+	tuple_append($$, v_sexpr, "else", $4);
+    }
+    |
+    CASE case_expr_when_list END
+    {
+	new_tuple($$, v_tuple, "when_list", $2);
+    }
+;
+
+case_expr_when_list:
+    case_expr_when
+    {
+	new_tuple($$, v_tuple, "when", $1);
+    }
+    |
+    case_expr_when_list case_expr_when
+    {
+	tuple_append($$, v_tuple, "when", $2);
+    }
+;
+
+case_expr_when:
+    WHEN scalar_expr THEN scalar_expr
+    {
+	new_tuple($$, v_sexpr, "condition", $2);
+	tuple_append($$, v_sexpr, "result", $4);	
+    }
+; 
+
+//builtin_func:
+//;
+
 
 colref:
 	IDENTIFIER 
@@ -421,14 +530,6 @@ colref:
 		mk_tuplist_ident($$, $1, $3);
 	}
 ;
-
-/* Cheating slightly, we treat the in_predicate as a specialised s_expression
-	It seems to make more sense to do this than to make the in_predicate a value
-	expression itself in the grammar, even though we store the in_predicate data
-	in a C valueExprNode
-
-	IN-list can be a list of literal items, or a query expression
- */
 
 in_predicate:
 	scalar_expr {

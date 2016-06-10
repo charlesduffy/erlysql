@@ -67,6 +67,11 @@ lead_ident [a-zA-Z_]
 (?i:as)			{ return AS; }
 (?i:table)		{ return TABLE; }
 (?i:with)		{ return WITH; }
+(?i:case)		{ return CASE; }
+(?i:else)		{ return ELSE; }
+(?i:end)		{ return END; }
+(?i:when)		{ return WHEN; }
+(?i:then)		{ return THEN; }
 
 
 (?i:int)		{ return INT4; }
