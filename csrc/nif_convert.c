@@ -30,9 +30,8 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
 {
   tuple *parseTree;
   char queryText[MAXBUFLEN];
-  ERL_NIF_TERM erlParseTree;
-  static ERL_NIF_TERM erlParseTree2;
-    YY_BUFFER_STATE buf;
+  static ERL_NIF_TERM erlParseTree;
+  YY_BUFFER_STATE buf;
   parseTree=malloc((size_t)sizeof(tuple));
   yyscan_t scanner;
 
@@ -49,17 +48,15 @@ static ERL_NIF_TERM parseQuery_nif(ErlNifEnv * env, int argc,
     return enif_make_badarg(env);
   }
 
-//  parseTree = goparse(queryText);
-
   yylex_init(&scanner);
   buf = yy_scan_string(queryText, scanner);
   yyparse(scanner, parseTree);
-  //yy_delete_buffer(buf, scanner);
-  //yylex_destroy(scanner);
+  yy_delete_buffer(buf, scanner);
+  yylex_destroy(scanner);
 
-  erlParseTree2 = process_tuplist2(parseTree,env);//, env, erlParseTree);
+  erlParseTree = process_tuplist2(parseTree,env);
 
-  return (erlParseTree2);
+  return (erlParseTree);
 }
 
 //--process_tuplist(p, fn)

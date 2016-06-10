@@ -42,7 +42,7 @@ typedef void *yyscan_t;
 
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM 
-%token <keyword> COUNT SET INTO TABLE WITH
+%token <keyword> COUNT SET INTO TABLE WITH 
 
 /* SQL Datatypes */
 
@@ -59,8 +59,6 @@ typedef void *yyscan_t;
 
 /* operators */
 
-/* fix precedence */
-
 %left           OR
 %left           AND
 %left		NE
@@ -69,7 +67,7 @@ typedef void *yyscan_t;
 %right		EQ
 %nonassoc	LT GT
 %nonassoc	LE GE
-%right		BETWEEN
+%nonassoc	BETWEEN
 %left           ADD SUB
 %left           MUL DIV MOD
 %left           EXP
@@ -81,8 +79,8 @@ typedef void *yyscan_t;
 %left           POINT
 %left 		AS
 
-%type <Tuple>	sql query_statement select_statement select_list select_list_item from_clause table_ref
-		table_ref_list value_expr colref where_clause table_expr
+%type <Tuple>	sql query_statement select_statement select_list u_select_list_item select_list_item table_ref
+		table_ref_list value_expr colref table_expr
 		column_definition column_definition_list data_type insert_statement insert_value_list column_list
 		ddl_table_ref create_table_stmt drop_table_stmt in_predicate
 
@@ -204,6 +202,19 @@ select_list:
 ;
 
 select_list_item:
+    u_select_list_item
+    {
+	$$=$1;
+    }
+    |
+    u_select_list_item AS IDENTIFIER
+    {
+	$$=$1;
+	tuple_append($$, v_text, "alias", $3); 
+    }
+;
+
+u_select_list_item:
     scalar_expr
     {
 	new_tuple($$, v_sexpr, "value", $1);	
@@ -214,10 +225,9 @@ select_list_item:
 	new_tuple($$, v_text, "value", "wildcard");
     }	 
     |
-    scalar_expr AS IDENTIFIER
+    LPAREN select_statement RPAREN
     {
-	new_tuple($$, v_sexpr, "value", $1);	
-	tuple_append($$, v_text, "alias", $3); 
+	new_tuple($$, v_tuple, "subquery", $2);
     }
 ;
 
@@ -296,9 +306,6 @@ scalar_expr:
     LPAREN scalar_expr RPAREN
     { 
 	$$ = $2;
-//precedence inline here ?	
-	
-	
     }
     |
     scalar_expr ADD scalar_expr 
@@ -374,54 +381,15 @@ scalar_expr:
     {
     }
     |	
-scalar_expr BETWEEN scalar_expr AND scalar_expr
-{
-				/*
-				   This action rewrites the BETWEEN construct as a boolean
-				   expression. 
-
-				   A BETWEEN R1 AND R2 
-
-				   becomes
-
-				   (A >= R1) AND (A <= R2)
-
-				 */
-			
-
-				/* We can also consider replacing this with a construct like:
-			
-				scalar_expr BETWEEN scalar_expr
-
-				checking in the action that the $3 scalar_expr is an operator
-				node with the value AND (in a similar manner to the way the 
-				check for boolean value for the WHERE clause predicate works.)
-
-				This might need some fancy mid rule action or token pushback in the
-				normal AND rule.
-
-	
-				  $$ = MAKENODE(s_expr);
-				  $$->value.type = OPER;
-				  $$->value.value.oper_val = _AND;	
-
-				  $$->left = MAKENODE(s_expr);
-				  $$->left->value.type = OPER;
-				  $$->left->value.value.oper_val = _GTE;
-
-				  $$->left->left = $1;
-				  $$->left->right = $3;
-
-				  $$->right = MAKENODE(s_expr);
-				  $$->right->value.type = OPER;
-				  $$->right->value.value.oper_val = _LTE;
-	
-				  $$->right->left = $1; 
-				  $$->right->right = $5;  
-				*/
-
-				}	
+    scalar_expr BETWEEN scalar_expr
+    {
+    }
+    |
+    scalar_expr NOT BETWEEN scalar_expr
+    {
+    }
 ;
+
 
 value_expr:
 	colref  { 
