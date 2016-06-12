@@ -81,6 +81,10 @@ lead_ident [a-zA-Z_]
 (?i:first)		{ return FIRST; }
 (?i:last)		{ return LAST; }
 (?i:nulls)		{ return NULLS; }
+(?i:null)		{ return _NULL; }
+(?i:is)			{ return IS; }
+(?i:true)		{ return TRUE; }
+(?i:false)		{ return FALSE; }
 
 
 (?i:int)		{ return INT4; }

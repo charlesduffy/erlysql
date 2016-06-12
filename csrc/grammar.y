@@ -43,7 +43,7 @@ typedef void *yyscan_t;
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM 
 %token <keyword> COUNT SET INTO TABLE WITH ORDER BY HAVING GROUP CASE WHEN THEN END
-%token <keyword> ELSE DESC ASC FIRST LAST NULLS
+%token <keyword> ELSE DESC ASC FIRST LAST NULLS _NULL TRUE FALSE IS NOT UNKNOWN
 
 /* SQL Datatypes */
 
@@ -89,7 +89,7 @@ typedef void *yyscan_t;
 
 %type <sExpr>	scalar_expr group_by_clause having_clause where_clause 
 
-%type <keyword>	order_by_direction order_by_nulls
+%type <keyword>	order_by_direction order_by_nulls boolean sqlval
 
 %token  <identifier_val>  IDENTIFIER 
 
@@ -498,12 +498,32 @@ scalar_expr:
     scalar_expr NOT BETWEEN scalar_expr
     {
     }
+    |
+    scalar_expr IS scalar_expr
+    {
+	mk_s_expr_oper($$, "IS", $1, $3);
+    }
+    |
+    scalar_expr IS NOT scalar_expr
+    {
+	mk_s_expr_oper($$, "ISNOT", $1, $4);
+    }
 ;
 
 value_expr:
 	colref
 	{ 
 	    $$=$1;
+	}
+	|
+	boolean
+	{
+	    mk_tuplist_lit($$, v_text, "BOOL", $1);
+	}
+	|
+	sqlval
+	{
+	    mk_tuplist_lit($$, v_text, "SQLV", $1);
 	}
 	|
 	INT_LIT
@@ -525,6 +545,30 @@ value_expr:
 	{
 	    $$=$1;
 	}
+;
+
+boolean:
+    TRUE    
+    {
+	$$="true";	
+    }
+    |
+    FALSE
+    {
+	$$="false";	
+    }
+;
+
+sqlval:
+    _NULL
+    {
+	$$="sqlnull";	
+    }
+    |
+    UNKNOWN
+    {
+	$$="unknown";	
+    }
 ;
 
 function:
