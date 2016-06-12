@@ -95,7 +95,10 @@ typedef void *yyscan_t;
 
 %%
 
-/* this node is a multi-statement submission delimited by semicolon */
+/* SQL
+ * ----------------------------------------------------------------------------
+ * Multi-statement query string, delimited by semicolon
+ */
 
 sql:
     query_statement SEMICOLON
@@ -113,8 +116,6 @@ sql:
 	tuple_append(ptree , v_tuple, "query", $2);
     }
 ;
-
-/* this node is a single query statement */
 
 query_statement:
     select_statement 
@@ -140,17 +141,12 @@ query_statement:
 	new_tuple($$, v_text, "statement_type", "drop_table_statement");
 	tuple_append($$, v_tuple, "drop_table_statement", $1);
     }
-//TODO consider using a more generic "DDL stmt" rather than explicitly identifying every kind of DDL operation
 ;
 
-/* 
-
-INSERT STATEMENT
-
-
-*/
-
-
+/* INSERT
+ * ----------------------------------------------------------------------------
+ * Insert statement 
+ */
 
 insert_statement:
     INSERT INTO ddl_table_ref LPAREN column_list RPAREN VALUES LPAREN insert_value_list RPAREN 
@@ -184,13 +180,10 @@ insert_value_list:
 	}
 ;
 
-
-	
-/*
-
-SELECT STATEMENT
-
-*/
+/* SELECT
+ * ----------------------------------------------------------------------------
+ * Select statement 
+ */
 
 select_list:
     select_list_item
@@ -575,12 +568,8 @@ function:
     case_expr 	
     {
 	$$=$1;
-    };
-//    |
-//    builtin_func
-//    {
-//    }
-
+    }
+;
 
 case_expr:
     CASE case_expr_when_list ELSE scalar_expr END 
