@@ -72,6 +72,15 @@ lead_ident [a-zA-Z_]
 (?i:end)		{ return END; }
 (?i:when)		{ return WHEN; }
 (?i:then)		{ return THEN; }
+(?i:having)		{ return HAVING; }
+(?i:group)		{ return GROUP; }
+(?i:order)		{ return ORDER; }
+(?i:desc)		{ return DESC; }
+(?i:asc)		{ return ASC; }
+(?i:by)			{ return BY; }
+(?i:first)		{ return FIRST; }
+(?i:last)		{ return LAST; }
+(?i:nulls)		{ return NULLS; }
 
 
 (?i:int)		{ return INT4; }

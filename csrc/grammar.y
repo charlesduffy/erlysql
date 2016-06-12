@@ -43,7 +43,7 @@ typedef void *yyscan_t;
 /* SQL keywords */
 %token <keyword> SELECT INSERT UPDATE DELETE WHERE FROM VALUES CREATE DROP SUM 
 %token <keyword> COUNT SET INTO TABLE WITH ORDER BY HAVING GROUP CASE WHEN THEN END
-%token <keyword> ELSE
+%token <keyword> ELSE DESC ASC FIRST LAST NULLS
 
 /* SQL Datatypes */
 
@@ -82,14 +82,16 @@ typedef void *yyscan_t;
 
 %type <Tuple>	sql query_statement select_statement select_list u_select_list_item select_list_item table_ref
 		table_ref_list value_expr colref table_expr
-		function case_expr case_expr_when_list case_expr_when
-		group_by_clause having_clause from_clause where_clause order_by_clause
+		function case_expr case_expr_when_list case_expr_when from_clause 
+		order_by_list order_by_list_item order_by_clause
 		column_definition column_definition_list data_type insert_statement insert_value_list column_list
 		ddl_table_ref create_table_stmt drop_table_stmt in_predicate
 
-%type <sExpr>	scalar_expr 	
+%type <sExpr>	scalar_expr group_by_clause having_clause where_clause 
 
-%token  <identifier_val>  IDENTIFIER
+%type <keyword>	order_by_direction order_by_nulls
+
+%token  <identifier_val>  IDENTIFIER 
 
 %%
 
@@ -274,7 +276,7 @@ table_ref_list:
 from_clause:
     FROM table_ref_list
     {
-	new_tuple($$, v_tuple, "from_clause", $2);
+	$$=$2;
     }
 ;
 
@@ -286,7 +288,7 @@ where_clause:
     |
     WHERE scalar_expr
     {
-	tuple_append($$, v_sexpr, "where_clause", $2); 
+	$$=$2;
     }
 ;
 
@@ -298,7 +300,7 @@ having_clause:
     |
     HAVING scalar_expr
     {
-	tuple_append($$, v_sexpr, "having_clause", $2); 
+	$$=$2;
     }
 ;
 
@@ -308,11 +310,66 @@ order_by_clause:
 	$$=NULL;
     }
     |
-    ORDER BY scalar_expr
+    ORDER BY order_by_list
     {
-	tuple_append($$, v_sexpr, "order_by_clause", $3); 
+	$$=$3;
     }
 ;
+
+order_by_list:
+    order_by_list_item
+    {
+	new_tuple($$, v_tuple, "order_by_expression", $1);
+    }
+    |
+    order_by_list COMMA order_by_list_item
+    {
+	tuple_append($$, v_tuple, "order_by_expression", $3);
+    }
+;
+
+order_by_list_item:
+    scalar_expr order_by_direction order_by_nulls  
+    {
+	new_tuple($$, v_sexpr, "value", $1);	
+	if ($2 != NULL) tuple_append($$, v_text, "direction", $2); 
+	if ($3 != NULL) tuple_append($$, v_text, "nulls", $3); 
+    }
+;
+
+order_by_direction:
+    %empty
+    {
+	$$=NULL;
+    }
+    |
+    ASC
+    {
+	$$="asc";
+    }
+    |
+    DESC
+    {
+	$$="desc";
+    }
+;
+
+order_by_nulls:
+    %empty
+    {
+	$$=NULL;
+    }
+    |
+    NULLS FIRST
+    {
+	$$="first";
+    }
+    |
+    NULLS LAST
+    {
+	$$="last";
+    }
+; 
 
 group_by_clause:
     %empty
@@ -322,18 +379,18 @@ group_by_clause:
     |
     GROUP BY scalar_expr
     {
-	tuple_append($$, v_sexpr, "group_by_clause", $3); 
+	$$=$3;
     }
 ;
 
 table_expr:
     from_clause where_clause group_by_clause having_clause order_by_clause
     {
-	new_tuple($$, v_tuple, "from_clause", $2);
+	new_tuple($$, v_tuple, "from_clause", $1);
 	if ($2 != NULL) tuple_append($$, v_sexpr, "where_clause", $2); 
 	if ($3 != NULL) tuple_append($$, v_sexpr, "group_by_clause", $3); 
 	if ($4 != NULL) tuple_append($$, v_sexpr, "having_clause", $4); 
-	if ($5 != NULL) tuple_append($$, v_sexpr, "order_by_clause", $5); 
+	if ($5 != NULL) tuple_append($$, v_tuple, "order_by_clause", $5); 
     }
 ;
 
