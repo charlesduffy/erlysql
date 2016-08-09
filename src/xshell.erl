@@ -44,10 +44,10 @@ process_query([$\\|[Q|T]]) ->
 process_query(_X) ->
 	ParseTree = parser:parseQuery(_X),
 	io:fwrite("parsetree:~n~p~n", [ParseTree]),
-	Program = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
-	io:fwrite("program:~n~p~n", [Program]),
-	CS = despatch:generate_childspec(Program),		%%for present generates a list of child specs for sequential launch
-	io:fwrite("~n^^^^^^^^^^^^^^^^^^~n childspec:~n~p~n", [CS]),
+	%%Program = planner:plan_query(ParseTree),		%%this will change to message to planner gen_server process 
+	%%io:fwrite("program:~n~p~n", [Program]),
+	%%CS = despatch:generate_childspec(Program),		%%for present generates a list of child specs for sequential launch
+	%%io:fwrite("~n^^^^^^^^^^^^^^^^^^~n childspec:~n~p~n", [CS]),
 %%	Check = supervisor:check_childspecs(CS),
 %%	io:fwrite("~n^^^^^^^^^^^^^^^^^^~n check output :~n~p~n", [Check]),
 %%	spawn_pipeline(CS),

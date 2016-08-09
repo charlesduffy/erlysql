@@ -1,43 +1,60 @@
 %% @doc <h3> Parser </h3>
 %% 
 %% <h4> Parse Tree data structure </h4>
-%% Parse Tree:
 %% 
-%%	 #{from_clause => [[{name,"A"}],[{name,"B"}],[{name,"C"}]],
- %%	  select_list => [[{type,colref},{value,"a"}],
- %%	   {[{type,operator},{value,"-"}],
- %%	    [{type,colref},{value,"b"}],
- %%	    [{type,int},{value,1}]},
- %%	   {[{type,operator},{value,"+"}],
- %%	    [{type,colref},{value,"c"}],
-  %%	   {[{type,operator},{value,"/"}],
- %%	     [{type,colref},{value,"a"}],
- %%	     [{type,int},{value,2}]}}],
- %%	  where_clause => {[{type,operator},{value,"AND"}],
- %%	   {[{type,operator},{value,"AND"}],
-  %%	   {[{type,operator},{value,"<"}],
- %%	     [{type,colref},{value,"a"}],
- %%	     [{type,int},{value,2}]},
- %%	    {[{type,operator},{value,"="}],
- %%	     [{type,colref},{value,"b"}],
- %%	     [{type,colref},{value,"c"}]}},
- %%	   {[{type,operator},{value,"<"}],
- %%	    {[{type,operator},{value,"+"}],
- %%	     [{type,colref},{value,"a"}],
- %%	     [{type,int},{value,1}]},
-  %%	   [{type,int},{value,65}]}}}
 %% 
 %% @end
 -module(parser).
--export([foo/1, bar/1, parseQuery/1]).
+-export([parseQuery/1, ptGetRangeTable/1, ptGetFromClause/1, ptGetFromClause2/1]).
 -on_load(init/0).
 
 init() ->
     ok = erlang:load_nif("./priv/nif_convert", 0).
+%%
+%%foo(_X) ->
+  %%  exit(nif_library_not_loaded).
+%%bar(_Y) ->
+ %%   exit(nif_library_not_loaded).
 
-foo(_X) ->
-    exit(nif_library_not_loaded).
-bar(_Y) ->
-    exit(nif_library_not_loaded).
 parseQuery(_X) ->
     exit(nif_library_not_loaded).
+
+%% @doc Get an element of a select statment 
+%% consider generalising to all statement lists
+%% takes: SelectStmt, returns FromClause
+
+ptGetFromClause([SelectStmtHead|SelectStmtTail]) ->
+    { Tag , Data } = SelectStmtHead,
+    io:fwrite("pt1 select stmt head is: ~p ~n", [ SelectStmtHead ] ),
+    case Tag of
+	table_expr -> ptGetFromClause2(Data);
+	_Else -> ptGetFromClause(SelectStmtTail)
+    end
+.
+
+ptGetFromClause2([SelectStmtHead|SelectStmtTail]) ->
+    { Tag , Data } = SelectStmtHead,
+    io:fwrite("pt2 select stmt head is: ~p ~n", [ SelectStmtHead ] ),
+    case Tag of
+	from_clause -> SelectStmtHead;
+	_Else -> ptGetFromClause2(SelectStmtTail)
+    end
+.
+
+%% rewrite to generic! Should get clauses now matter how deep nested
+%% needs to know the path to the nested elem, ie, table_expr, from_clause
+
+%%o:fwrite("CURRENT NODE DATA LIST IS~n================~n ~p ~n--------------~n",[get_plan_node_data(PlanNode)]),
+
+%% @doc Returns a subtree of a parse tree
+
+ptGetRangeTable( [{query,[{statement_type, "select_statement" }, { select_statement, SelectStmt }]}] ) ->
+
+%% get first tuple in tuplist
+%% if tag matches, return tuple subtree
+%% if tag doesn't match, search tuple subtree (depth-first tree search)
+    io:fwrite("select stmt is: ~p ~n", [ SelectStmt ] ),
+    ptGetFromClause(SelectStmt)
+.
+
+
