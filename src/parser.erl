@@ -5,7 +5,7 @@
 %% 
 %% @end
 -module(parser).
--export([parseQuery/1, ptGetRangeTable/1, ptGetFromClause/1, ptGetFromClause2/1]).
+-export([parseQuery/1, ptGetRangeTable/1, ptGetFromClause/1, ptGetFromClause2/1, ptGetSubtree/2]).
 -on_load(init/0).
 
 init() ->
@@ -41,6 +41,22 @@ ptGetFromClause2([SelectStmtHead|SelectStmtTail]) ->
     end
 .
 
+ptGetSubtree(Data, []) ->
+    Data
+;
+
+ptGetSubtree([StmtHead|StmtTail], Path) ->
+    { Tag , Data } = StmtHead,
+    [PathHead|PathTail] = Path,
+    io:fwrite("get subtree is: ~n Tag: ~p~n Data: ~p~n StmtHead ~p~n StmtTail ~p~n PathHead ~p~n PathTail ~p~n~n ---- ",
+	 [ Tag, Data,  StmtHead, StmtTail, PathHead, PathTail ] ),
+		case Tag of 
+		    PathHead -> ptGetSubtree(Data , PathTail); 
+		    _Else -> ptGetSubtree(StmtTail, Path)
+		end
+.
+
+
 %% rewrite to generic! Should get clauses now matter how deep nested
 %% needs to know the path to the nested elem, ie, table_expr, from_clause
 
@@ -54,7 +70,8 @@ ptGetRangeTable( [{query,[{statement_type, "select_statement" }, { select_statem
 %% if tag matches, return tuple subtree
 %% if tag doesn't match, search tuple subtree (depth-first tree search)
     io:fwrite("select stmt is: ~p ~n", [ SelectStmt ] ),
-    ptGetFromClause(SelectStmt)
+    ptGetFromClause(SelectStmt),
+    ptGetSubtree(SelectStmt, [ table_expr,from_clause ] )
 .
 
 
