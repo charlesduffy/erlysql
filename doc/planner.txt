@@ -9,4 +9,16 @@ steps in planning
 * identify output transforms
 
 
+======
 
+example plan process
+
+
+
+select t1.a , t2.b from A as t1 , B as t2 where t1.a < 3 and t2.b > 5;
+
+
+1. build scan list
+    tables and predicates
+
+ 

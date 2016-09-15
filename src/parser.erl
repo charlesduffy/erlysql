@@ -30,11 +30,8 @@ ptGetSubtree([StmtHead|StmtTail], Path) ->
 		end
 .
 
-
 %% @doc Returns the range table of a query
 
 ptGetRangeTable( [{query,[{statement_type, "select_statement" }, { select_statement, SelectStmt }]}] ) ->
     ptGetSubtree(SelectStmt, [ table_expr,from_clause ] )
 .
-
-

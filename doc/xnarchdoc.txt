@@ -1,0 +1,20 @@
+XN is an in-memory, parallel relational database designed to support both short queries (those typically completing in under 2 seconds) and long queries (complex analytics or business intelligence over large datasets, taking minutes or hours to run). 
+
+XN is designed to support streaming analytics in real-time, as well as traditional database workloads in the same elastically scalable platform. 
+
+XN is dual-licensed; the free software version is released under the GNU General Public Licence version 3. The Enterprise version incorporates support, services and additional features, and is released under a commercial licencing agreement.
+
+Design concepts
+
+All data in XN is stored in main memory during database operation. Data can be persisted to disk to preserve information across reboots, and a transaction log is written to non-volatile storage after transaction commits (if in read-committed mode).
+
+XN is based on an in-memory thread-to-data model; data resides in volatile main memory and is partitioned into regions. Each region is assigned a processor thread which receives execution instructions from a dispatch thread. New threads are not created in response to query or connection requests; fragments of query execution plans are routed to the threads (which exist for the duration of database system uptime). 
+
+Memory regions are divided into read-optimised and write-optimised segments. Short-query write operations are routed to write-optimised memory structures. A periodic merge operation is carried out to move data from write-optimised to read-optimised structures. Compression is used on read-optimised structures. 
+
+Concurrency control is achieved with a hybrid timestamp-ordering protocol, with transaction IDs embedded in the execution messages. Recovery is via a transaction log flushed to non-volatile storage at commit time (if required by the isolation level mode). 
+
+XN is a distributed, parallel database; memory regions can be distributed across one or more machines participating in the database cluster. 
+
+Memory regions may be partitioned, replicated, or both. 
+
