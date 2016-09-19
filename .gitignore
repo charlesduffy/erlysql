@@ -23,7 +23,7 @@ priv/*
 data/*
 csrc/test/testParser.c
 src/doc/
-doc/*.aux
-doc/*.log
-doc/*.pdf
-doc/*.dvi
+doc/overview_doc/*.aux
+doc/overview_doc/*.log
+doc/overview_doc/*.pdf
+doc/overview_doc/*.dvi

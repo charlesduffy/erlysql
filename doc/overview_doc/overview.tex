@@ -1,0 +1,113 @@
+\documentclass[12pt]{article}
+\usepackage{microtype}
+\usepackage{tikz} 
+\title{project overview}
+\author{Charles Duffy}
+\date{\today}
+\begin{document}
+\maketitle
+\section{overview} %%concept / business overview
+
+\subsection{Overview}
+
+
+XN is an in-memory, parallel relational database. 
+
+
+\subsection{Rationale}
+
+XN is designed to take advantage of developing *circumstances in the database *world, and
+to address challenges that have arisen in the analytics space.
+
+\subsection{Analytics and “big data”}
+
+“Big data” has been a successful marketing mantra, but the idea is not completely congruent 
+with what most business are really trying to achieve. Although data volumes globally are growing, the challenge
+for the majority of businesses is not storing and querying vast quantities of data, but rather integrating disparate data sources
+and data consumers, across wildly varying access patterns. Most businesses trying to build analytical platforms
+are managing less than 10TB of working data in the database. (footnote - give examples)
+
+The difficulty for these businesses is in accommodating different access patterns in a coherent, preferably
+transparent, data management system. These patterns include the requirement to process real-time streaming data, 
+as well as longer-running analytical queries, and also to support ad-hoc querying and model development. Additionally, 
+these platforms often have demanding availability SLAs. The requirement that they simultaneously support high availability, 
+flexibility, and a variety of data access patterns and levels of concurrency is an extremely difficult one to meet with current tools. 
+
+For example - businesses frequently attempt to both train and run machine learning models in the same platform, or run
+high-concurrency OLTP style workloads alongside SLA-critical scheduled jobs. It could be argued that this is the product of
+poor design, but technological limitations often make alternative solutions even worse. (footnote with examples here). 
+
+Traditional ETL processes, although providing reliable and traceable data sources, impose large change costs and provide
+out-of-date insights. The next conception - the so-called “data lake” - attempts to capture all data sources, fast and slow, 
+into a single substrate. It then provides various interlinked subsystems to handle the different workloads. In theory, this is 
+a viable solution but the reality is that these platforms tend to become fantastically complex and very fragile. Projects
+to build and maintain them are costly and have a high failure rate, and the promise of rapid return on investment is rarely met. 
+Such platforms generally rely on a patchwork of complex open-source software, each component being developed seperately and at a different rate, and often 
+with subtle and devilishly hard problems of interoperability. The staff to build and maintain data lakes are hard to find and retain, and specialist 
+consultancies are very expensive. 
+
+What is needed is a new platform framework to meet these challenges.
+
+\subsection{Limitations of current database systems}
+
+Current data processing platforms have a number of limitations which make constructing a viable “data lake” very difficult. 
+
+
+Architecture and design
+==================
+
+
+(anticipated) FAQ
+=============
+
+This sounds like a major challenge. How do you expect to complete such an ambitious project ?
+
+What have you completed so far ?
+
+Why another in-memory database ?
+
+What time, money and other resources do you have at your disposal ?
+
+Why Erlang + C ?
+
+When will the MVP come out ?
+
+Business model for commercialisation (if any) ?
+
+Are you smarter than Google ? Why hasn’t this been done before ?
+------
+
+\begin{tikzpicture}
+
+\def \n {5}
+\def \radius {3cm}
+\def \margin {8} % margin in angles, depends on the radius
+
+\foreach \s in {1,...,\n}
+{
+  \node[draw, circle] at ({360/\n * (\s - 1)}:\radius) {$\s$};
+  \draw[->, >=latex] ({360/\n * (\s - 1)+\margin}:\radius) 
+    arc ({360/\n * (\s - 1)+\margin}:{360/\n * (\s)-\margin}:\radius);
+}
+\end{tikzpicture}
+
+
+
+
+-----
+'state of play' with current analytical platofrms, parallel databases
+'big data'
+expanding memory sizes
+average size of data 
+
+problems with current parallel systems
+problems with 'lambda architecture'
+
+properties of the proposed system
+'cloud database'
+
+
+\section{architecture}
+\section{design}
+
+\end{document}
