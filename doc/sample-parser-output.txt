@@ -1,0 +1,58 @@
+gen_server:call(catalogue, { write , { "A" , [  [ {attname , "a" } , {atttype, integer }   ] , [ {attname, "b" } , {atttype,integer  }   ]    ] }}).
+gen_server:call(catalogue, { write , { "B" , [  [ {attname , "c" } , {atttype, integer }   ] , [ {attname, "d" } , {atttype,integer  }   ]    ] }}).
+
+
+[ { Tag , [ ] } ]
+
+[ tup , tup , tup ]
+
+[ { tag , data } , { tag , data } , { tag , data } ]
+
+* Make all data elements lists in parser.
+	— problem with scalar_expr. Encoded as tuple, not list…
+* fix bug in value list elem (value should be a list not a tuple)
+
+* tree traverser with path
+  tree, path
+  
+  find elem1 of path
+	when found, advance path
+ 	recursive call, search tree tail 
+  
+
+
+
+[   
+
+ { tag, data } , 
+ { tag, data } , 
+ { tag, data }
+
+] 
+
+
+[{query,
+     [{statement_type,"select_statement"},
+      {select_statement,
+          [{select_list,
+               [{select_list_item,
+                    [{value,{[{class,"identifier"},{value,"a"}],null,null}}]},
+                {select_list_item,
+                    [{value,
+                         {[{class,"identifier"},{value,"b"}],null,null}
+		 }]}]},
+           {table_expr,  
+               [{from_clause, [{table,[{name,"A"}]},{table,[{name,"B"}]}]},
+                {where_clause,
+
+                    	{ [ {value,"AND"},{class,"operator"} ],
+
+                     {[{value,"LT"},{class,"operator"}],
+                      {[{class,"identifier"},{value,"a"}],null,null},
+                      {[{value,10},{class,"literal"},{sqltype,"INT"}],
+                       null,null}},
+                     {[{value,"GT"},{class,"operator"}],
+                      {[{class,"identifier"},{value,"b"}],null,null},
+                      {[{value,20},{class,"literal"},{sqltype,"INT"}],
+                       null,null}}}}]}]}]}]
+
