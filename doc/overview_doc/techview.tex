@@ -9,69 +9,17 @@
 \section{overview} %%concept / business overview
 \subsection{Description}
 XN is an in-memory, parallel relational database. 
-\subsection{Rationale}
-XN is designed to take advantage of developing *circumstances in the database *world, and
-to address challenges that have arisen in the analytics space.
-\subsubsection{Analytics and “big data”}
 
-“Big data” has been a successful marketing mantra, but the idea is not congruent 
-with what most organisations are really trying to achieve. Although data volumes globally are growing, the challenge
-for the majority of organisations is not storing and querying vast quantities of data, 
-but rather integrating disparate data sources and data consumers across wildly varying access patterns. 
-Most organisations trying to build analytical platforms are managing less than 10TB of working data in the database. (footnote - give examples)
-
-The difficulty for these organisations is in accommodating different access patterns in a coherent, preferably
-transparent, data management system. These patterns include the requirement to process real-time streaming data, 
-longer-running analytical queries, and ad-hoc queries and development. 
-Such platforms often also have demanding availability SLAs. The requirement that they simultaneously support high availability, 
-flexibility, and a variety of data access patterns and levels of concurrency is an extremely difficult one to meet with current tools. 
-
-For example - organisations frequently attempt to both train and run machine learning models in the same platform, or run
-high-concurrency OLTP style workloads alongside SLA-critical scheduled jobs. It could be argued that this is the product of
-poor design, but technological limitations often make alternative solutions even worse.
-
-Traditional ETL processes, although providing reliable and traceable data sources, impose large change costs and provide
-out-of-date insights. The next conception - the so-called “data lake” - attempts to capture all data sources, fast and slow, 
-into a single substrate. It then provides various interlinked subsystems to handle the different workloads\footnote{sometimes called the "Lambda Architecture"}. 
-
-In theory, this is a viable solution but the reality is that these platforms tend to become fantastically complex and very fragile. Projects
-to build and maintain them are costly and have a high failure rate, and the promise of rapid return on investment is rarely met. 
-Such platforms generally rely on a patchwork of complex open-source software, each component being developed seperately and at a different rate, 
-and often with subtle and devilishly hard problems of interoperability. Absolute experts in the specific technologies are needed solve these problems. 
-Consequently, the staff to build and maintain data lakes are hard to find and retain. Specialist 
-consultancies are very expensive. 
-
-What is needed is a new platform framework to meet these challenges.
-
-\subsection{Limitations of current database systems}
-
-Current data processing platforms have a number of limitations which make constructing a viable “data lake” difficult. The range of 
-open-source and proprietary technologies in the data storage and analytics market is very large, however some general observations can be made.
-
-\subsubsection{Parallel relational database systems}
-
-Parallel on-disk RDBMS systems are often a major component of data lake platforms; they appear to scale up a tradional database system linearly simply
-by adding more processing and storage nodes. 
-
-Parallel systems can be used successfully to provide the "speedup" over growing data sets 
-that analytics teams require, but they fall short in a number of areas. Typically they end up being pressed into service as the main data storage 
-and analysis backbone, feeding analytics teams, report developers, OLTP clients and executing machine learning models - possibly even directly 
-integrated with live operational systems. Usually parallel database systems struggle to handle the concurrency required for these 
-workloads, perform less-than-adequately on the short-query side, and suffer from a range of operational shortcomings. To address the 
-concurrency and short-query problems, a variety of front-end buffers, proxies and pooling systems are often implemented, adding to complexity 
-and reducing overall reliability, usually for marginal gains. 
-
-The original purpose of parallel RDBMS systems was as scalable data warehouses; designed to be fed from scheduled and carefully-planned
-ETL streams and to deliver reports over very large data sets (into the petabyte range). The rise of analytics, data integration and real time 
-insights has led vendors to attempt to stretch their capabilities, with mixed results. 
-
-Additionally, the operational aspects of current parallel RDBMSs are often troublesome. Deployment architectures are brittle, meaning moving from 
-one network topology to another, or migrating data across heterogeneous clusters, is very difficult and risky. There is no 'elasticity' in these systems,
-never mind coping with the flexible cloud computing platforms coming into ever greater use. Software upgrades are dreaded by operations teams. Backups
-are inflexible and interfere with live jobs. 
-Most parallel RBMSs are proprietary, and expensive. 
+-- requirements
 
 \section{Architecture and design}
+
+\subsection{overview}
+
+-- brief descr here
+
+-- diagram
+
 
 \subsection{Design choices and overview}
 * Language choice
