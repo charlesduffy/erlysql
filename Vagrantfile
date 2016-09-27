@@ -74,6 +74,6 @@ Vagrant.configure("2") do |config|
      sudo dpkg -i /tmp/erlang-solutions_1.0_all.deb
      sudo apt-get update
      sudo apt-get install -y esl-erlang
-     sudo apt-get install -y erlang-base-hipe 
+     sudo apt-get install -y erlang-base-hipe erlang-dev rebar vim-vimerl
    SHELL
 end
