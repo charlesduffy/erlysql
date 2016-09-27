@@ -28,3 +28,5 @@ doc/overview_doc/*.log
 doc/overview_doc/*.pdf
 doc/overview_doc/*.dvi
 doc/overview_doc/.exrc
+.vagrant
+.vagrant/*
