@@ -5,33 +5,41 @@
 %% 
 %% @end
 -module(parser).
--export([parseQuery/1, ptGetRangeTable/1]).
+-export([parse_query/1, pt_get_range_table/1, pt_get_where_clause/1]).
 -on_load(init/0).
 
 init() ->
     ok = erlang:load_nif("./priv/nif_convert", 0).
 
-parseQuery(_X) ->
+parse_query(_X) ->
     exit(nif_library_not_loaded).
 
 %% @doc Get a subtree of the parse tree.
 %% Takes the portion of the parse tree and a search path. 
 
-ptGetSubtree(Data, []) ->
+pt_get_subtree(Data, []) ->
     Data
 ;
 
-ptGetSubtree([StmtHead|StmtTail], Path) ->
+pt_get_subtree([StmtHead|StmtTail], Path) ->
     { Tag , Data } = StmtHead,
     [PathHead|PathTail] = Path,
 		case Tag of 
-		    PathHead -> ptGetSubtree(Data , PathTail); 
-		    _Else -> ptGetSubtree(StmtTail, Path)
+		    PathHead -> pt_get_subtree(Data , PathTail); 
+		    _Else -> pt_get_subtree(StmtTail, Path)
 		end
 .
 
 %% @doc Returns the range table of a query
 
-ptGetRangeTable( [{query,[{statement_type, "select_statement" }, { select_statement, SelectStmt }]}] ) ->
-    ptGetSubtree(SelectStmt, [ table_expr,from_clause ] )
+pt_get_range_table( [{query,[{statement_type, "select_statement" }, { select_statement, SelectStmt }]}] ) ->
+    pt_get_subtree(SelectStmt, [ table_expr,from_clause ] )
 .
+
+
+%% @doc Returns the where clause of a query
+
+pt_get_where_clause( [{query,[{statement_type, "select_statement" }, { select_statement, SelectStmt }]}] ) ->
+    pt_get_subtree(SelectStmt, [ table_expr,where_clause ] )
+.
+

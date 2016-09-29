@@ -1,3 +1,5 @@
+(assumes single-statement query. Does not support subqueries at all)
+
 steps in planning
 
 * get base relations
@@ -21,4 +23,15 @@ select t1.a , t2.b from A as t1 , B as t2 where t1.a < 3 and t2.b > 5;
 1. build scan list
     tables and predicates
 
- 
+
+
+=====
+
+thoughts on non-SELECT:
+
+1. First stage split overall text into seperate queries (should be supported from the parse tree stage)
+2. plan SELECTs as above
+
+Planner has "plan_select_query" , "plan_update_query" type interface
+
+Subqueries are planned just as queries and their output presented as a relation 

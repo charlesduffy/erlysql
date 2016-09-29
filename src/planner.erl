@@ -41,16 +41,18 @@ find_subtrees1 (ParseTree) ->
 
 	%% get attribute relation list from system catalogue
 	
-	RelMap = proto:get_relmap(
-			       	    maps:get(from_clause, ParseTree)
-			 ),
-io:fwrite("RelMap is: ~p~n", [ RelMap ] ),
-
-	find_subtrees1( maps:get(where_clause, ParseTree), RelMap)		
+%%RelMap = proto:get_relmap(parser:pt_get_range_table(ParseTree)),
+RelMap = relmap,
+WhereClause = parser:pt_get_where_clause(ParseTree),
+find_subtrees1(WhereClause ,  RelMap )
 .
 
-find_subtrees1([ { type , colref } , { value , NodeVal } ], RelMap ) ->
-	[ {type , scan } , { predicate , [ { type , colref } , { value , NodeVal } ] }, { relation , maps:get(NodeVal, RelMap) }, { leaf , true } ]
+%%find_subtrees1([ { class , "identifier" } , { value , NodeVal } ], RelMap ) ->
+find_subtrees1([ { class , "identifier" } , NodeVal ], RelMap ) ->
+	%% extract Predicate from NodeVal
+	%% 'scan_spec' was previously called 'predicate'
+	Value = [ Val || { Key , Val } <- NodeVal ],
+	[ {type , scan } , { scan_spec , [ { type , colref } , { value , Value } ] }, { relation , "Nulldata" }, { leaf , true } ]
 	%% @todo get rid of the 'leaf' tag. Figure out some other way of achieving the same thing. 
 ;
 
@@ -188,9 +190,9 @@ plan_query(ParseTree) ->
 %%	Program = generate_code(PlanTree),
 %%	Program.
 
-	generate_code(
+%%	generate_code(
 			find_subtrees1(ParseTree)
-		     )
+%%		     )
 .	
 
 %%% execution plan generic node
