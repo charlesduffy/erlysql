@@ -19,7 +19,7 @@ static ERL_NIF_TERM process_s_expr(s_expr *, ErlNifEnv *);
 static ERL_NIF_TERM parseQuery_nif(ErlNifEnv *, int, const ERL_NIF_TERM[]);
 
 static ErlNifFunc nif_funcs[] = {
-  {"parseQuery", 1, parseQuery_nif}
+  {"parse_query", 1, parseQuery_nif}
 };
 
 ERL_NIF_INIT(parser, nif_funcs, NULL, NULL, NULL, NULL);
