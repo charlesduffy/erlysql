@@ -252,6 +252,19 @@ table_ref:
 	new_tuple($$, v_text, "name", $1);
 	tuple_append($$, v_text, "alias", $3);
     }
+    |
+    LPAREN select_statement RPAREN
+    {
+	new_tuple($$, v_text, "name", "subquery");
+	tuple_append($$, v_tuple, "subquery", $2);
+    }
+    |
+    LPAREN select_statement RPAREN AS IDENTIFIER
+    {
+	new_tuple($$, v_text, "name", "subquery");
+	tuple_append($$, v_text, "alias", $5);
+	tuple_append($$, v_tuple, "subquery", $2);
+    }
 ;
 
 table_ref_list:

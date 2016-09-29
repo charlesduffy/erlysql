@@ -1,0 +1,21 @@
+Project development notes
+
+Naming convention:
+
+* Functions are named all in lowercase, with underscores separating words. Generally, 
+abbreviations aren't used in function names but can be used sparingly to avoid really
+long and clumsy function names.
+
+Some example function names:
+
+pt_get_range_table()
+parse_query()
+process_statement()
+
+* Variables are named using Camel Case. In Erlang, the initial character needs to be uppercase, 
+but un C the initial character is lowercase. 
+
+Some Examples (Erlang)
+
+ParentNodeId
+CurMaxId
