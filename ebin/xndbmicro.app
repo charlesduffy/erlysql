@@ -1,0 +1,10 @@
+{application,xndbmicro,
+             [{description,[]},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {modules,[catalogue,chunkserver,despatch,despatch_sup,listener,
+                        parser,pipeline,planner,proto,visualiser,
+                        xndbmicro_app,xndbmicro_sup,xshell]},
+              {mod,{xndbmicro_app,[]}},
+              {env,[]}]}.

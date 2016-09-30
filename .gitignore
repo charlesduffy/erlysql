@@ -4,7 +4,7 @@ callgrind.out.*
 core
 grammar.output
 grammar.xml
-ebin/*
+ebin/*.beam
 .rebar/*
 *.so
 crc/*.swp
