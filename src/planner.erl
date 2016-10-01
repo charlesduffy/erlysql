@@ -48,16 +48,25 @@ find_subtrees1(WhereClause ,  RelMap )
 .
 
 %%find_subtrees1([ { class , "identifier" } , { value , NodeVal } ], RelMap ) ->
-find_subtrees1([ { class , "identifier" } , NodeVal ], RelMap ) ->
-	%% extract Predicate from NodeVal
-	%% 'scan_spec' was previously called 'predicate'
-	Value = [ Val || { Key , Val } <- NodeVal ],
-	[ {type , scan } , { scan_spec , [ { type , colref } , { value , Value } ] }, { relation , "Nulldata" }, { leaf , true } ]
-	%% @todo get rid of the 'leaf' tag. Figure out some other way of achieving the same thing. 
-;
+%%find_subtrees1([ { class , "identifier" } , NodeVal ], RelMap ) ->
+%%	%% extract Predicate from NodeVal
+%%	%% 'scan_spec' was previously called 'predicate'
+%%	Value = [ Val || { Key , Val } <- NodeVal ],
+%%	[ {type , scan } , { scan_spec , [ { type , colref } , { value , Value } ] }, { relation , "Nulldata" }, { leaf , true } ]
+%%	%% @todo get rid of the 'leaf' tag. Figure out some other way of achieving the same thing. 
+%%;
 
-find_subtrees1([ { type , NodeType } , { value , NodeVal } ], _ ) ->
-	[ {type , scan } , { predicate , [ { type , NodeType } , { value , NodeVal } ] }, { relation , null } , { leaf , true } ]
+%%find_subtrees1([ { type , NodeType } , { value , NodeVal } ], _ ) ->
+%%	[ {type , scan } , { predicate , [ { type , NodeType } , { value , NodeVal } ] }, { relation , null } , { leaf , true } ]
+%%;
+
+find_subtrees1 ([ParseNodeHead|ParseNodeTail]) ->
+	case ParseNodeHead of
+		{class,"identifier"} <- [ {type, scan} , { relation, "SomeTable" }  ] ;
+		{class,"literal"} <- [ {type, scan} ];
+		{sqltype,SqlType} <- [ {sqltype, SqlType} ];
+		{value,Value} <- [ {predicate,  Value } ]
+	end ++ find_subtrees1(ParseNodeTail)
 ;
 
 
