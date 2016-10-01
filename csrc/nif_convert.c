@@ -99,18 +99,27 @@ static ERL_NIF_TERM process_s_expr(s_expr *s, ErlNifEnv *env) {
   
   if (s->left != NULL) 
     left = process_s_expr(s->left, env);
-   else 
-    left = enif_make_atom(env, "null");
-  
 
   if (s->right != NULL) 
     right = process_s_expr(s->right, env);
-   else 
-    right = enif_make_atom(env, "null");
-
-  //tuple_to_nif(value,s->value);
+  
   value = process_tuplist2(s->value,env);
 
+  /* 
+	If we're a leaf node, return a value list. Otherwise, 
+	 we return a 3-tuple
+  */
+
+  if (s->left == NULL && s->right == NULL) {
+
+   return(value);
+
+  } else if (s->left != NULL & s->right != NULL) { 
+
   return(enif_make_tuple3(env, value, left, right)); 
+
+  } else {
+    //ERROR - should never get here. Throw some sort of error...
+  }
 
 }
