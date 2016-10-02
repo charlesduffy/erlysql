@@ -10,42 +10,6 @@
 %% @doc <h2> subtree finder </h2>
 %% this is some more text
 
-find_subtrees1 (ParseTree) ->
-%%  RelMap = #{ "a" => "A" , "b" => "A" , "c" => "B" , "d" => "B" },
-%% RelMap is a temporary data dictionary for testing. To be replaced by proper catalogue server
-
-%% We are going to pass a relmap that contains the projection list and relation list in OID form. 
-
-%% example catalogue insertion commands
-%% gen_server:call(catalogue, { write , { "A" , [  [ {attname , "a" } , {atttype, integer }   ] , [ {attname, "b" } , {atttype,integer  }   ]    ] }}).
-%% gen_server:call(catalogue, { write , { "B" , [  [ {attname , "c" } , {atttype, integer }   ] , [ {attname, "d" } , {atttype,integer  }   ]    ] }}).
-
-%% Consider adding a 'comments' or 'debug' field to the plan for inspection
-
-%% Object proplist should be improved. Something like:
-
-%% { colref , [ { name , "customer" } , { oid , 901231 } ] }
-
-%% Planner also needs to know current xation because (currently in design) DDL is transactional
-
-%% Plan flow
-%% - get select list map (Relmap). Error if rels / atts incorrect / not found
-%% - disambiguate select list references. Ie, resolve A.a , "a" to an OID for all further comparison
-%% -- probably leave the textual colref names for plan debug purposes
-%% - Process where clause and perform planning. 
-
-
-	%% get relation list from parse tree
-
-	
-
-	%% get attribute relation list from system catalogue
-	
-%%RelMap = proto:get_relmap(parser:pt_get_range_table(ParseTree)),
-RelMap = relmap,
-WhereClause = parser:pt_get_where_clause(ParseTree),
-find_subtrees1(WhereClause ,  RelMap )
-.
 
 %%find_subtrees1([ { class , "identifier" } , { value , NodeVal } ], RelMap ) ->
 %%find_subtrees1([ { class , "identifier" } , NodeVal ], RelMap ) ->
@@ -60,14 +24,29 @@ find_subtrees1(WhereClause ,  RelMap )
 %%	[ {type , scan } , { predicate , [ { type , NodeType } , { value , NodeVal } ] }, { relation , null } , { leaf , true } ]
 %%;
 
-find_subtrees1 ([ParseNodeHead|ParseNodeTail]) ->
-	case ParseNodeHead of
-		{class,"identifier"} <- [ {type, scan} , { relation, "SomeTable" }  ] ;
-		{class,"literal"} <- [ {type, scan} ];
-		{sqltype,SqlType} <- [ {sqltype, SqlType} ];
-		{value,Value} <- [ {predicate,  Value } ]
-	end ++ find_subtrees1(ParseNodeTail)
+process_pt_node ([ParseNodeHead|ParseNodeTail], NodeAccum, RelMap) ->
+	io:fwrite("calling process pt_node...~n"),
+	NodeData = 
+	  case ParseNodeHead of
+		{class,"identifier"} -> [ {type, scan} , { relation, "SomeTable" }  ] ;
+		{class,"literal"} -> [ {type, scan} , { relation, null}  ];
+		{sqltype,SqlType} -> [ {sqltype, SqlType} ];
+		{value,Value} -> [ {predicate ,  Value } ]
+	  end,
+	process_pt_node(ParseNodeTail, NodeData ++ NodeAccum, RelMap)
 ;
+
+process_pt_node ([], NodeAccum, RelMap) ->
+	NodeAccum
+.
+
+find_subtrees1 (ParseTree) ->
+	RelMap = "bleh",
+	WhereClause = parser:pt_get_where_clause(ParseTree),
+	find_subtrees1(WhereClause ,  RelMap )
+.
+
+
 
 
 find_subtrees1 ({ Self , Lchild , Rchild }, RelMap ) ->
@@ -75,6 +54,7 @@ find_subtrees1 ({ Self , Lchild , Rchild }, RelMap ) ->
 	LsubTree = find_subtrees1(Lchild, RelMap),
 	RsubTree = find_subtrees1(Rchild, RelMap), 	
 
+	io:fwrite("subtrees with scan nodes are >~p<  >~p<", [ LsubTree , RsubTree ] ),
 	% if same rel return scan
 	% if different rel return join op with trees
 	% if join + scan return join op
@@ -93,6 +73,10 @@ find_subtrees1 ({ Self , Lchild , Rchild }, RelMap ) ->
 						RsubTree,
 						Self)
 	end
+;
+
+find_subtrees1 (ParseNode, RelMap) ->
+	process_pt_node(ParseNode, [], RelMap)
 .
 
 %% do join
@@ -117,7 +101,7 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , No
 
 %% @doc merge subtrees containing the same relation into a single scan node
 merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
-	%%io:fwrite("merge_subtrees1 with scan nodes called ~n~p~n~p", [ LsubTree , RsubTree ] ),
+	io:fwrite("merge_subtrees1 with scan nodes called ~n~p~n~p", [ LsubTree , RsubTree ] ),
 	[ Lpred ] = [ Lpredicate || { predicate , Lpredicate } <- LsubTree ] , 
 	[ Rpred ] = [ Rpredicate || { predicate , Rpredicate } <- RsubTree ] , 
 	[ {type, scan} , { predicate , { Self , Lpred , Rpred } } , { relation , RelName } , { leaf , true } ]
