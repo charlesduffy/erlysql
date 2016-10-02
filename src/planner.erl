@@ -2,6 +2,34 @@
 
 -export([plan_query/1, find_subtrees1/1]).
 
+%% @doc Initial planner. 
+%% 	Does no plan optimisation at all - merely generates a viable execution plan
+
+plan_query(ParseTree) ->
+
+%%	PlanTree = find_subtrees1(ParseTree),	
+%%	Program = generate_code(PlanTree),
+%%	Program.
+
+	find_subtrees1(ParseTree)
+.	
+
+%%	Basic dumb planner algorithm for SELECT
+
+%%	Iterate through FROM clause list. 
+%%	  generate list of base relations (scan nodes)
+%%	  populate base relation projection list
+%%	  populate base relation selection predicates
+
+%%	Check for ORDER BY
+%%	  if present, add sort node and link to scan nodes
+
+%%	Iterate through select list
+%%	  if present, add aggregation node and link to lower level nodes
+%%	  add output node.
+%%	     populate transform list
+%%	     populate rename list
+
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
@@ -10,25 +38,12 @@
 %% @doc <h2> subtree finder </h2>
 %% this is some more text
 
-
-%%find_subtrees1([ { class , "identifier" } , { value , NodeVal } ], RelMap ) ->
-%%find_subtrees1([ { class , "identifier" } , NodeVal ], RelMap ) ->
-%%	%% extract Predicate from NodeVal
-%%	%% 'scan_spec' was previously called 'predicate'
-%%	Value = [ Val || { Key , Val } <- NodeVal ],
-%%	[ {type , scan } , { scan_spec , [ { type , colref } , { value , Value } ] }, { relation , "Nulldata" }, { leaf , true } ]
-%%	%% @todo get rid of the 'leaf' tag. Figure out some other way of achieving the same thing. 
-%%;
-
-%%find_subtrees1([ { type , NodeType } , { value , NodeVal } ], _ ) ->
-%%	[ {type , scan } , { predicate , [ { type , NodeType } , { value , NodeVal } ] }, { relation , null } , { leaf , true } ]
-%%;
-
 process_pt_node ([ParseNodeHead|ParseNodeTail], NodeAccum, RelMap) ->
 	io:fwrite("calling process pt_node...~n"),
 	NodeData = 
 	  case ParseNodeHead of
-		{class,"identifier"} -> [ {type, scan} , { relation, "SomeTable" }  ] ;
+		{class,"identifier"} -> [ {type, scan} ] ;
+		{reference,TableRef } -> [ {relation, TableRef} ] ;
 		{class,"literal"} -> [ {type, scan} , { relation, null}  ];
 		{sqltype,SqlType} -> [ {sqltype, SqlType} ];
 		{value,Value} -> [ {predicate ,  Value } ]
@@ -54,7 +69,7 @@ find_subtrees1 ({ Self , Lchild , Rchild }, RelMap ) ->
 	LsubTree = find_subtrees1(Lchild, RelMap),
 	RsubTree = find_subtrees1(Rchild, RelMap), 	
 
-	io:fwrite("subtrees with scan nodes are >~p<  >~p<", [ LsubTree , RsubTree ] ),
+	io:fwrite("subtrees with scan nodes are >~p<  >~p<~n~n", [ LsubTree , RsubTree ] ),
 	% if same rel return scan
 	% if different rel return join op with trees
 	% if join + scan return join op
@@ -173,45 +188,4 @@ generate_code ( [{ type, scan }|Node], ParentNodeID, CurMaxID, Descent ) ->
 .
 
 
-
-%% @doc Initial planner. 
-%% 	Does no plan optimisation at all - merely generates a viable execution plan
-
-plan_query(ParseTree) ->
-
-%%	PlanTree = find_subtrees1(ParseTree),	
-%%	Program = generate_code(PlanTree),
-%%	Program.
-
-%%	generate_code(
-			find_subtrees1(ParseTree)
-%%		     )
-.	
-
-%%% execution plan generic node
-
-%%  Elements required in code/plan per node
-
-%% Node Type: scan, join, agg, filter
-%% Predicate: an s-expr in the case of join/scan/filter, function for agg, 
-%% Node ID: ID code for this node instance
-%% Source ID set: tuple of the source nodes for this node. (may not be required)
-%% Target ID: target node for this node. 
-
-
-%%	Basic dumb planner algorithm for SELECT
-
-%%	Iterate through FROM clause list. 
-%%	  generate list of base relations (scan nodes)
-%%	  populate base relation projection list
-%%	  populate base relation selection predicates
-
-%%	Check for ORDER BY
-%%	  if present, add sort node and link to scan nodes
-
-%%	Iterate through select list
-%%	  if present, add aggregation node and link to lower level nodes
-%%	  add output node.
-%%	     populate transform list
-%%	     populate rename list
 
