@@ -43,6 +43,7 @@ process_pt_node ([ParseNodeHead|ParseNodeTail], NodeAccum, RelMap) ->
 	NodeData = 
 	  case ParseNodeHead of
 		{class,"identifier"} -> [ {type, scan} ] ;
+		{class,"operator"} -> [ {type, oper} ] ;
 		{reference,TableRef } -> [ {relation, TableRef} ] ;
 		{class,"literal"} -> [ {type, scan} , { relation, null}  ];
 		{sqltype,SqlType} -> [ {sqltype, SqlType} ];
@@ -95,11 +96,13 @@ find_subtrees1 (ParseNode, RelMap) ->
 .
 
 %% do join
-merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , NodeVal} ] ) ->
+%%merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , NodeVal} ] ) ->
+merge_subtrees1 (  [ ] , LsubTree , RsubTree, Self ) ->
+	
 	case 
-		[ true || { leaf , true } <- LsubTree , { leaf , true } <- RsubTree ] of 
+		[ true || { type , oper } <- LsubTree , { type , oper } <- RsubTree ] of 
 		
-			[ true ] -> 
+			[ ] -> 
 					
 				[ LPred1 ] = [ LPr|| { predicate , LPr} <- LsubTree ] ,
  				[ RPred1 ] = [ RPr|| { predicate , RPr} <- RsubTree ] ,
@@ -110,7 +113,7 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, [ {type , NodeType } , {value , No
 					{ right, RsubTree } , { relation , null } , {leaf, false}
 				 ] ;
 
-			[ ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
+			[ true ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
 	end
 ;
 
