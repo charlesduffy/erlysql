@@ -1,6 +1,6 @@
 -module(planner).
 
--export([plan_query/1, find_subtrees1/1]).
+-export([plan_query/1, find_subtrees1/1, find_subtrees1/2]).
 
 %% @doc Initial planner. 
 %% 	Does no plan optimisation at all - merely generates a viable execution plan
@@ -38,24 +38,6 @@ plan_query(ParseTree) ->
 %% @doc <h2> subtree finder </h2>
 %% this is some more text
 
-process_pt_node ([ParseNodeHead|ParseNodeTail], NodeAccum, RelMap) ->
-	io:fwrite("calling process pt_node...~n"),
-	NodeData = 
-	  case ParseNodeHead of
-		{class,"identifier"} -> [ {type, scan} ] ;
-		{class,"operator"} -> [ {type, oper} ] ;
-		{reference,TableRef } -> [ {relation, TableRef} ] ;
-		{class,"literal"} -> [ {type, scan} , { relation, null}  ];
-		{sqltype,SqlType} -> [ {sqltype, SqlType} ];
-		{value,Value} -> [ {predicate ,  Value } ]
-	  end,
-	process_pt_node(ParseNodeTail, NodeData ++ NodeAccum, RelMap)
-;
-
-process_pt_node ([], NodeAccum, RelMap) ->
-	NodeAccum
-.
-
 find_subtrees1 (ParseTree) ->
 	RelMap = "bleh",
 	WhereClause = parser:pt_get_where_clause(ParseTree),
@@ -67,32 +49,54 @@ find_subtrees1 (ParseTree) ->
 
 find_subtrees1 ({ Self , Lchild , Rchild }, RelMap ) ->
 	
-	LsubTree = find_subtrees1(Lchild, RelMap),
-	RsubTree = find_subtrees1(Rchild, RelMap), 	
+	%%io:fwrite("Left Child: ~p~n  SELF: ~p~n==========~n ", [ Lchild , Self] ),
+	[{clade,LClade}|LCladeTail] = find_subtrees1(Lchild, RelMap),
+	[{clade,RClade}|RCladeTail] = find_subtrees1(Rchild, RelMap), 
+	[{clade,SClade}|SelfTail]  = find_subtrees1(Self, RelMap),	
 
-	io:fwrite("subtrees with scan nodes are >~p<  >~p<~n~n", [ LsubTree , RsubTree ] ),
+	%%io:fwrite("subtrees with scan nodes are >~p<  >~p<~n~n", [ LClade , RClade ] ),
 	% if same rel return scan
 	% if different rel return join op with trees
 	% if join + scan return join op
 
 	case
-		[ true || {type, scan} <- LsubTree , {type, scan} <- RsubTree  ] of
+		[ true || {type, scan} <- LClade, {type, scan} <- RClade ] of
 	
 			[ true ] -> merge_subtrees1( 
-						[ Lrel || {relation, Lrel} <- LsubTree , {relation, Rrel} <- RsubTree , (Rrel==Lrel) or (Rrel == null) or (Lrel == null) ],
-						LsubTree,
-						RsubTree,
+						[ Lrel || {relation, Lrel} <- LClade , {relation, Rrel} <- RClade, (Rrel==Lrel) or (Rrel == []) or (Lrel == []) ],
+						LClade,
+						RClade,
 						Self);
 
 			[ ] -> merge_subtrees1( [] ,
-						LsubTree,
-						RsubTree,
+						Lchild,
+						Rchild,
 						Self)
 	end
 ;
 
 find_subtrees1 (ParseNode, RelMap) ->
-	process_pt_node(ParseNode, [], RelMap)
+	%%process_pt_node(ParseNode, [], RelMap)
+	%%io:fwrite("find_subtrees1 ~p~n", [ ParseNode ] ),
+	Predicate = [ {Key, Val} || { Key , Val } <- ParseNode , lists:member(Key,[ class, sqltype, value]) ],
+	CladeType = 
+	  case [ Val || { class , Val } <- ParseNode ] of
+		["identifier"] -> scan;
+		["operator"] -> oper;
+		["literal"] -> scan		
+	  end,
+	RelSpec = [ {Key,Val} || { Key, Val } <- ParseNode, Key==reference ],
+	CladeId = 0,
+	[ 
+	  { clade, 
+		[ 
+		  {type, CladeType},
+		  {relation, RelSpec},
+		  {predicate, Predicate},
+		  {clade_id, CladeId}
+		]
+	   }
+	]	
 .
 
 %% do join
@@ -107,24 +111,41 @@ merge_subtrees1 (  [ ] , LsubTree , RsubTree, Self ) ->
 				[ LPred1 ] = [ LPr|| { predicate , LPr} <- LsubTree ] ,
  				[ RPred1 ] = [ RPr|| { predicate , RPr} <- RsubTree ] ,
 				[ 
-					{type, join} , 
-			     		{ joinpred , { [{type,NodeType},{value , NodeVal}] , LPred1 , RPred1 }} , 
-					{ left , LsubTree } , 
-					{ right, RsubTree } , { relation , null } , {leaf, false}
+%					{type, join} , 
+%			     		{ joinpred , { [{type,NodeType},{value , NodeVal}] , LPred1 , RPred1 }}, 
+%					{ left , LsubTree }, 
+%					{ right, RsubTree }, { relation , null } 
 				 ] ;
-
-			[ true ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
+%
+%			[ true ] -> [ {type, join} , { joinpred, NodeVal } , {left, LsubTree } , {right, RsubTree } , { relation, null } , {leaf, false} ]
+			[ true ] -> ok
 	end
 ;
 
 %% @doc merge subtrees containing the same relation into a single scan node
-merge_subtrees1 (  [ RelName ] , LsubTree , RsubTree, Self ) ->
-	io:fwrite("merge_subtrees1 with scan nodes called ~n~p~n~p", [ LsubTree , RsubTree ] ),
-	[ Lpred ] = [ Lpredicate || { predicate , Lpredicate } <- LsubTree ] , 
-	[ Rpred ] = [ Rpredicate || { predicate , Rpredicate } <- RsubTree ] , 
-	[ {type, scan} , { predicate , { Self , Lpred , Rpred } } , { relation , RelName } , { leaf , true } ]
+merge_subtrees1 (  [ RelSpec ] , LsubTree , RsubTree, Self ) ->
+	%%io:fwrite("merge_subtrees1 with scan nodes called ~p~n*****~n~p*****~n~p~n", [ LsubTree , RsubTree, Self ] ),
+	CladeId = 0, %%CHANGE!!	
+	%%LClade = [{clade,LsubTree}],	
+	%%RClade = [{clade,RsubTree}],	
+	LClade = LsubTree,
+	RClade = RsubTree,
+	[ Lpred ] = [ Lpredicate || { predicate , Lpredicate } <- LClade ], 
+	[ Rpred ] = [ Rpredicate || { predicate , Rpredicate } <- RClade ], 
+%%	[ Spred ] = [ Spredicate || { predicate , Spredicate } <- Self ], 
+	%[ {type, scan} , { predicate , { Spred , Lpred , Rpred } } , { relation , RelName } ]
+	%%%
+	[ 
+	  { clade, 
+		[ 
+		  {type, scan},
+		  {relation, RelSpec},
+		  {predicate, {Self, Lpred, Rpred}},
+		  {clade_id, CladeId}
+		]
+	   }
+	]	
 .
-
 
 %% @doc generate code from plan tree to execute the query
 %%	generate instructions for a join node
