@@ -75,5 +75,8 @@ Vagrant.configure("2") do |config|
      sudo apt-get update
      sudo apt-get install -y esl-erlang
      sudo apt-get install -y erlang-base-hipe erlang-dev rebar vim-vimerl
+     sudo apt-get install -y erlang-dev erlang-debugger erlang-dialyzer erlang-percept erlang-edoc erlang-observer erlang-pman
+     sudo apt-get install -y postgresql-9.4 postgresql-common postgresql-client-9.4 postgresql-client-common
+     sudo apt-get install -y dblatex texlive-latex-base texlive-latex-extra texlive-latex-recommended
    SHELL
 end
